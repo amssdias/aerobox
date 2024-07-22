@@ -10,7 +10,11 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
+import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -42,6 +46,7 @@ DJANGO_APPS = [
 
 PROJECT_APPS  = [
     "apps.users",
+    "apps.cloud_storage",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + PROJECT_APPS
@@ -137,4 +142,19 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.TokenAuthentication",
     ]
+}
+
+# Storages
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": {
+            "access_key": os.environ.get("AWS_ACCESS_KEY_ID", None),
+            "secret_key": os.environ.get("AWS_SECRET_ACCESS_KEY", None),
+            "bucket_name": os.environ.get("AWS_STORAGE_BUCKET_NAME", None),
+        },
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    }
 }
