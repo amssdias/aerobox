@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-a54f)n*imqog=wgpw---zfhurha%vyu)_zd*lg_nbj#_wus11-"
+SECRET_KEY = os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -146,15 +146,20 @@ REST_FRAMEWORK = {
 
 # Storages
 STORAGES = {
-    "default": {
-        "BACKEND": "storages.backends.s3.S3Storage",
-        "OPTIONS": {
-            "access_key": os.environ.get("AWS_ACCESS_KEY_ID", None),
-            "secret_key": os.environ.get("AWS_SECRET_ACCESS_KEY", None),
-            "bucket_name": os.environ.get("AWS_STORAGE_BUCKET_NAME", None),
-        },
-    },
+    # "default": {
+    #     "BACKEND": "storages.backends.s3.S3Storage",
+    #     "OPTIONS": {
+    #         "access_key": os.environ.get("AWS_ACCESS_KEY_ID", None),
+    #         "secret_key": os.environ.get("AWS_SECRET_ACCESS_KEY", None),
+    #         "bucket_name": os.environ.get("AWS_STORAGE_BUCKET_NAME", None),
+    #     },
+    # },
     "staticfiles": {
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     }
 }
+
+# AWS S3
+AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID", None)
+AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY", None)
+AWS_STORAGE_BUCKET_NAME = os.environ.get("AWS_STORAGE_BUCKET_NAME", None)
