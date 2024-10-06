@@ -23,4 +23,5 @@ urlpatterns = [
     path('api-auth/', views.obtain_auth_token),
 
     path("users/", include("apps.users.urls")),
+    path("cloud/", include("apps.cloud_storage.urls")),
 ]
