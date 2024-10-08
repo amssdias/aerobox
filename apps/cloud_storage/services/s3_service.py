@@ -1,4 +1,5 @@
 from botocore.exceptions import NoCredentialsError, ClientError
+from django.conf import settings
 
 from .aws_client import AWSClient
 
@@ -7,7 +8,7 @@ class S3Service:
     def __init__(self):
         self.s3_client = AWSClient("s3").get_client()
 
-    def generate_presigned_upload_url(self, bucket_name, object_name, expiration=3600):
+    def generate_presigned_upload_url(self, object_name, bucket_name=settings.AWS_STORAGE_BUCKET_NAME, expiration=3600):
         """
         Generates a presigned URL for uploading a file to S3.
 
