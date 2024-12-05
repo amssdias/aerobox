@@ -8,6 +8,7 @@ django = "*"
 djangorestframework = "*"
 django-storages = {extras = ["s3"], version = "*"}
 python-dotenv = "*"
+factory-boy = "*"
 
 [dev-packages]
 
