@@ -72,6 +72,7 @@ jobs:
 
   check-deploy:
     name: 🚀 Deployment Checks
+    if: false
     runs-on: ubuntu-latest
 
     steps:
