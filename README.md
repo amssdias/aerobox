@@ -1,3 +1,5 @@
+[![🔍 Validate Code and Migrations](https://github.com/amssdias/aerobox/actions/workflows/django-ci.yml/badge.svg?branch=master)](https://github.com/amssdias/aerobox/actions/workflows/django-ci.yml)
+
 [![Django](https://img.shields.io/badge/Django-4.2-092E20?style=for-the-badge&logo=django)](https://www.djangoproject.com/)
 [![DRF](https://img.shields.io/badge/DRF-3.15-E83E3E?style=for-the-badge&logo=django)](https://www.django-rest-framework.org/)
 
