@@ -10,6 +10,7 @@ django-storages = {extras = ["s3"], version = "*"}
 python-dotenv = "*"
 factory-boy = "*"
 black = "*"
+coverage = "*"
 
 [dev-packages]
 
