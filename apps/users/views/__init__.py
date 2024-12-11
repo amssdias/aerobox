@@ -1,1 +1,2 @@
 from .user_create import UserCreateView
+from .password_reset import CustomPasswordResetView, CustomPasswordResetConfirmView
