@@ -9,10 +9,10 @@ djangorestframework = "*"
 django-storages = {extras = ["s3"], version = "*"}
 python-dotenv = "*"
 factory-boy = "*"
-coverage = "*"
 
 [dev-packages]
 black = "*"
+coverage = "*"
 
 [requires]
 python_version = "3.9"
