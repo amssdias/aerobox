@@ -5,14 +5,14 @@ from django.utils.translation import gettext_lazy as _
 from config.models.timestampable import Timestampable
 
 
-class CloudFiles(Timestampable):
+class CloudFile(Timestampable):
     STATUS = (
         ("pending", "Pending"),
         ("uploaded", "Uploaded"),
         ("failed", "Failed"),
     )
-    
-    name = models.CharField(
+
+    file_name = models.CharField(
         max_length=255,
         help_text=_("The intended name of the file to be stored in S3.")
     )
@@ -73,9 +73,9 @@ class CloudFiles(Timestampable):
         verbose_name_plural = _("Cloud Files")
         indexes = [
             models.Index(fields=["user"]),
-            models.Index(fields=["name"]),
+            models.Index(fields=["file_name"]),
         ]
-        unique_together = ("path", "name")
+        unique_together = ("path", "file_name")
 
     def __str__(self):
         return f"{self.name} ({self.user})"

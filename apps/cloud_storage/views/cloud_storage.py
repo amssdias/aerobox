@@ -4,7 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from apps.cloud_storage.models import CloudFiles
+from apps.cloud_storage.models import CloudFile
 from apps.cloud_storage.serializers import CloudFilesSerializer
 from apps.cloud_storage.services import S3Service
 
@@ -13,7 +13,7 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
     serializer_class = CloudFilesSerializer
-    queryset = CloudFiles.objects.all()
+    queryset = CloudFile.objects.all()
 
     def get_queryset(self):
         queryset = self.queryset.filter(user=self.request.user)

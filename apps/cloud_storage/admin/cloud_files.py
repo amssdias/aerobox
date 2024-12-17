@@ -1,13 +1,13 @@
 from django.contrib import admin
 
-from apps.cloud_storage.models import CloudFiles
+from apps.cloud_storage.models import CloudFile
 
 
-@admin.register(CloudFiles)
+@admin.register(CloudFile)
 class CloudFilesAdmin(admin.ModelAdmin):
     list_display = (
         "id",
-        "name",
+        "file_name",
         "path",
         "file_type",
         "user",

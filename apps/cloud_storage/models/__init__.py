@@ -1,1 +1,1 @@
-from .cloud_files import CloudFiles
+from .cloud_files import CloudFile
