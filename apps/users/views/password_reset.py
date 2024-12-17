@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password, ValidationError
 from django.contrib.auth.tokens import default_token_generator
-from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.core.validators import EmailValidator
 from django.utils.encoding import force_bytes
@@ -10,8 +10,6 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.views import APIView
-from django.contrib.auth.password_validation import validate_password, ValidationError
-
 
 
 class CustomPasswordResetView(APIView):
@@ -76,9 +74,13 @@ class CustomPasswordResetConfirmView(APIView):
         new_password1 = request.data.get("new_password1", "").strip()
         new_password2 = request.data.get("new_password2", "").strip()
 
-        password_validation_error = self.validate_passwords(new_password1, new_password2)
+        password_validation_error = self.validate_passwords(
+            new_password1, new_password2
+        )
         if password_validation_error:
-            return Response({"error": password_validation_error}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": password_validation_error}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         try:
             uid = urlsafe_base64_decode(uidb64).decode()
