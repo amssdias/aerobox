@@ -39,16 +39,19 @@ DJANGO_APPS = [
     "drf_spectacular",
 ]
 
+EXTERNAL_APPS = ["corsheaders",]
+
 PROJECT_APPS  = [
     "apps.users",
     "apps.cloud_storage",
 ]
 
-INSTALLED_APPS = DJANGO_APPS + PROJECT_APPS
+INSTALLED_APPS = DJANGO_APPS + EXTERNAL_APPS + PROJECT_APPS
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
