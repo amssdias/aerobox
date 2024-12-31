@@ -1,3 +1,5 @@
+import mimetypes
+
 from botocore.exceptions import NoCredentialsError, ClientError
 from django.conf import settings
 
@@ -18,11 +20,15 @@ class S3Service:
         :return: Presigned URL as a string or None if there is an error
         """
         try:
+            content_type, _ = mimetypes.guess_type(object_name)
             presigned_url = self.s3_client.generate_presigned_url(
-                "put_object",
-                Params={"Bucket": bucket_name, "Key": object_name},
+                ClientMethod="put_object",
+                Params={
+                    "Bucket": bucket_name,
+                    "Key": object_name,
+                    "ContentType": content_type
+                },
                 ExpiresIn=expiration,
-                HttpMethod="PUT"
             )
             return presigned_url
         except (NoCredentialsError, ClientError) as e:
