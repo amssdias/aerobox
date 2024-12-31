@@ -78,4 +78,4 @@ class CloudFile(Timestampable):
         unique_together = ("path", "file_name")
 
     def __str__(self):
-        return f"{self.name} ({self.user})"
+        return f"{self.file_name} ({self.user})"
