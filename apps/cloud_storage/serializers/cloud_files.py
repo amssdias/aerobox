@@ -10,7 +10,7 @@ class CloudFilesSerializer(serializers.ModelSerializer):
     class Meta:
         model = CloudFile
         fields = (
-            "name",
+            "file_name",
             "path",
             "size",
             "file_type",
@@ -26,7 +26,7 @@ class CloudFilesSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(_("User is not authenticated."))
 
         file_name = data.get("file_name")
-        content_type = mimetypes.guess_type(file_name)
+        content_type, _ = mimetypes.guess_type(file_name)
         if content_type != data.get("file_type"):
             raise serializers.ValidationError(_("Content type sent is not correct."))
 
@@ -37,5 +37,5 @@ class CloudFilesSerializer(serializers.ModelSerializer):
         validated_data["user"] = user
 
         file_name = validated_data.get("file_name")
-        validated_data["file_type"] = mimetypes.guess_type(file_name)
+        validated_data["file_type"], _ = mimetypes.guess_type(file_name)
         return super().create(validated_data)
