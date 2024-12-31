@@ -16,6 +16,9 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from drf_spectacular.views import SpectacularRedocView, SpectacularAPIView
+from rest_framework.authentication import SessionAuthentication
+from config.permissions import IsSuperUser
 
 
 urlpatterns = [
@@ -23,4 +26,10 @@ urlpatterns = [
 
     path("api/users/", include("apps.users.urls")),
     path("api/cloud/", include("apps.cloud_storage.urls")),
+]
+
+# Add documentation URLs with superuser restriction
+urlpatterns += [
+    path("api/schema/", SpectacularAPIView.as_view(permission_classes=[IsSuperUser]), name="schema"),
+    path("api/docs/redoc/", SpectacularRedocView.as_view(url_name="schema", authentication_classes=[SessionAuthentication], permission_classes=[IsSuperUser]), name="redoc"),
 ]
