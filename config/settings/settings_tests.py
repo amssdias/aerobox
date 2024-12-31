@@ -2,6 +2,7 @@ import secrets
 
 from .base import *
 
+DEBUG = True
 SECRET_KEY = "".join(secrets.choice("abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)") for i in range(50))
 
 DATABASES = {

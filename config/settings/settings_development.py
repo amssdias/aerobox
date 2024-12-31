@@ -2,6 +2,8 @@ from .base import *
 
 
 DEBUG = True
+SECRET_KEY = "pzm!wg763dggm*8#f!vi$jp&gp^l!2%j55gqyb^9t&sgwcn^53"
+
 AUTH_PASSWORD_VALIDATORS = []
 
 ALLOWED_HOSTS = ["*"]
