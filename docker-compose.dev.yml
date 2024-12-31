@@ -1,0 +1,56 @@
+version: "2"
+
+services:
+  db:
+    image: postgres:17.2-bullseye
+    container_name: postgres-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: aerobox-db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  api:
+    container_name: aerobox-api
+    build:
+      context: .
+      dockerfile: deployments/development/Dockerfile
+    volumes:
+      - .:/usr/src/app
+    ports:
+      - "8000:8000"
+    environment:
+      - SECRET_KEY=${SECRET_KEY}
+      - DB_NAME=aerobox-db
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=db
+      - DB_PORT=5432
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_STORAGE_BUCKET_NAME=${AWS_STORAGE_BUCKET_NAME}
+      - AWS_S3_BUCKET_REGION=${AWS_S3_BUCKET_REGION}
+      - AWS_S3_BUCKET_FOLDER=${AWS_S3_BUCKET_FOLDER}
+      - DJANGO_SETTINGS_MODULE=config.settings.settings_development
+    depends_on:
+      - db
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    depends_on:
+      - db
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+
+volumes:
+  postgres_data:
+  pgadmin_data:

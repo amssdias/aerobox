@@ -1,5 +1,10 @@
 FROM python:3.9-slim-bullseye
 
+# Install PostgreSQL client and development libraries
+RUN apt-get update && apt-get install -y \
+    libpq-dev gcc && \
+    rm -rf /var/lib/apt/lists/*
+
 WORKDIR /usr/src/app
 
 RUN pip install pipenv
