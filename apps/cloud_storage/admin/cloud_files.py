@@ -9,8 +9,14 @@ class CloudFilesAdmin(admin.ModelAdmin):
         "id",
         "file_name",
         "path",
-        "file_type",
+        "content_type",
         "user",
         "status",
     )
     list_per_page = 25
+    readonly_fields = (
+        "size",
+        "created_at",
+        "updated_at",
+    )
+    raw_id_fields = ("user",)

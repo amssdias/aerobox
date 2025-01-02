@@ -2,14 +2,15 @@ from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+from apps.cloud_storage.constants.cloud_files import PENDING, UPLOADED, FAILED
 from config.models.timestampable import Timestampable
 
 
 class CloudFile(Timestampable):
     STATUS = (
-        ("pending", _("Pending")),
-        ("uploaded", _("Uploaded")),
-        ("failed", _("Failed")),
+        (PENDING, _("Pending")),
+        (UPLOADED, _("Uploaded")),
+        (FAILED, _("Failed")),
     )
 
     file_name = models.CharField(
@@ -18,17 +19,13 @@ class CloudFile(Timestampable):
     )
     path = models.CharField(
         max_length=255,
-        help_text=_("The S3 key or path where the file is stored.")
+        help_text=_("The S3 path where the file is stored.")
     )
     size = models.BigIntegerField(
-        null=True, 
-        blank=True,
         help_text=_("The size of the file in bytes. This can be updated after the file is uploaded.")
     )
-    file_type = models.CharField(
-        max_length=50, 
-        null=True, 
-        blank=True,
+    content_type = models.CharField(
+        max_length=50,
         help_text=_("The MIME type of the file (e.g., 'image/jpeg', 'application/pdf').")
     )
     user = models.ForeignKey(
@@ -36,7 +33,7 @@ class CloudFile(Timestampable):
         related_name="files", 
         on_delete=models.SET_NULL,
         null=True,
-        help_text=_("The user who uploaded the file.")
+        help_text=_("The user who uploaded the file (owner).")
     )
     status = models.CharField(
         max_length=8,
@@ -54,7 +51,7 @@ class CloudFile(Timestampable):
         max_length=1024, 
         blank=True, 
         null=True,
-        help_text=_("The URL to access the file in S3. Typically, this is generated after the file is uploaded.")
+        help_text=_("The URL to access the file in S3. This is generated after the file is uploaded.")
     )
     error_message = models.TextField(
         blank=True, 
