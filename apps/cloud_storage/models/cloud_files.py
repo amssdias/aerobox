@@ -7,9 +7,9 @@ from config.models.timestampable import Timestampable
 
 class CloudFile(Timestampable):
     STATUS = (
-        ("pending", "Pending"),
-        ("uploaded", "Uploaded"),
-        ("failed", "Failed"),
+        ("pending", _("Pending")),
+        ("uploaded", _("Uploaded")),
+        ("failed", _("Failed")),
     )
 
     file_name = models.CharField(
@@ -39,7 +39,7 @@ class CloudFile(Timestampable):
         help_text=_("The user who uploaded the file.")
     )
     status = models.CharField(
-        max_length=20, 
+        max_length=8,
         choices=STATUS, 
         default="pending",
         help_text=_("The current status of the file upload process.")
@@ -75,7 +75,6 @@ class CloudFile(Timestampable):
             models.Index(fields=["user"]),
             models.Index(fields=["file_name"]),
         ]
-        unique_together = ("path", "file_name")
 
     def __str__(self):
         return f"{self.file_name} ({self.user})"
