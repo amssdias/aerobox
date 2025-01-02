@@ -46,19 +46,19 @@ class CustomPasswordResetConfirmViewTestCase(APITestCase):
             },
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("Passwords do not match.", response.data["error"])
+        self.assertIn("Passwords do not match.", response.data["non_field_errors"])
 
     def test_password_reset_missing_passwords(self):
         response = self.client.post(self.url, data={})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("Both passwords are required.", response.data["error"])
+        self.assertIn("new_password1", response.data)
+        self.assertIn("new_password2", response.data)
 
     def test_password_reset_empty_passwords(self):
         response = self.client.post(
             self.url, data={"new_password1": "", "new_password2": ""}
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("Both passwords are required.", response.data["error"])
 
     def test_password_reset_invalid_token(self):
         url = reverse(
@@ -116,12 +116,12 @@ class CustomPasswordResetConfirmViewTestCase(APITestCase):
             self.url, data={"new_password1": "123", "new_password2": "123"}
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("error", response.data)
+        self.assertIn("new_password1", response.data)
 
     def test_password_reset_only_one_password_provided(self):
         response = self.client.post(self.url, data={"new_password1": "NewPassword123"})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("Both passwords are required.", response.data["error"])
+        self.assertIn("new_password2", response.data)
 
     def test_password_reset_successful_and_password_is_updated(self):
         response = self.client.post(

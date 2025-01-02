@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User
-from django.contrib.auth.password_validation import validate_password, ValidationError
+from django.contrib.auth.password_validation import ValidationError
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.core.validators import EmailValidator
@@ -7,9 +7,14 @@ from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.translation import gettext_lazy as _
 from rest_framework import status
+from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.views import APIView
+
+from apps.users.serializers.password_reset_serializer import (
+    PasswordResetConfirmSerializer,
+)
 
 
 class CustomPasswordResetView(APIView):
@@ -67,26 +72,21 @@ class CustomPasswordResetView(APIView):
         return None
 
 
-class CustomPasswordResetConfirmView(APIView):
+class CustomPasswordResetConfirmView(GenericAPIView):
     """Handles the reset password confirmation process."""
 
-    def post(self, request, uidb64, token):
-        new_password1 = request.data.get("new_password1", "").strip()
-        new_password2 = request.data.get("new_password2", "").strip()
+    serializer_class = PasswordResetConfirmSerializer
 
-        password_validation_error = self.validate_passwords(
-            new_password1, new_password2
-        )
-        if password_validation_error:
-            return Response(
-                {"error": password_validation_error}, status=status.HTTP_400_BAD_REQUEST
-            )
+    def post(self, request, uidb64, token):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             uid = urlsafe_base64_decode(uidb64).decode()
             user = User.objects.get(pk=uid)
             if default_token_generator.check_token(user, token):
-                user.set_password(new_password1)
+                user.set_password(serializer.validated_data["new_password1"])
                 user.save()
                 return Response(
                     {"message": _("Password has been reset.")},
@@ -94,24 +94,10 @@ class CustomPasswordResetConfirmView(APIView):
                 )
             else:
                 return Response(
-                    {"error": "Invalid token."}, status=status.HTTP_400_BAD_REQUEST
+                    {"error": _("Invalid token.")}, status=status.HTTP_400_BAD_REQUEST
                 )
         except (User.DoesNotExist, ValueError, TypeError):
             return Response(
                 {"error": _("Invalid user or token.")},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
-    @staticmethod
-    def validate_passwords(password1, password2):
-        if not password1 or not password2:
-            return _("Both passwords are required.")
-        if password1 != password2:
-            return _("Passwords do not match.")
-
-        try:
-            validate_password(password1)
-        except ValidationError as e:
-            return ",".join(e.messages)
-
-        return None
