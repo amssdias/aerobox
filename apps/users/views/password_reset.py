@@ -6,6 +6,7 @@ from django.core.validators import EmailValidator
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.translation import gettext_lazy as _
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
@@ -15,8 +16,11 @@ from rest_framework.views import APIView
 from apps.users.serializers.password_reset_serializer import (
     PasswordResetConfirmSerializer,
 )
+from config.api_docs.custom_extensions import api_users_tag
 
 
+@api_users_tag()
+@extend_schema(tags=["API - Users"])
 class CustomPasswordResetView(APIView):
     """Sends a password reset link via email."""
 
@@ -72,6 +76,7 @@ class CustomPasswordResetView(APIView):
         return None
 
 
+@api_users_tag()
 class CustomPasswordResetConfirmView(GenericAPIView):
     """Handles the reset password confirmation process."""
 
