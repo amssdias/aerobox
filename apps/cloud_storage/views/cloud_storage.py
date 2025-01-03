@@ -1,14 +1,26 @@
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import viewsets, status
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.status import HTTP_400_BAD_REQUEST
 
 from apps.cloud_storage.models import CloudFile
 from apps.cloud_storage.serializers import CloudFilesSerializer
 from apps.cloud_storage.services import S3Service
+from config.api_docs.openapi_schemas import RESPONSE_SCHEMA_GET_PRESIGNED_URL
 
 
+@extend_schema_view(
+    list=extend_schema(exclude=True),
+    retrieve=extend_schema(exclude=True),
+    create=extend_schema(exclude=True),
+    update=extend_schema(exclude=True),
+    partial_update=extend_schema(exclude=True),
+    destroy=extend_schema(exclude=True),
+)
+@extend_schema(tags=["API - Cloud Storage"])
 class CloudStorageViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
@@ -22,13 +34,19 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
     def list(self, request):
         return super(CloudStorageViewSet, self).list(request)
 
+    @extend_schema(responses={200: RESPONSE_SCHEMA_GET_PRESIGNED_URL})
     @action(methods=["POST"], detail=False, url_path="get_s3_presigned_url", url_name="get_s3_presigned_url")
     def get_s3_presigned_url_to_upload(self, request):
+        serializer = self.get_serializer(data=request.data, context={"request": request})
+        if not serializer.is_valid():
+            return Response(data=serializer.errors, status=HTTP_400_BAD_REQUEST)
+
         s3_service = S3Service()
-        file_name = self.request.POST.get("file_name")
-        object_name = f"users/{self.request.user.id}/{file_name}"
+
+        file_path = serializer.validated_data.get("path")
         presigned_url = s3_service.generate_presigned_upload_url(
-            object_name=object_name
+            object_name=file_path
         )
 
-        return Response(data="Nothing heereee", status=status.HTTP_200_OK)
+        serializer.save()
+        return Response(data={"presigned-url": presigned_url}, status=status.HTTP_200_OK)
