@@ -1,4 +1,4 @@
 USER_PREFIX = "users/{}/"
 PENDING = "pending"
-UPLOADED = "uploaded"
+SUCCESS = "success"
 FAILED = "failed"
