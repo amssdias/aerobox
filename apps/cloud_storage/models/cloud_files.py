@@ -38,7 +38,7 @@ class CloudFile(Timestampable):
     status = models.CharField(
         max_length=8,
         choices=STATUS, 
-        default="pending",
+        default=PENDING,
         help_text=_("The current status of the file upload process.")
     )
     checksum = models.CharField(

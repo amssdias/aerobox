@@ -1,1 +1,1 @@
-from .cloud_files import CloudFilesSerializer
+from .cloud_files import CloudFilesSerializer, CloudFileUpdateSerializer

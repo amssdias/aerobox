@@ -79,3 +79,9 @@ class CloudFilesSerializer(serializers.ModelSerializer):
 
     def get_relative_path(self, obj):
         return obj.get_relative_path()
+
+
+class CloudFileUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CloudFile
+        fields = ("status", "error_message")

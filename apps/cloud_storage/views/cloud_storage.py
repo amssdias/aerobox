@@ -8,6 +8,7 @@ from rest_framework.status import HTTP_400_BAD_REQUEST
 
 from apps.cloud_storage.models import CloudFile
 from apps.cloud_storage.serializers import CloudFilesSerializer
+from apps.cloud_storage.serializers.cloud_files import CloudFileUpdateSerializer
 from apps.cloud_storage.services import S3Service
 from config.api_docs.openapi_schemas import RESPONSE_SCHEMA_GET_PRESIGNED_URL
 
@@ -17,7 +18,6 @@ from config.api_docs.openapi_schemas import RESPONSE_SCHEMA_GET_PRESIGNED_URL
     retrieve=extend_schema(exclude=True),
     create=extend_schema(exclude=True),
     update=extend_schema(exclude=True),
-    partial_update=extend_schema(exclude=True),
     destroy=extend_schema(exclude=True),
 )
 @extend_schema(tags=["API - Cloud Storage"])
@@ -30,6 +30,11 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = self.queryset.filter(user=self.request.user)
         return queryset
+
+    def get_serializer_class(self):
+        if self.action == "partial_update":
+            return CloudFileUpdateSerializer
+        return CloudFilesSerializer
 
     def list(self, request):
         return super(CloudStorageViewSet, self).list(request)
