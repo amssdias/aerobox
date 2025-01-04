@@ -7,15 +7,19 @@ from django.utils.translation import gettext_lazy as _
 
 
 class CloudFilesSerializer(serializers.ModelSerializer):
+    relative_path = serializers.SerializerMethodField()
+    path = serializers.CharField(write_only=True)
+
     class Meta:
         model = CloudFile
         fields = (
+            "id",
             "file_name",
             "path",
             "size",
             "content_type",
             "checksum",
-            "file_url",
+            "relative_path",
         )
 
     def validate_file_name(self, value):
@@ -70,4 +74,8 @@ class CloudFilesSerializer(serializers.ModelSerializer):
 
         file_name = validated_data.get("file_name")
         validated_data["content_type"], _encoding_type = mimetypes.guess_type(file_name)
+
         return super().create(validated_data)
+
+    def get_relative_path(self, obj):
+        return obj.get_relative_path()

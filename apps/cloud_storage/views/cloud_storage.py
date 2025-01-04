@@ -49,4 +49,4 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
         )
 
         serializer.save()
-        return Response(data={"presigned-url": presigned_url}, status=status.HTTP_200_OK)
+        return Response(data={"presigned-url": presigned_url, **serializer.data}, status=status.HTTP_200_OK)

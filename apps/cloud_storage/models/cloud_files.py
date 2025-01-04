@@ -2,14 +2,14 @@ from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from apps.cloud_storage.constants.cloud_files import PENDING, UPLOADED, FAILED
+from apps.cloud_storage.constants.cloud_files import PENDING, SUCCESS, FAILED
 from config.models.timestampable import Timestampable
 
 
 class CloudFile(Timestampable):
     STATUS = (
         (PENDING, _("Pending")),
-        (UPLOADED, _("Uploaded")),
+        (SUCCESS, _("Success")),
         (FAILED, _("Failed")),
     )
 
@@ -63,6 +63,16 @@ class CloudFile(Timestampable):
         null=True,
         help_text=_("Additional metadata related to the file, stored as a JSON object.")
     )
+    # file_extension = models.CharField(
+    #     max_length=10,
+    #     blank=True,
+    #     null=True,
+    #     help_text=_("The file extension (e.g., '.jpg', '.png', '.pdf').")
+    # )
+    # upload_attempts = models.PositiveIntegerField(
+    #     default=0,
+    #     help_text=_("The number of times an upload attempt was made for this file.")
+    # )
 
 
     class Meta:
@@ -75,3 +85,7 @@ class CloudFile(Timestampable):
 
     def __str__(self):
         return f"{self.file_name} ({self.user})"
+
+    def get_relative_path(self):
+        """Returns only the part of the path that should be exposed to the user."""
+        return "/".join(self.path.split("/")[2:])  # Removes 'user/user_id/'
