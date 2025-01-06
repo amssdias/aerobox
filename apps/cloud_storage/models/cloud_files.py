@@ -19,6 +19,7 @@ class CloudFile(Timestampable):
     )
     path = models.CharField(
         max_length=255,
+        unique=True,
         help_text=_("The S3 path where the file is stored.")
     )
     size = models.BigIntegerField(
@@ -57,17 +58,10 @@ class CloudFile(Timestampable):
         null=True,
         help_text=_("Additional metadata related to the file, stored as a JSON object.")
     )
-    # file_extension = models.CharField(
-    #     max_length=10,
-    #     blank=True,
-    #     null=True,
-    #     help_text=_("The file extension (e.g., '.jpg', '.png', '.pdf').")
-    # )
     # upload_attempts = models.PositiveIntegerField(
     #     default=0,
     #     help_text=_("The number of times an upload attempt was made for this file.")
     # )
-
 
     class Meta:
         verbose_name = _("Cloud File")
