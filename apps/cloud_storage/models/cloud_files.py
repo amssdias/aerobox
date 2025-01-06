@@ -47,12 +47,6 @@ class CloudFile(Timestampable):
         null=True,
         help_text=_("A checksum or hash (e.g., MD5, SHA256) to verify the integrity of the uploaded file.")
     )
-    file_url = models.URLField(
-        max_length=1024, 
-        blank=True, 
-        null=True,
-        help_text=_("The URL to access the file in S3. This is generated after the file is uploaded.")
-    )
     error_message = models.TextField(
         blank=True, 
         null=True,
@@ -89,3 +83,7 @@ class CloudFile(Timestampable):
     def get_relative_path(self):
         """Returns only the part of the path that should be exposed to the user."""
         return "/".join(self.path.split("/")[2:])  # Removes 'user/user_id/'
+
+    @property
+    def file_url(self):
+        return f"{settings.AWS_S3_BASE_URL}/{self.path}"
