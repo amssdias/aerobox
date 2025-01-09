@@ -38,6 +38,10 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
     def list(self, request):
         return super(CloudStorageViewSet, self).list(request)
 
+    @extend_schema(description="Retrieve a file info by ID")
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
+
     def get_serializer_context(self):
         context = super().get_serializer_context()
 
@@ -45,7 +49,10 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
         context["is_detail"] = self.action == "retrieve"
         return context
 
-    @extend_schema(responses={200: RESPONSE_SCHEMA_GET_PRESIGNED_URL})
+    @extend_schema(
+        responses={200: RESPONSE_SCHEMA_GET_PRESIGNED_URL},
+        description="Save file info on DB and get a presigned URL to upload on cloud."
+    )
     @action(methods=["POST"], detail=False, url_path="get_s3_presigned_url", url_name="get_s3_presigned_url")
     def get_s3_presigned_url_to_upload(self, request):
         serializer = self.get_serializer(data=request.data, context={"request": request})
