@@ -3,6 +3,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from apps.cloud_storage.constants.cloud_files import PENDING, SUCCESS, FAILED
+from apps.cloud_storage.models.managers.cloud_file import CloudFileManager
 from config.models.soft_delete import SoftDeleteModel
 from config.models.timestampable import Timestampable
 
@@ -53,6 +54,10 @@ class CloudFile(Timestampable, SoftDeleteModel):
         null=True,
         help_text=_("Additional metadata related to the file, stored as a JSON object.")
     )
+
+    objects = models.Manager()
+    active = CloudFileManager()
+
     # upload_attempts = models.PositiveIntegerField(
     #     default=0,
     #     help_text=_("The number of times an upload attempt was made for this file.")

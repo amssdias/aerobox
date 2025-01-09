@@ -18,5 +18,6 @@ class CloudFilesAdmin(admin.ModelAdmin):
         "size",
         "created_at",
         "updated_at",
+        "deleted_at",
     )
     raw_id_fields = ("user",)
