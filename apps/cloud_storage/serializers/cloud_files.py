@@ -36,17 +36,18 @@ class CloudFilesSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 _("The file name cannot be empty or consist only of whitespace.")
             )
-        return value
+        return value.lower()
 
     def validate_path(self, value):
         """
         Validates the file path:
         - Allows an empty string `""` for the root path.
         - Ensures only forward slashes `/`, no leading/trailing slashes, and no consecutive slashes.
+        - Rejects paths that contain dots (`.`) to prevent incorrect file names.
         """
         user = self.context["request"].user
 
-        folder_path = value.strip()
+        folder_path = value.strip().lower()
 
         # Get file name from request data
         file_name = self.initial_data.get("file_name")
@@ -72,6 +73,11 @@ class CloudFilesSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     _("The file path cannot contain consecutive slashes.")
                 )
+
+            # Reject paths that contain dots (`.`), ensuring only file names can have extensions
+            if "." in folder_path:
+                raise serializers.ValidationError(
+                    _("The file path cannot contain dots (`.`). Dots are only allowed in file names for extensions."))
 
             # Construct the full path
             full_path = build_s3_path(user.id, f"{folder_path}/{file_name}")
