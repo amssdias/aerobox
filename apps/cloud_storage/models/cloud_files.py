@@ -3,10 +3,11 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from apps.cloud_storage.constants.cloud_files import PENDING, SUCCESS, FAILED
+from config.models.soft_delete import SoftDeleteModel
 from config.models.timestampable import Timestampable
 
 
-class CloudFile(Timestampable):
+class CloudFile(Timestampable, SoftDeleteModel):
     STATUS = (
         (PENDING, _("Pending")),
         (SUCCESS, _("Success")),
