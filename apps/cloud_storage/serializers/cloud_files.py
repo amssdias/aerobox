@@ -1,14 +1,16 @@
 import mimetypes
+import re
+
+from django.utils.translation import gettext_lazy as _
+from rest_framework import serializers
 
 from apps.cloud_storage.constants.cloud_files import USER_PREFIX
 from apps.cloud_storage.models import CloudFile
-from rest_framework import serializers
-from django.utils.translation import gettext_lazy as _
 
 
 class CloudFilesSerializer(serializers.ModelSerializer):
     relative_path = serializers.SerializerMethodField()
-    path = serializers.CharField(write_only=True)
+    path = serializers.CharField(write_only=True, allow_blank=True)
 
     class Meta:
         model = CloudFile
@@ -26,32 +28,58 @@ class CloudFilesSerializer(serializers.ModelSerializer):
         Ensure the file_name does not start with unsafe characters like '/'.
         """
         if "/" in value or "\\" in value:
-            raise serializers.ValidationError(_("The file name cannot contain '/' or '\\'."))
+            raise serializers.ValidationError(
+                _("The file name cannot contain '/' or '\\'.")
+            )
         if not value.strip():
-            raise serializers.ValidationError(_("The file name cannot be empty or consist only of whitespace."))
+            raise serializers.ValidationError(
+                _("The file name cannot be empty or consist only of whitespace.")
+            )
         return value
 
     def validate_path(self, value):
         """
-        Construct the full path dynamically during validation.
+        Validates the file path:
+        - Allows an empty string `""` for the root path.
+        - Ensures only forward slashes `/`, no leading/trailing slashes, and no consecutive slashes.
         """
         user = self.context["request"].user
 
-        # Base prefix
+        # Base prefix for user
         user_prefix = USER_PREFIX.format(user.id)
-        folder_path = value.strip() if value else ""
 
-        if folder_path.startswith("/") or folder_path.startswith("\\"):
-            raise serializers.ValidationError(_("The file path cannot start with '/' or '\\'."))
-        if folder_path.endswith("/") or folder_path.endswith("\\"):
-            raise serializers.ValidationError(_("The file path cannot end with '/' or '\\'."))
+        folder_path = value.strip()
 
+        # Get file name from request data
         file_name = self.initial_data.get("file_name")
 
-        if folder_path:
-            full_path = f"{user_prefix}{folder_path}/{file_name}".strip("/")
+        # Allow empty path (interpreted as root)
+        if not folder_path:
+            full_path = f"{user_prefix}/{file_name}".strip("/")
         else:
-            full_path = f"{user_prefix}{file_name}".strip("/")
+            # Reject paths that contain backslashes `\`
+            if "\\" in folder_path:
+                raise serializers.ValidationError(
+                    _("The file path must use '/' instead of '\\'.")
+                )
+
+            # Ensure the path does NOT start or end with a slash
+            if folder_path.startswith("/") or folder_path.endswith("/"):
+                raise serializers.ValidationError(
+                    _("The file path cannot start or end with '/'.")
+                )
+
+            # Ensure the path does NOT contain consecutive slashes (e.g., "folder1////folder2")
+            if re.search(r"//+", folder_path):
+                raise serializers.ValidationError(
+                    _("The file path cannot contain consecutive slashes.")
+                )
+
+            # Construct the full path
+            full_path = f"{user_prefix}/{folder_path}/{file_name}".strip("/")
+
+        if CloudFile.objects.filter(path=full_path).exists():
+            raise serializers.ValidationError("A file with this name already exists.")
 
         return full_path
 
