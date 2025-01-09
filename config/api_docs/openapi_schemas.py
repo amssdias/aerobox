@@ -7,6 +7,5 @@ RESPONSE_SCHEMA_GET_PRESIGNED_URL = {
         "relative_path": {"type": "string", "example": "somefolder/test.png"},
         "size": {"type": "integer", "format": "bytes", "example": 204800},
         "content_type": {"type": "string", "example": "image/jpeg"},
-        "checksum": {"type": "string", "example": "123456abcdef"},
     },
 }

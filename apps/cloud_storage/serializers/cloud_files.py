@@ -18,7 +18,6 @@ class CloudFilesSerializer(serializers.ModelSerializer):
             "path",
             "size",
             "content_type",
-            "checksum",
             "relative_path",
         )
 

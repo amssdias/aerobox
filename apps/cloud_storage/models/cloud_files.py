@@ -42,12 +42,6 @@ class CloudFile(Timestampable):
         default=PENDING,
         help_text=_("The current status of the file upload process.")
     )
-    checksum = models.CharField(
-        max_length=64, 
-        blank=True, 
-        null=True,
-        help_text=_("A checksum or hash (e.g., MD5, SHA256) to verify the integrity of the uploaded file.")
-    )
     error_message = models.TextField(
         blank=True, 
         null=True,
