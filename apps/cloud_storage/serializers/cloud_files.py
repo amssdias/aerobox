@@ -12,6 +12,7 @@ from apps.cloud_storage.utils.path_utils import build_s3_path
 class CloudFilesSerializer(serializers.ModelSerializer):
     relative_path = serializers.SerializerMethodField()
     path = serializers.CharField(write_only=True, allow_blank=True)
+    url = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = CloudFile
@@ -22,7 +23,16 @@ class CloudFilesSerializer(serializers.ModelSerializer):
             "size",
             "content_type",
             "relative_path",
+            "url",
         )
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+
+        if not self.context.get("is_detail", False):
+            data.pop("url", None)
+
+        return data
 
     def validate_file_name(self, value):
         """
@@ -110,6 +120,16 @@ class CloudFilesSerializer(serializers.ModelSerializer):
 
     def get_relative_path(self, obj):
         return obj.get_relative_path()
+
+    def get_url(self, obj):
+        """Only add extra_info when retrieving a single object"""
+        if self.context.get("is_detail", False):
+            s3_service = S3Service()
+            download_url = s3_service.generate_presigned_download_url(
+                object_name=self.instance.path
+            )
+            return download_url
+        return None
 
 
 class CloudFileUpdateSerializer(serializers.ModelSerializer):

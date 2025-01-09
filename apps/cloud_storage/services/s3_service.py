@@ -34,3 +34,26 @@ class S3Service:
         except (NoCredentialsError, ClientError) as e:
             print(f"Error generating presigned URL: {e}")
             return None
+
+    def generate_presigned_download_url(self, object_name, bucket_name=settings.AWS_STORAGE_BUCKET_NAME, expiration=3600):
+        """
+        Generates a presigned URL for downloading a file from S3.
+
+        :param bucket_name: Name of the S3 bucket
+        :param object_name: S3 key (file path) in the bucket
+        :param expiration: Time in seconds for the presigned URL to remain valid
+        :return: Presigned URL as a string or None if there is an error
+        """
+        try:
+            presigned_url = self.s3_client.generate_presigned_url(
+                ClientMethod="get_object",
+                Params={
+                    "Bucket": bucket_name,
+                    "Key": object_name,
+                },
+                ExpiresIn=expiration,
+            )
+            return presigned_url
+        except (NoCredentialsError, ClientError) as e:
+            print(f"Error generating presigned download URL: {e}")
+            return None

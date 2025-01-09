@@ -15,7 +15,6 @@ from config.api_docs.openapi_schemas import RESPONSE_SCHEMA_GET_PRESIGNED_URL
 
 @extend_schema_view(
     list=extend_schema(exclude=True),
-    retrieve=extend_schema(exclude=True),
     create=extend_schema(exclude=True),
     update=extend_schema(exclude=True),
     destroy=extend_schema(exclude=True),
@@ -38,6 +37,13 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
 
     def list(self, request):
         return super(CloudStorageViewSet, self).list(request)
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+
+        # Differentiate list vs. detail views
+        context["is_detail"] = self.action == "retrieve"
+        return context
 
     @extend_schema(responses={200: RESPONSE_SCHEMA_GET_PRESIGNED_URL})
     @action(methods=["POST"], detail=False, url_path="get_s3_presigned_url", url_name="get_s3_presigned_url")
