@@ -4,8 +4,9 @@ import re
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
-from apps.cloud_storage.constants.cloud_files import USER_PREFIX
 from apps.cloud_storage.models import CloudFile
+from apps.cloud_storage.services import S3Service
+from apps.cloud_storage.utils.path_utils import build_s3_path
 
 
 class CloudFilesSerializer(serializers.ModelSerializer):
@@ -45,9 +46,6 @@ class CloudFilesSerializer(serializers.ModelSerializer):
         """
         user = self.context["request"].user
 
-        # Base prefix for user
-        user_prefix = USER_PREFIX.format(user.id)
-
         folder_path = value.strip()
 
         # Get file name from request data
@@ -55,7 +53,7 @@ class CloudFilesSerializer(serializers.ModelSerializer):
 
         # Allow empty path (interpreted as root)
         if not folder_path:
-            full_path = f"{user_prefix}/{file_name}".strip("/")
+            full_path = build_s3_path(user.id, file_name)
         else:
             # Reject paths that contain backslashes `\`
             if "\\" in folder_path:
@@ -76,7 +74,7 @@ class CloudFilesSerializer(serializers.ModelSerializer):
                 )
 
             # Construct the full path
-            full_path = f"{user_prefix}/{folder_path}/{file_name}".strip("/")
+            full_path = build_s3_path(user.id, f"{folder_path}/{file_name}")
 
         if CloudFile.objects.filter(path=full_path).exists():
             raise serializers.ValidationError("A file with this name already exists.")
