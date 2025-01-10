@@ -24,6 +24,7 @@ class CloudFilesSerializer(serializers.ModelSerializer):
             "content_type",
             "relative_path",
             "url",
+            "created_at",
         )
 
     def to_representation(self, instance):

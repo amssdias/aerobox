@@ -14,7 +14,6 @@ from config.api_docs.openapi_schemas import RESPONSE_SCHEMA_GET_PRESIGNED_URL
 
 
 @extend_schema_view(
-    list=extend_schema(exclude=True),
     create=extend_schema(exclude=True),
     update=extend_schema(exclude=True),
     destroy=extend_schema(exclude=True),
