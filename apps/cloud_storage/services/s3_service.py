@@ -10,7 +10,12 @@ class S3Service:
     def __init__(self):
         self.s3_client = AWSClient("s3").get_client()
 
-    def generate_presigned_upload_url(self, object_name, bucket_name=settings.AWS_STORAGE_BUCKET_NAME, expiration=3600):
+    def generate_presigned_upload_url(
+            self,
+            object_name,
+            bucket_name=settings.AWS_STORAGE_BUCKET_NAME,
+            expiration=settings.AWS_PRESIGNED_EXPIRATION_TIME
+    ):
         """
         Generates a presigned URL for uploading a file to S3.
 
