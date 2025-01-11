@@ -1,3 +1,4 @@
+import logging
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import viewsets, status
 from rest_framework.authentication import TokenAuthentication
@@ -5,7 +6,9 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST
+from django.utils.translation import gettext_lazy as _
 
+from apps.cloud_storage.exceptions import FileUploadError
 from apps.cloud_storage.models import CloudFile
 from apps.cloud_storage.serializers import CloudFilesSerializer
 from apps.cloud_storage.serializers.cloud_files import CloudFileUpdateSerializer
@@ -13,8 +16,9 @@ from apps.cloud_storage.services import S3Service
 from config.api_docs.openapi_schemas import RESPONSE_SCHEMA_GET_PRESIGNED_URL
 
 
+logger = logging.getLogger(__name__)
+
 @extend_schema_view(
-    create=extend_schema(exclude=True),
     update=extend_schema(exclude=True),
     destroy=extend_schema(exclude=True),
 )
@@ -33,6 +37,34 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
         if self.action == "partial_update":
             return CloudFileUpdateSerializer
         return CloudFilesSerializer
+
+    @extend_schema(
+        responses={200: RESPONSE_SCHEMA_GET_PRESIGNED_URL},
+        description="Save file info on DB and get a presigned URL to upload on cloud."
+    )
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        # Generate a presigned URL for uploading
+        s3_service = S3Service()
+        file_path = serializer.validated_data.get("path")
+
+        try:
+            presigned_url = s3_service.generate_presigned_upload_url(object_name=file_path)
+            if not presigned_url:
+                raise ValueError(_("Received empty presigned URL"))
+        except Exception as e:
+            logger.error(f"File upload error for path {file_path}: {str(e)}", exc_info=True)
+            raise FileUploadError()
+
+        # Save file metadata in DB
+        self.perform_create(serializer)
+
+        return Response(
+            {"presigned-url": presigned_url, **serializer.data},
+            status=status.HTTP_201_CREATED
+        )
 
     def list(self, request):
         return super(CloudStorageViewSet, self).list(request)
