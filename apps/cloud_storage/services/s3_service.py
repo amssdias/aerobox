@@ -1,9 +1,12 @@
+import logging
 import mimetypes
 
 from botocore.exceptions import NoCredentialsError, ClientError
 from django.conf import settings
 
 from .aws_client import AWSClient
+
+logger = logging.getLogger(__name__)
 
 
 class S3Service:
@@ -67,12 +70,12 @@ class S3Service:
         except ClientError as e:
 
             if e.response["Error"]["Code"] == "404":
-                print(f"File '{object_name}' not found in S3 bucket '{bucket_name}'.")
+                logger.error(f"File '{object_name}' not found in S3 bucket '{bucket_name}'.")
                 return None
             else:
-                print(f"Error generating presigned download URL: {e}")
+                logger.error(f"Error generating presigned download URL: {e}")
                 return None
 
         except NoCredentialsError:
-            print("AWS credentials not found.")
+            logger.critical("AWS credentials not found.")
             return None
