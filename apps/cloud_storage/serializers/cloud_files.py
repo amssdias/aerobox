@@ -1,3 +1,4 @@
+import logging
 import mimetypes
 import re
 
@@ -7,6 +8,8 @@ from rest_framework import serializers
 from apps.cloud_storage.models import CloudFile
 from apps.cloud_storage.services import S3Service
 from apps.cloud_storage.utils.path_utils import build_s3_path
+
+logger = logging.getLogger(__name__)
 
 
 class CloudFilesSerializer(serializers.ModelSerializer):
@@ -88,7 +91,10 @@ class CloudFilesSerializer(serializers.ModelSerializer):
             # Reject paths that contain dots (`.`), ensuring only file names can have extensions
             if "." in folder_path:
                 raise serializers.ValidationError(
-                    _("The file path cannot contain dots (`.`). Dots are only allowed in file names for extensions."))
+                    _(
+                        "The file path cannot contain dots (`.`). Dots are only allowed in file names for extensions."
+                    )
+                )
 
             # Construct the full path
             full_path = build_s3_path(user.id, f"{folder_path}/{file_name}")
@@ -126,10 +132,28 @@ class CloudFilesSerializer(serializers.ModelSerializer):
         """Only add extra_info when retrieving a single object"""
         if self.context.get("is_detail", False):
             s3_service = S3Service()
-            download_url = s3_service.generate_presigned_download_url(
-                object_name=self.instance.path
-            )
-            return download_url
+
+            try:
+                download_url = s3_service.generate_presigned_download_url(
+                    object_name=obj.path
+                )
+                if not download_url:
+                    raise serializers.ValidationError(
+                        _(
+                            "Unable to generate download URL. The file may not exist or there was an error with the storage service."
+                        )
+                    )
+                return download_url
+
+            except Exception as e:
+                logger.error(
+                    f"Error generating presigned URL for file '{obj.path}': {str(e)}",
+                    exc_info=True,
+                )
+                raise serializers.ValidationError(
+                    _("Failed to retrieve file. Please try again later.")
+                )
+
         return None
 
 
