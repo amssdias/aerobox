@@ -4,6 +4,7 @@ import re
 
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
+from rest_framework.exceptions import NotFound
 
 from apps.cloud_storage.models import CloudFile
 from apps.cloud_storage.services import S3Service
@@ -137,13 +138,6 @@ class CloudFilesSerializer(serializers.ModelSerializer):
                 download_url = s3_service.generate_presigned_download_url(
                     object_name=obj.path
                 )
-                if not download_url:
-                    raise serializers.ValidationError(
-                        _(
-                            "Unable to generate download URL. The file may not exist or there was an error with the storage service."
-                        )
-                    )
-                return download_url
 
             except Exception as e:
                 logger.error(
@@ -153,6 +147,14 @@ class CloudFilesSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     _("Failed to retrieve file. Please try again later.")
                 )
+
+            if not download_url:
+                raise NotFound(
+                    _(
+                        "Unable to generate download URL. The file may not exist or there was an error with the storage service."
+                    )
+                )
+            return download_url
 
         return None
 
