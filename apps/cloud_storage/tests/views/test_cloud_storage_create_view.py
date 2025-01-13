@@ -1,4 +1,3 @@
-import logging
 import unittest
 from unittest.mock import patch
 
@@ -34,7 +33,7 @@ class CloudStoragePresignedURLTests(APITestCase):
         "generate_presigned_upload_url",
         return_value="https://s3-presigned-url.com",
     )
-    def test_generate_presigned_url_success(self, mock_s3):
+    def test_create_file_and_presigned_url_success(self, mock_s3):
         """Test generating a presigned URL successfully."""
 
         response = self.client.post(self.url, self.data, format="json")
@@ -53,18 +52,18 @@ class CloudStoragePresignedURLTests(APITestCase):
         )
         mock_s3.assert_called_once_with(object_name=path)
 
-    def test_generate_presigned_url_requires_authentication(self):
+    def test_create_file_and_presigned_url_requires_authentication(self):
         self.client.logout()
         response = self.client.post(self.url, self.data, format="json")
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    def test_generate_presigned_url_missing_path(self):
+    def test_create_file_and_presigned_url_missing_path(self):
         """Test that missing 'path' field returns a 400 error."""
         response = self.client.post(self.url, {}, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("path", response.data)
 
-    def test_generate_presigned_url_invalid_path(self):
+    def test_create_file_and_presigned_url_invalid_path(self):
         self.data["path"] = "/"
         response = self.client.post(self.url, self.data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -82,7 +81,7 @@ class CloudStoragePresignedURLTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     @patch.object(S3Service, "generate_presigned_upload_url", return_value=None)
-    def test_generate_presigned_url_s3_error(self, mock_s3):
+    def test_create_file_and_presigned_url_s3_error(self, mock_s3):
         response = self.client.post(self.url, self.data, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -95,7 +94,7 @@ class CloudStoragePresignedURLTests(APITestCase):
         "generate_presigned_upload_url",
         return_value="https://s3-presigned-url.com",
     )
-    def test_generate_presigned_url_creates_database_entry(self, mock_s3):
+    def test_create_file_and_presigned_url_creates_database_entry(self, mock_s3):
         response = self.client.post(self.url, self.data, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -106,7 +105,7 @@ class CloudStoragePresignedURLTests(APITestCase):
         )
         self.assertTrue(CloudFile.objects.filter(user=self.user, path=path).exists())
 
-    def test_generate_presigned_url_invalid_file_extension(self):
+    def test_create_file_and_presigned_url_invalid_file_extension(self):
         self.data["path"] = "uploads/malware.exe"
         response = self.client.post(self.url, self.data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -120,7 +119,7 @@ class CloudStoragePresignedURLTests(APITestCase):
         "generate_presigned_upload_url",
         return_value="https://s3-presigned-url.com",
     )
-    def test_generate_presigned_url_with_special_characters(self, mock_s3):
+    def test_create_file_and_presigned_url_with_special_characters(self, mock_s3):
         self.data["path"] = "uploads/special-@#$.png"
         response = self.client.post(self.url, self.data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -130,7 +129,7 @@ class CloudStoragePresignedURLTests(APITestCase):
             response.data.get("path"),
         )
 
-    def test_generate_presigned_url_with_long_filename(self):
+    def test_create_file_and_presigned_url_with_long_filename(self):
         self.data["file_name"] = "file" + ("a" * 255) + ".jpg"
         response = self.client.post(self.url, self.data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -141,7 +140,7 @@ class CloudStoragePresignedURLTests(APITestCase):
         "generate_presigned_upload_url",
         return_value="https://s3-presigned-url.com",
     )
-    def test_generate_presigned_url_uppercase_path(self, mock_s3):
+    def test_create_file_and_presigned_url_uppercase_path(self, mock_s3):
         self.data["path"] = "uploads/FOLDER1"
         response = self.client.post(self.url, self.data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -160,23 +159,23 @@ class CloudStoragePresignedURLTests(APITestCase):
         "generate_presigned_upload_url",
         return_value="https://s3-presigned-url.com",
     )
-    def test_generate_presigned_url_forbidden_file_type(self, mock_s3):
+    def test_create_file_and_presigned_url_forbidden_file_type(self, mock_s3):
         """Test rejecting an upload of a forbidden file type (e.g., `.bat`)."""
         data = {"path": "uploads/malicious.bat"}
         response = self.client.post(self.url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_generate_presigned_url_no_json_body(self):
+    def test_create_file_and_presigned_url_no_json_body(self):
         response = self.client.post(self.url, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_generate_presigned_url_invalid_json_structure(self):
+    def test_create_file_and_presigned_url_invalid_json_structure(self):
         data = {"invalid_key": "uploads/test.txt"}
         response = self.client.post(self.url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     @patch.object(S3Service, "generate_presigned_upload_url", return_value=None)
-    def test_generate_presigned_url_s3_connection_error(self, mock_s3):
+    def test_create_file_and_presigned_url_s3_connection_error(self, mock_s3):
         response = self.client.post(self.url, self.data, format="json")
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -188,7 +187,7 @@ class CloudStoragePresignedURLTests(APITestCase):
         "generate_presigned_upload_url",
         return_value="https://s3-presigned-url.com",
     )
-    def test_generate_presigned_url_with_subdirectories(self, mock_s3):
+    def test_create_file_and_presigned_url_with_subdirectories(self, mock_s3):
         self.data["path"] = "uploads/folder1/folder2"
         response = self.client.post(self.url, self.data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -201,7 +200,7 @@ class CloudStoragePresignedURLTests(APITestCase):
         "generate_presigned_upload_url",
         return_value="https://s3-presigned-url.com",
     )
-    def test_generate_presigned_url_special_unicode_characters(self, mock_s3):
+    def test_create_file_and_presigned_url_special_unicode_characters(self, mock_s3):
         data = {"path": "uploads/测试文件📁"}
         response = self.client.post(self.url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
