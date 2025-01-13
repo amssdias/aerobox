@@ -21,7 +21,6 @@ logger = logging.getLogger("aerobox")
 
 @extend_schema_view(
     update=extend_schema(exclude=True),
-    destroy=extend_schema(exclude=True),
     get_s3_presigned_url_to_upload=extend_schema(exclude=True),
 )
 @extend_schema(tags=["API - Cloud Storage"])
