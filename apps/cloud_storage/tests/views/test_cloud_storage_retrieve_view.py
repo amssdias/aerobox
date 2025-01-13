@@ -5,6 +5,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 from rest_framework.authtoken.models import Token
 from django.urls import reverse
+from django.utils import timezone
 
 from apps.cloud_storage.factories.cloud_file_factory import CloudFileFactory
 from apps.cloud_storage.services import S3Service
@@ -54,7 +55,8 @@ class CloudStorageRetrieveTests(APITestCase):
     @patch("apps.cloud_storage.services.s3_service.logger", return_value=logging.getLogger("null"))
     def test_retrieve_non_existent_file(self, mock_logger):
         """Test retrieving a non-existent file should return 404."""
-        response = self.client.get(self.url)
+        url = reverse("storage-detail", kwargs={"pk": 1000})
+        response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_retrieve_without_authentication(self):
@@ -75,4 +77,31 @@ class CloudStorageRetrieveTests(APITestCase):
         response = self.client.get(url)
 
         # Retrieves a 404 because the logged user don´t have that file ID associated to him
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    @patch("apps.cloud_storage.services.S3Service.generate_presigned_download_url")
+    def test_retrieve_file_with_network_failure(self, mock_generate_url):
+        """Test retrieving a file when there's a network issue with S3."""
+        mock_generate_url.side_effect = Exception("Network timeout")
+
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            str(response.data[0]),
+            "Failed to retrieve file. Please try again later."
+        )
+
+    def test_retrieve_deleted_file(self):
+        """Test retrieving a file that has been soft-deleted should return 404."""
+        path = build_s3_path(
+            user_id=self.user.id,
+            file_name="example.txt",
+        )
+        f = CloudFileFactory(
+            user=self.user,
+            path=path,
+            deleted_at=timezone.now()
+        )
+        url = reverse("storage-detail", kwargs={"pk": f.id})
+        response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
