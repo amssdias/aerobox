@@ -52,8 +52,7 @@ class CloudStorageRetrieveTests(APITestCase):
             "Unable to generate download URL. The file may not exist or there was an error with the storage service."
         )
 
-    @patch("apps.cloud_storage.services.s3_service.logger", return_value=logging.getLogger("null"))
-    def test_retrieve_non_existent_file(self, mock_logger):
+    def test_retrieve_non_existent_file(self):
         """Test retrieving a non-existent file should return 404."""
         url = reverse("storage-detail", kwargs={"pk": 1000})
         response = self.client.get(url)

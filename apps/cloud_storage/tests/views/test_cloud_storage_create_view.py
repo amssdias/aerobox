@@ -82,11 +82,7 @@ class CloudStoragePresignedURLTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     @patch.object(S3Service, "generate_presigned_upload_url", return_value=None)
-    @patch(
-        "apps.cloud_storage.views.cloud_storage.logger",
-        return_value=logging.getLogger("null"),
-    )
-    def test_generate_presigned_url_s3_error(self, mock_logger, mock_s3):
+    def test_generate_presigned_url_s3_error(self, mock_s3):
         response = self.client.post(self.url, self.data, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -180,11 +176,7 @@ class CloudStoragePresignedURLTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     @patch.object(S3Service, "generate_presigned_upload_url", return_value=None)
-    @patch(
-        "apps.cloud_storage.views.cloud_storage.logger",
-        return_value=logging.getLogger("null"),
-    )
-    def test_generate_presigned_url_s3_connection_error(self, mock_s3, mock_logger):
+    def test_generate_presigned_url_s3_connection_error(self, mock_s3):
         response = self.client.post(self.url, self.data, format="json")
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
