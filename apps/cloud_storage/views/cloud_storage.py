@@ -1,5 +1,6 @@
 import logging
 
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import viewsets, status
@@ -28,7 +29,7 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
     serializer_class = CloudFilesSerializer
-    queryset = CloudFile.active.all()
+    queryset = CloudFile.active.all().order_by("id")
 
     def get_queryset(self):
         queryset = self.queryset.filter(user=self.request.user)
@@ -73,6 +74,13 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
     @extend_schema(description="Retrieve a file info by ID")
     def retrieve(self, request, *args, **kwargs):
         return super().retrieve(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        """Soft delete the file by setting 'deleted_at' instead of deleting it."""
+        instance = self.get_object()
+        instance.deleted_at = timezone.now()
+        instance.save(update_fields=["deleted_at"])
+        return Response({}, status=status.HTTP_204_NO_CONTENT)
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
