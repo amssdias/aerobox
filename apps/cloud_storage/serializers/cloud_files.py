@@ -10,7 +10,7 @@ from apps.cloud_storage.models import CloudFile
 from apps.cloud_storage.services import S3Service
 from apps.cloud_storage.utils.path_utils import build_s3_path
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("aerobox")
 
 
 class CloudFilesSerializer(serializers.ModelSerializer):

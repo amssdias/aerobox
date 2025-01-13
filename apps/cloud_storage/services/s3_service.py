@@ -6,7 +6,7 @@ from django.conf import settings
 
 from .aws_client import AWSClient
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("aerobox")
 
 
 class S3Service:

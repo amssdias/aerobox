@@ -16,7 +16,7 @@ from apps.cloud_storage.serializers.cloud_files import CloudFileUpdateSerializer
 from apps.cloud_storage.services import S3Service
 from config.api_docs.openapi_schemas import RESPONSE_SCHEMA_GET_PRESIGNED_URL
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("aerobox")
 
 @extend_schema_view(
     update=extend_schema(exclude=True),
