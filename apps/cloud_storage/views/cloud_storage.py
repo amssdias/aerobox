@@ -33,7 +33,7 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = self.queryset.filter(user=self.request.user)
 
-        if self.action == "rename_file":
+        if self.action == "update":
             queryset = queryset.filter(status=SUCCESS)
         return queryset
 

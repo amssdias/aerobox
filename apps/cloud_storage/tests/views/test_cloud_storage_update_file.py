@@ -12,7 +12,7 @@ from apps.cloud_storage.utils.path_utils import build_s3_path
 from apps.users.factories.user_factory import UserFactory
 
 
-class RenameFileIntegrationTests(APITestCase):
+class UpdateFileIntegrationTests(APITestCase):
 
     @classmethod
     def setUpTestData(cls):
@@ -32,7 +32,7 @@ class RenameFileIntegrationTests(APITestCase):
         )
 
         # URL for renaming
-        cls.url = reverse("storage-rename-file", kwargs={"pk": cls.file.pk})
+        cls.url = reverse("storage-detail", kwargs={"pk": cls.file.pk})
 
     def setUp(self):
         self.client.force_authenticate(user=self.user)
@@ -121,7 +121,7 @@ class RenameFileIntegrationTests(APITestCase):
         )
 
     def test_cannot_rename_non_existent_file(self):
-        non_existent_url = reverse("storage-rename-file", kwargs={"pk": 999})
+        non_existent_url = reverse("storage-detail", kwargs={"pk": 999})
         response = self.client.put(
             non_existent_url, {"file_name": "new_name.txt"}, format="json"
         )
@@ -155,7 +155,7 @@ class RenameFileIntegrationTests(APITestCase):
             path=path,
             status=FAILED,
         )
-        url = reverse("storage-rename-file", kwargs={"pk": file.pk})
+        url = reverse("storage-detail", kwargs={"pk": file.pk})
         response = self.client.put(url, {"file_name": "fixed_name"}, format="json")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
@@ -170,7 +170,7 @@ class RenameFileIntegrationTests(APITestCase):
             path=path,
             status=PENDING,
         )
-        url = reverse("storage-rename-file", kwargs={"pk": file.pk})
+        url = reverse("storage-detail", kwargs={"pk": file.pk})
         response = self.client.put(url, {"file_name": "fixed_name"}, format="json")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
