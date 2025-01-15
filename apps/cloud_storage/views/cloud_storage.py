@@ -20,9 +20,7 @@ from config.api_docs.openapi_schemas import RESPONSE_SCHEMA_GET_PRESIGNED_URL
 
 logger = logging.getLogger("aerobox")
 
-@extend_schema_view(
-    update=extend_schema(exclude=True),
-)
+
 @extend_schema(tags=["API - Cloud Storage"])
 class CloudStorageViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]
