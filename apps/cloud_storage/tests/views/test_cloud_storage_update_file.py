@@ -29,6 +29,7 @@ class UpdateFileIntegrationTests(APITestCase):
             file_name="file1.txt",
             path=cls.path_1,
             status=SUCCESS,
+            size=999,
         )
 
         # URL for renaming
@@ -213,3 +214,19 @@ class UpdateFileIntegrationTests(APITestCase):
         response = self.client.put(self.url, {}, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("file_name", response.data)
+
+    @patch.object(S3Service, "rename_file", return_value=True)
+    def test_update_path_fails(self, mock_s3_rename):
+        """Ensure updating the path is not allowed."""
+        response = self.client.put(self.url, {"file_name": "new_name", "path": "docs/wrongpath"}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(self.file.path, self.path_1)
+
+    @patch.object(S3Service, "rename_file", return_value=True)
+    def test_update_size_fails(self, mock_s3_rename):
+        """Ensure updating the size is not allowed."""
+        response = self.client.put(self.url, {"file_name": "new_name", "size": 123}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(self.file.size, 999)
