@@ -19,7 +19,12 @@ from config.api_docs.custom_extensions import api_users_tag
 
 @api_users_tag()
 class CustomPasswordResetView(GenericAPIView):
-    """API View to send a password reset link via email."""
+    """
+    Sends a password reset link to the user's email.
+
+    The link includes a token that is valid for 1 hour. Accepts an email
+    in the request body and, if the user exists, emails the reset link.
+    """
 
     serializer_class = PasswordResetRequestSerializer
 
