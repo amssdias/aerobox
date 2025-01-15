@@ -163,3 +163,62 @@ class CloudFileUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = CloudFile
         fields = ("status", "error_message")
+
+
+class RenameFileSerializer(serializers.ModelSerializer):
+    """Serializer for renaming a file."""
+    file_name = serializers.CharField(required=True, max_length=255,)
+    path = serializers.CharField(required=False, allow_blank=True)
+
+    class Meta:
+        model = CloudFile
+        fields = ("file_name", "path")
+
+    def validate_file_name(self, value):
+        """
+        Ensure the file_name does not start with unsafe characters like '/'.
+        """
+        if "/" in value or "\\" in value:
+            raise serializers.ValidationError(
+                _("The file name cannot contain '/' or '\\'.")
+            )
+        if "." in value:
+            raise serializers.ValidationError(
+                _("The file name cannot contain '.' or extensions.")
+            )
+
+        if self.instance.file_name.split(".")[0] == value:
+            raise serializers.ValidationError(
+                _("The new file name cannot be the same as the current file name.")
+            )
+
+        if not value.strip():
+            raise serializers.ValidationError(
+                _("The file name cannot be empty or consist only of whitespace.")
+            )
+        return value.lower()
+
+    def update(self, instance, validated_data):
+        """
+        Handles renaming the file in S3 and updating the database.
+        """
+
+        old_file_name = instance.file_name
+        old_path = instance.path
+        file_extension = old_file_name.split(".")[-1]
+        new_name = validated_data.get("file_name")
+        new_file_name = f"{new_name}.{file_extension}"
+
+        instance.file_name = new_file_name
+        instance.path = instance.path.replace(old_file_name, new_file_name)
+
+        s3_service = S3Service()
+
+        # Rename the file in S3
+        if not s3_service.rename_file(old_path, instance.path):
+            raise serializers.ValidationError({"error": "S3 rename operation failed."})
+
+        # Update database record
+        instance.save()
+
+        return instance

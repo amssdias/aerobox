@@ -10,10 +10,11 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST
 
+from apps.cloud_storage.constants.cloud_files import SUCCESS
 from apps.cloud_storage.exceptions import FileUploadError
 from apps.cloud_storage.models import CloudFile
 from apps.cloud_storage.serializers import CloudFilesSerializer
-from apps.cloud_storage.serializers.cloud_files import CloudFileUpdateSerializer
+from apps.cloud_storage.serializers.cloud_files import CloudFileUpdateSerializer, RenameFileSerializer
 from apps.cloud_storage.services import S3Service
 from config.api_docs.openapi_schemas import RESPONSE_SCHEMA_GET_PRESIGNED_URL
 
@@ -32,11 +33,16 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = self.queryset.filter(user=self.request.user)
+
+        if self.action == "rename_file":
+            queryset = queryset.filter(status=SUCCESS)
         return queryset
 
     def get_serializer_class(self):
         if self.action == "partial_update":
             return CloudFileUpdateSerializer
+        elif self.action == "rename_file":
+            return RenameFileSerializer
         return CloudFilesSerializer
 
     @extend_schema(
@@ -107,3 +113,18 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
 
         serializer.save()
         return Response(data={"presigned-url": presigned_url, **serializer.data}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=["PUT"], url_path="rename")
+    def rename_file(self, request, pk=None):
+        """
+        Rename a file in both the database and S3 storage.
+        """
+        cloud_file = self.get_object()
+
+        serializer = self.get_serializer(instance=cloud_file, data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer.save()
+
+        return Response({"message": f"File renamed to {serializer.instance.file_name}"}, status=status.HTTP_200_OK)
