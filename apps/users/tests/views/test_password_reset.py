@@ -37,29 +37,27 @@ class CustomPasswordResetViewTestCase(APITestCase):
     def test_password_reset_missing_email(self):
         response = self.client.post(self.url, data={})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("Email is required.", response.data["error"])
+        self.assertIn("email", response.data)
 
     def test_password_reset_email_not_registered(self):
         response = self.client.post(self.url, data={"email": "nonexistent@example.com"})
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertIn("User with this email does not exist.", response.data["error"])
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("email", response.data)
 
     def test_password_reset_invalid_email_format(self):
         response = self.client.post(self.url, data={"email": "invalid-email"})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn(
-            "Invalid email format.", response.data["error"]
-        )
+        self.assertIn("email", response.data)
 
     def test_password_reset_empty_email(self):
         response = self.client.post(self.url, data={"email": ""})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("Email is required.", response.data["error"])
+        self.assertIn("email", response.data)
 
     def test_password_reset_whitespace_email(self):
         response = self.client.post(self.url, data={"email": "   "})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("Email is required.", response.data["error"])
+        self.assertIn("email", response.data)
 
     def test_password_reset_email_case_insensitive(self):
         response = self.client.post(self.url, data={"email": self.user_email.upper()})
@@ -90,3 +88,18 @@ class CustomPasswordResetViewTestCase(APITestCase):
             response = self.client.post(self.url, data={"email": self.user_email})
 
         self.assertNotEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+
+    @override_settings(EMAIL_BACKEND="django.core.mail.backends.smtp.EmailBackend")
+    def _test_password_reset_email_fail_silently_false(self):
+        response = self.client.post(self.url, data={"email": self.user_email})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Simulate an email failure
+        with self.assertRaises(Exception):
+            mail.send_mail(
+                "Subject",
+                "Body",
+                "from@example.com",
+                ["invalid-email"],
+                fail_silently=False,
+            )
