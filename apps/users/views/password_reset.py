@@ -1,79 +1,62 @@
 from django.contrib.auth.models import User
-from django.contrib.auth.password_validation import ValidationError
 from django.contrib.auth.tokens import default_token_generator
+from django.conf import settings
 from django.core.mail import send_mail
-from django.core.validators import EmailValidator
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.translation import gettext_lazy as _
-from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
-from rest_framework.views import APIView
 
 from apps.users.serializers.password_reset_serializer import (
     PasswordResetConfirmSerializer,
+    PasswordResetRequestSerializer,
 )
 from config.api_docs.custom_extensions import api_users_tag
 
 
 @api_users_tag()
-@extend_schema(tags=["API - Users"])
-class CustomPasswordResetView(APIView):
-    """Sends a password reset link via email."""
+class CustomPasswordResetView(GenericAPIView):
+    """API View to send a password reset link via email."""
 
-    def post(self, request):
-        email = request.data.get("email", "").strip()
+    serializer_class = PasswordResetRequestSerializer
 
-        validation_error = self.validate_email(email)
-        if validation_error:
-            return Response(
-                {"error": validation_error["error"]}, status=validation_error["status"]
-            )
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-        try:
-            user = User.objects.get(email__iexact=email)
-            uid = urlsafe_base64_encode(force_bytes(user.pk))
-            token = default_token_generator.make_token(user)
-            reset_link = reverse(
-                "users:password_reset_confirm", kwargs={"uidb64": uid, "token": token}
-            )
+        email = serializer.validated_data["email"]
+        user = User.objects.get(email__iexact=email)
 
-            send_mail(
-                "Password Reset Request",
-                f"Use this link to reset your password: {reset_link}",
-                "noreply@example.com",
-                [user.email],
-                fail_silently=False,
-            )
-            return Response(
-                {"message": _("Password reset link sent.")}, status=status.HTTP_200_OK
-            )
-        except User.DoesNotExist:
-            return Response(
-                {"error": _("User with this email does not exist.")},
-                status=status.HTTP_404_NOT_FOUND,
-            )
+        self.send_password_reset_email(user)
+
+        return Response(
+            {"message": _("Password reset link sent.")},
+            status=status.HTTP_200_OK,
+        )
 
     @staticmethod
-    def validate_email(email):
-        if not email:
-            return {
-                "error": "Email is required.",
-                "status": status.HTTP_400_BAD_REQUEST,
-            }
+    def send_password_reset_email(user):
+        """Generates a password reset link and sends it to the user's email."""
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        token = default_token_generator.make_token(user)
+        reset_link = reverse(
+            "users:password_reset_confirm", kwargs={"uidb64": uid, "token": token}
+        )
+        frontend_domain = settings.FRONTEND_DOMAIN
+        full_reset_link = f"{frontend_domain}{reset_link}"
 
-        try:
-            EmailValidator()(email)
-        except ValidationError:
-            return {
-                "error": "Invalid email format.",
-                "status": status.HTTP_400_BAD_REQUEST,
-            }
-
-        return None
+        send_mail(
+            _("Password Reset Request"),
+            _("Use this link to reset your password: {link}").format(
+                link=full_reset_link
+            ),
+            "noreply@example.com",
+            [user.email],
+            fail_silently=False,
+        )
 
 
 @api_users_tag()
