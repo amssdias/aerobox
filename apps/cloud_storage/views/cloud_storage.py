@@ -22,7 +22,6 @@ logger = logging.getLogger("aerobox")
 
 @extend_schema_view(
     update=extend_schema(exclude=True),
-    get_s3_presigned_url_to_upload=extend_schema(exclude=True),
 )
 @extend_schema(tags=["API - Cloud Storage"])
 class CloudStorageViewSet(viewsets.ModelViewSet):
@@ -41,15 +40,17 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == "partial_update":
             return CloudFileUpdateSerializer
-        elif self.action == "rename_file":
+        elif self.action == "update":
             return RenameFileSerializer
         return CloudFilesSerializer
 
     @extend_schema(
         responses={200: RESPONSE_SCHEMA_GET_PRESIGNED_URL},
-        description="Save file info on DB and get a presigned URL to upload on cloud."
     )
     def create(self, request, *args, **kwargs):
+        """
+        Save file info on DB and get a presigned URL to upload on cloud.
+        """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -76,9 +77,25 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
     def list(self, request):
         return super(CloudStorageViewSet, self).list(request)
 
-    @extend_schema(description="Retrieve a file info by ID")
     def retrieve(self, request, *args, **kwargs):
+        """
+        Retrieve a file info by ID
+        """
         return super().retrieve(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        """
+        Rename a file in both the database and S3 storage.
+        """
+        cloud_file = self.get_object()
+
+        serializer = self.get_serializer(instance=cloud_file, data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer.save()
+
+        return Response({"message": f"File renamed to {serializer.instance.file_name}"}, status=status.HTTP_200_OK)
 
     def destroy(self, request, *args, **kwargs):
         """Soft delete the file by setting 'deleted_at' instead of deleting it."""
@@ -93,38 +110,3 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
         # Differentiate list vs. detail views
         context["is_detail"] = self.action == "retrieve"
         return context
-
-    @extend_schema(
-        responses={200: RESPONSE_SCHEMA_GET_PRESIGNED_URL},
-        description="Save file info on DB and get a presigned URL to upload on cloud."
-    )
-    @action(methods=["POST"], detail=False, url_path="get_s3_presigned_url", url_name="get_s3_presigned_url")
-    def get_s3_presigned_url_to_upload(self, request):
-        serializer = self.get_serializer(data=request.data, context={"request": request})
-        if not serializer.is_valid():
-            return Response(data=serializer.errors, status=HTTP_400_BAD_REQUEST)
-
-        s3_service = S3Service()
-
-        file_path = serializer.validated_data.get("path")
-        presigned_url = s3_service.generate_presigned_upload_url(
-            object_name=file_path
-        )
-
-        serializer.save()
-        return Response(data={"presigned-url": presigned_url, **serializer.data}, status=status.HTTP_200_OK)
-
-    @action(detail=True, methods=["PUT"], url_path="rename")
-    def rename_file(self, request, pk=None):
-        """
-        Rename a file in both the database and S3 storage.
-        """
-        cloud_file = self.get_object()
-
-        serializer = self.get_serializer(instance=cloud_file, data=request.data)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        serializer.save()
-
-        return Response({"message": f"File renamed to {serializer.instance.file_name}"}, status=status.HTTP_200_OK)
