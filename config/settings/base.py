@@ -53,6 +53,7 @@ MIDDLEWARE = [
     "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
+    "django.middleware.locale.LocaleMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -195,4 +196,21 @@ AWS_S3_REGION_NAME = os.environ.get("AWS_S3_REGION_NAME", None)
 AWS_S3_BASE_URL = f"https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com"
 
 AWS_PRESIGNED_EXPIRATION_TIME = 3600
+
+# Redis
+REDIS_PROTOCOL = os.getenv("REDIS_PROTOCOL", "rediss")
+REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", "")
+REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
+REDIS_PORT = os.getenv("REDIS_PORT", "6379")
+REDIS_URL = f"{REDIS_PROTOCOL}://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}"
+
+# Celery settings
+REDIS_DB_CELERY = os.getenv("REDIS_DB_CELERY")
+CELERY_BROKER_URL = f"{REDIS_URL}/{REDIS_DB_CELERY}"
+CELERY_REDIS_BACKEND_HEALTH_CHECK_INTERVAL = 60
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+CELERY_TIMEZONE = "UTC"
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+
 FRONTEND_DOMAIN = ""
