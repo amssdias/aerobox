@@ -1,6 +1,18 @@
 version: "2"
 
 services:
+  my-redis:
+    image: redis:7.2.4
+    container_name: redis
+    ports:
+      - "6379:6379"
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    #volumes:
+    #  # Mount the custom redis.conf file into the container
+    #  - ./redis.conf:/usr/local/etc/redis/redis.conf
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
+
   db:
     image: postgres:17.2-bullseye
     container_name: postgres-db
@@ -35,6 +47,11 @@ services:
       - AWS_S3_BUCKET_REGION=${AWS_S3_BUCKET_REGION}
       - AWS_S3_BUCKET_FOLDER=${AWS_S3_BUCKET_FOLDER}
       - DJANGO_SETTINGS_MODULE=config.settings.settings_development
+      - REDIS_PROTOCOL=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_HOST=my-redis
+      - REDIS_PORT=6379
+      - REDIS_DB_CELERY=${REDIS_DB_CELERY}
     depends_on:
       - db
 
