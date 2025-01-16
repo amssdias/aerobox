@@ -1,7 +1,8 @@
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
-from django.conf import settings
-from django.core.mail import send_mail
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.translation import gettext_lazy as _
@@ -53,15 +54,27 @@ class CustomPasswordResetView(GenericAPIView):
         frontend_domain = settings.FRONTEND_DOMAIN
         full_reset_link = f"{frontend_domain}{reset_link}"
 
-        send_mail(
-            _("Password Reset Request"),
-            _("Use this link to reset your password: {link}").format(
-                link=full_reset_link
-            ),
-            "noreply@example.com",
-            [user.email],
-            fail_silently=False,
+        # Render the email content
+        subject = _("Password Reset Request")
+        to_email = [user.email]
+        context = {"reset_link": full_reset_link, "user": user}
+
+        # Plain-text version
+        text_content = _("Use this link to reset your password: {link}").format(
+            link=full_reset_link
         )
+
+        # HTML version
+        html_content = render_to_string("emails/password_reset_email.html", context)
+
+        # Send the email
+        email = EmailMultiAlternatives(
+            subject=subject,
+            body=text_content,
+            to=to_email
+        )
+        email.attach_alternative(html_content, "text/html")
+        email.send(fail_silently=False)
 
 
 @api_users_tag()
