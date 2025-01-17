@@ -24,8 +24,9 @@ from config.permissions import IsSuperUser
 urlpatterns = [
     path("admin/", admin.site.urls),
 
-    path("api/users/", include("apps.users.urls")),
     path("api/cloud/", include("apps.cloud_storage.urls")),
+    path("api/subscriptions/", include("apps.subscriptions.urls")),
+    path("api/users/", include("apps.users.urls")),
 ]
 
 # Add documentation URLs with superuser restriction
