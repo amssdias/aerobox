@@ -42,8 +42,9 @@ DJANGO_APPS = [
 EXTERNAL_APPS = ["corsheaders",]
 
 PROJECT_APPS  = [
-    "apps.users",
     "apps.cloud_storage",
+    "apps.subscriptions",
+    "apps.users",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + EXTERNAL_APPS + PROJECT_APPS
