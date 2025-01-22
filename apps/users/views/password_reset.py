@@ -1,6 +1,4 @@
 from django.contrib.auth.models import User
-from django.contrib.auth.tokens import default_token_generator
-from django.utils.http import urlsafe_base64_decode
 from django.utils.translation import gettext_lazy as _
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
@@ -46,27 +44,18 @@ class CustomPasswordResetConfirmView(GenericAPIView):
 
     serializer_class = PasswordResetConfirmSerializer
 
-    def post(self, request, uidb64, token):
+    def post(self, request):
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        try:
-            uid = urlsafe_base64_decode(uidb64).decode()
-            user = User.objects.get(pk=uid)
-            if default_token_generator.check_token(user, token):
-                user.set_password(serializer.validated_data["new_password1"])
-                user.save()
-                return Response(
-                    {"message": _("Password has been reset.")},
-                    status=status.HTTP_200_OK,
-                )
-            else:
-                return Response(
-                    {"error": _("Invalid token.")}, status=status.HTTP_400_BAD_REQUEST
-                )
-        except (User.DoesNotExist, ValueError, TypeError):
-            return Response(
-                {"error": _("Invalid user or token.")},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        user = serializer.validated_data["user"]
+        new_password = serializer.validated_data["new_password1"]
+        user.set_password(new_password)
+        user.save()
+
+        return Response(
+            {"message": _("Password has been reset successfully.")},
+            status=status.HTTP_200_OK,
+        )
+

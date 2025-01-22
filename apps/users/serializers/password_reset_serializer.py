@@ -1,4 +1,6 @@
 from django.contrib.auth import get_user_model
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.utils.http import urlsafe_base64_decode
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
@@ -17,10 +19,14 @@ class PasswordResetRequestSerializer(serializers.Serializer):
 
 
 class PasswordResetConfirmSerializer(serializers.Serializer):
+    uidb64 = serializers.CharField(write_only=True)  # Required UID field
+    token = serializers.CharField(write_only=True)
     new_password1 = serializers.CharField(max_length=128, write_only=True)
     new_password2 = serializers.CharField(max_length=128, write_only=True)
 
     def validate(self, data):
+        uidb64 = data.get("uidb64")
+        token = data.get("token")
         password1 = data.get("new_password1")
         password2 = data.get("new_password2")
 
@@ -33,5 +39,16 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
             validate_password(password1)
         except ValidationError as e:
             raise serializers.ValidationError({"new_password1": e.messages})
+
+        try:
+            uid = urlsafe_base64_decode(uidb64).decode()
+            user = User.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            raise serializers.ValidationError(_("Invalid UID."))
+
+        if not PasswordResetTokenGenerator().check_token(user, token):
+            raise serializers.ValidationError(_("Invalid or expired token."))
+
+        data["user"] = user
 
         return data
