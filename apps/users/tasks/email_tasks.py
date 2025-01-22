@@ -1,12 +1,13 @@
+from urllib.parse import urlencode
+
 from celery import shared_task
+from django.conf import settings
+from django.contrib.auth.models import User
+from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
-from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
-from django.contrib.auth.tokens import default_token_generator
-from django.contrib.auth.models import User
-from django.conf import settings
-from django.urls import reverse
+from django.utils.http import urlsafe_base64_encode
 from django.utils.translation import gettext as _
 
 
@@ -23,11 +24,11 @@ def send_password_reset_email(user_id):
         # Generate the reset link
         uid = urlsafe_base64_encode(force_bytes(user.pk))
         token = default_token_generator.make_token(user)
-        reset_link = reverse(
-            "users:password_reset_confirm", kwargs={"uidb64": uid, "token": token}
-        )
+
         frontend_domain = settings.FRONTEND_DOMAIN
-        full_reset_link = f"{frontend_domain}{reset_link}"
+        reset_password_path = "/reset-password"
+        query_params = urlencode({"uidb64": uid, "token": token})
+        full_reset_link = f"{frontend_domain}{reset_password_path}?{query_params}"
 
         # Render the email content
         subject = _("Password Reset Request")
