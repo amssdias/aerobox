@@ -22,7 +22,7 @@ DATABASES = {
 
 CORS_ALLOW_ALL_ORIGINS = True
 
-FRONTEND_DOMAIN = "localhost:3000"
+FRONTEND_DOMAIN = "http://localhost:3000"
 
 # Email settings for any service
 EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
