@@ -24,8 +24,5 @@ class TestUsersAppUrls(SimpleTestCase):
         self.assertEqual(resolve(url).func.view_class, CustomPasswordResetView)
 
     def test_password_reset_confirm_url_is_resolved(self):
-        url = reverse(
-            "users:password_reset_confirm",
-            kwargs={"uidb64": "test-uid", "token": "test-token"},
-        )
+        url = reverse("users:password_reset_confirm")
         self.assertEqual(resolve(url).func.view_class, CustomPasswordResetConfirmView)

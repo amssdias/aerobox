@@ -20,18 +20,20 @@ class CustomPasswordResetConfirmViewTestCase(APITestCase):
         cls.user.save()
         cls.uid = urlsafe_base64_encode(force_bytes(cls.user.pk))
         cls.token = default_token_generator.make_token(cls.user)
-        cls.url = reverse(
-            "users:password_reset_confirm",
-            kwargs={"uidb64": cls.uid, "token": cls.token},
-        )
+        cls.url = reverse("users:password_reset_confirm",)
 
     def test_password_reset_successful(self):
         response = self.client.post(
             self.url,
-            data={"new_password1": "NewPassword123", "new_password2": "NewPassword123"},
+            data={
+                "new_password1": "NewPassword123",
+                "new_password2": "NewPassword123",
+                "uidb64": self.uid,
+                "token": self.token,
+            },
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn("Password has been reset.", response.data["message"])
+        self.assertIn("Password has been reset successfully.", response.data["message"])
 
     def test_password_reset_confirm_get_not_allowed(self):
         response = self.client.get(self.url, kwargs={"uidb64": "test-uid", "token": "test-token"})
@@ -43,6 +45,8 @@ class CustomPasswordResetConfirmViewTestCase(APITestCase):
             data={
                 "new_password1": "NewPassword123",
                 "new_password2": "DifferentPassword456",
+                "uidb64": self.uid,
+                "token": self.token,
             },
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -61,59 +65,68 @@ class CustomPasswordResetConfirmViewTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_password_reset_invalid_token(self):
-        url = reverse(
-            "users:password_reset_confirm",
-            kwargs={"uidb64": self.uid, "token": "invalidtoken"},
-        )
         response = self.client.post(
-            url,
-            data={"new_password1": "NewPassword123", "new_password2": "NewPassword123"},
+            self.url,
+            data={
+                "new_password1": "NewPassword123",
+                "new_password2": "NewPassword123",
+                "uidb64": self.uid,
+                "token": "invalidtoken",
+            },
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("Invalid token.", response.data["error"])
+        self.assertEqual("Invalid or expired token.", str(response.data.get("non_field_errors")[0]))
 
     def test_password_reset_invalid_uid(self):
-        url = reverse(
-            "users:password_reset_confirm",
-            kwargs={"uidb64": "invaliduid", "token": self.token},
-        )
         response = self.client.post(
-            url,
-            data={"new_password1": "NewPassword123", "new_password2": "NewPassword123"},
+            self.url,
+            data={
+                "new_password1": "NewPassword123",
+                "new_password2": "NewPassword123",
+                "uidb64": "invaliduid",
+                "token": self.token,
+            },
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("Invalid user or token.", response.data["error"])
+        self.assertIn("Invalid UID.", response.data.get("non_field_errors")[0])
 
     def test_password_reset_expired_token(self):
         self.user.set_password("OldPassword123")
         self.user.save()
-        url = reverse(
-            "users:password_reset_confirm",
-            kwargs={"uidb64": self.uid, "token": "expiredtoken"},
-        )
         response = self.client.post(
-            url,
-            data={"new_password1": "NewPassword123", "new_password2": "NewPassword123"},
+            self.url,
+            data={
+                "new_password1": "NewPassword123",
+                "new_password2": "NewPassword123",
+                "uidb64": self.uid,
+                "token": "expiredtoken",
+            },
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("Invalid token.", response.data["error"])
+        self.assertIn("Invalid or expired token.", response.data.get("non_field_errors")[0])
 
     def test_password_reset_user_does_not_exist(self):
         non_existent_uid = urlsafe_base64_encode(force_bytes(99999))
-        url = reverse(
-            "users:password_reset_confirm",
-            kwargs={"uidb64": non_existent_uid, "token": self.token},
-        )
         response = self.client.post(
-            url,
-            data={"new_password1": "NewPassword123", "new_password2": "NewPassword123"},
+            self.url,
+            data={
+                "new_password1": "NewPassword123",
+                "new_password2": "NewPassword123",
+                 "uidb64": non_existent_uid,
+                "token": self.token,
+            },
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("Invalid user or token.", response.data["error"])
+        self.assertEqual("Invalid UID.", str(response.data.get("non_field_errors")[0]))
 
     def test_password_reset_weak_password(self):
         response = self.client.post(
-            self.url, data={"new_password1": "123", "new_password2": "123"}
+            self.url, data={
+                "new_password1": "123",
+                "new_password2": "123",
+                "uidb64": self.uid,
+                "token": self.token,
+            }
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("new_password1", response.data)
@@ -126,7 +139,12 @@ class CustomPasswordResetConfirmViewTestCase(APITestCase):
     def test_password_reset_successful_and_password_is_updated(self):
         response = self.client.post(
             self.url,
-            data={"new_password1": "NewPassword123", "new_password2": "NewPassword123"},
+            data={
+                "new_password1": "NewPassword123",
+                "new_password2": "NewPassword123",
+                "uidb64": self.uid,
+                "token": self.token,
+            },
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.user.refresh_from_db()
@@ -134,13 +152,14 @@ class CustomPasswordResetConfirmViewTestCase(APITestCase):
 
     def test_password_reset_case_insensitive_token(self):
         token_lower = self.token.lower()
-        url = reverse(
-            "users:password_reset_confirm",
-            kwargs={"uidb64": self.uid, "token": token_lower},
-        )
         response = self.client.post(
-            url,
-            data={"new_password1": "NewPassword123", "new_password2": "NewPassword123"},
+            self.url,
+            data={
+                "new_password1": "NewPassword123",
+                "new_password2": "NewPassword123",
+                "uidb64": self.uid,
+                "token": token_lower,
+            },
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn("Password has been reset.", response.data["message"])
+        self.assertIn("Password has been reset successfully.", response.data["message"])
