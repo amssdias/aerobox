@@ -2,9 +2,6 @@ from .base import *
 
 DEBUG = False
 
-SECRET_KEY = os.environ.get("SECRET_KEY")
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(",")
-
 # ====== Security for HTTPS Enforcement ======
 # - SECURE_SSL_REDIRECT: Redirects all HTTP traffic to HTTPS, ensuring encrypted connections across the site.
 # - SECURE_HSTS_SECONDS: Instructs browsers to remember to only connect to the site over HTTPS for the specified duration (1 year in seconds).
