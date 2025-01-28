@@ -42,7 +42,7 @@ STORAGES = {
             "access_key": AWS_ACCESS_KEY_ID,
             "secret_key": AWS_SECRET_ACCESS_KEY,
             "bucket_name": AWS_STORAGE_BUCKET_NAME,
-            "region_name": AWS_S3_REGION_NAME,
+            "region_name": AWS_S3_BUCKET_REGION,
         },
         "LOCATION": "static/",
         "ACL": "public-read"

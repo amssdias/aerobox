@@ -37,7 +37,7 @@ LOGGING = {
 
 # AWS S3
 AWS_STORAGE_BUCKET_NAME = "test-bucket"
-AWS_S3_BASE_URL = f"https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com"
+AWS_S3_BASE_URL = f"https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_BUCKET_REGION}.amazonaws.com"
 
 # Celery
 CELERY_TASK_ALWAYS_EAGER = True
