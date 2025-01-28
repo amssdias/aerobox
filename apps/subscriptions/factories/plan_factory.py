@@ -11,5 +11,4 @@ class PlanFactory(factory.django.DjangoModelFactory):
     description = factory.Faker("sentence")
     monthly_price = factory.Faker("pydecimal", left_digits=2, right_digits=2, positive=True)
     yearly_price = factory.Faker("pydecimal", left_digits=3, right_digits=2, positive=True)
-    storage_limit = factory.Faker("random_int", min=10, max=1000)
     is_active = True

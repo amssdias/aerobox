@@ -40,7 +40,6 @@ class PlanListAPIViewTests(TestCase):
             self.assertIn("description", plan)
             self.assertIn("monthly_price", plan)
             self.assertIn("yearly_price", plan)
-            self.assertIn("storage_limit", plan)
 
     def test_plan_with_no_description(self):
         plan = PlanFactory(description=None, is_active=True)
@@ -66,14 +65,6 @@ class PlanListAPIViewTests(TestCase):
             elif plan["name"] == self.plan2.name:
                 self.assertEqual(plan["monthly_price"], str(self.plan2.monthly_price))
                 self.assertEqual(plan["yearly_price"], str(self.plan2.yearly_price))
-
-    def test_plan_storage_limit(self):
-        response = self.client.get(self.list_url)
-        for plan in response.data:
-            if plan["name"] == self.plan1.name:
-                self.assertEqual(plan["storage_limit"], self.plan1.storage_limit)
-            elif plan["name"] == self.plan2.name:
-                self.assertEqual(plan["storage_limit"], self.plan2.storage_limit)
 
     def test_only_get_method_allowed(self):
         post_response = self.client.post(self.list_url, {})
