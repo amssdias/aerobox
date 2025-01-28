@@ -17,7 +17,12 @@ class Plan(Timestampable):
         null=True,
         blank=True,
     )
-    storage_limit = models.PositiveIntegerField(help_text="Storage limit in GB")
+    trial_duration_days = models.PositiveIntegerField(
+        default=14,
+        help_text="Duration of the free trial period in days",
+        null=True,
+        blank=True,
+    )
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
