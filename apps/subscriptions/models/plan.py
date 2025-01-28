@@ -1,8 +1,13 @@
 from django.db import models
+
+from apps.features.models import Feature
 from config.models import Timestampable
 
 
 class Plan(Timestampable):
+    features = models.ManyToManyField(
+        Feature, through="PlanFeature", related_name="plans"
+    )
     name = models.CharField(max_length=100, unique=True)
     description = models.TextField(blank=True, null=True)
     monthly_price = models.DecimalField(
