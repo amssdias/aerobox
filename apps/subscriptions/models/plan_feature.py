@@ -6,8 +6,8 @@ from apps.subscriptions.models import Plan
 
 
 class PlanFeature(models.Model):
-    plan = models.ForeignKey(Plan, on_delete=models.CASCADE)
-    feature = models.ForeignKey(Feature, on_delete=models.CASCADE)
+    plan = models.ForeignKey(Plan, on_delete=models.CASCADE, related_name="plan_features")
+    feature = models.ForeignKey(Feature, on_delete=models.CASCADE, related_name="feature_plans")
     metadata = models.JSONField(
         blank=True,
         null=True,
