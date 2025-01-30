@@ -1,3 +1,4 @@
+import logging
 from urllib.parse import urlencode
 
 from celery import shared_task
@@ -9,6 +10,8 @@ from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from django.utils.translation import gettext as _
+
+logger = logging.getLogger("aerobox")
 
 
 @shared_task
@@ -51,8 +54,11 @@ def send_password_reset_email(user_id):
         )
         email.attach_alternative(html_content, "text/html")
         email.send(fail_silently=False)
-        return f"Password reset email sent to {user.email}."
+        logger.info(f"Password reset email sent to {user.email}.")
+        return True
     except User.DoesNotExist:
-        return f"User with ID {user_id} does not exist."
+        logger.warning(f"User with ID {user_id} does not exist.")
+        return None
     except Exception as e:
-        return f"Failed to send email: {e}"
+        logger.error(f"Failed to send email: {e}")
+        return None
