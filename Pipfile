@@ -15,6 +15,7 @@ psycopg2 = "*"
 celery = "*"
 redis = "*"
 gunicorn = "*"
+stripe = "*"
 
 [dev-packages]
 black = "*"
