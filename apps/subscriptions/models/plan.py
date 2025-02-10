@@ -28,6 +28,12 @@ class Plan(Timestampable):
         null=True,
         blank=True,
     )
+    stripe_price_id = models.CharField(
+        max_length=255,
+        unique=True,
+        null=True,
+        blank=True,
+    )
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
