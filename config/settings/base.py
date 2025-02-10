@@ -44,6 +44,7 @@ EXTERNAL_APPS = ["corsheaders",]
 PROJECT_APPS  = [
     "apps.cloud_storage",
     "apps.features",
+    "apps.payments",
     "apps.subscriptions",
     "apps.users",
 ]
