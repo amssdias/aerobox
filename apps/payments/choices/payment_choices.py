@@ -3,8 +3,10 @@ from django.utils.translation import gettext_lazy as _
 
 
 class PaymentMethodChoices(models.TextChoices):
-    CREDIT_CARD = "credit_card", _("Credit Card")
-    DEBIT_CARD = "debit_card", _("Debit Card")
+    """
+    https://docs.stripe.com/api/payment_methods/object
+    """
+    CARD = "card", _("Credit Card")
     PAYPAL = "paypal", _("PayPal")
 
 
