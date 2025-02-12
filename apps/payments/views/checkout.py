@@ -10,7 +10,7 @@ from apps.subscriptions.serializers.subscription import CheckoutSubscriptionSeri
 class CheckoutSessionViewSet(viewsets.GenericViewSet):
     serializer_class = CheckoutSubscriptionSerializer
 
-    @action(detail=False, methods=["post"], url_path="create-checkout")
+    @action(detail=False, methods=["post"], url_path="session")
     def create_checkout(self, request):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
