@@ -60,5 +60,5 @@ def send_password_reset_email(user_id):
         logger.warning(f"User with ID {user_id} does not exist.")
         return None
     except Exception as e:
-        logger.error(f"Failed to send email: {e}")
+        logger.error("Failed to send email.", exc_info=True, extra={"email": user.email})
         return None
