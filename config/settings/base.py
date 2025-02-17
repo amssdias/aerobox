@@ -45,6 +45,7 @@ PROJECT_APPS  = [
     "apps.cloud_storage",
     "apps.features",
     "apps.payments",
+    "apps.profiles",
     "apps.subscriptions",
     "apps.users",
 ]
@@ -212,3 +213,4 @@ FRONTEND_DOMAIN = ""
 
 # STRIPE CONFIG
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "")
+STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
