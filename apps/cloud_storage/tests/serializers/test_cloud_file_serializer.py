@@ -1,4 +1,4 @@
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from django.test import TestCase
 
@@ -113,7 +113,8 @@ class CloudFilesSerializerTests(TestCase):
         self.assertFalse(serializer.is_valid())
         self.assertIn("non_field_errors", serializer.errors)
 
-    def test_valid_relative_path_method(self):
+    @patch("stripe.Customer.create", return_value=Mock(id="cus_mocked_123456"))
+    def test_valid_relative_path_method(self, mock_create_customer):
         cloud_file = CloudFileFactory(
             file_name="test.txt",
             path="docs",

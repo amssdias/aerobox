@@ -1,16 +1,27 @@
+from django.db.models.signals import post_save
 from django.test import TestCase
 
 from apps.cloud_storage.constants.cloud_files import SUCCESS, FAILED, PENDING
 from apps.cloud_storage.factories.cloud_file_factory import CloudFileFactory
 from apps.cloud_storage.serializers import CloudFileUpdateSerializer
+from apps.profiles.models import Profile
+from apps.profiles.signals import create_stripe_customer
 
 
 class CloudFileUpdateSerializerTests(TestCase):
 
     @classmethod
     def setUpTestData(cls):
+        # Disconnect stripe
+        post_save.disconnect(create_stripe_customer, sender=Profile)
+
         cls.serializer = CloudFileUpdateSerializer
         cls.cloud_file = CloudFileFactory()
+
+    @classmethod
+    def tearDownClass(cls):
+        post_save.connect(create_stripe_customer, sender=Profile)
+        super().tearDownClass()
 
     def test_valid_update_status(self):
         data = {"status": SUCCESS}

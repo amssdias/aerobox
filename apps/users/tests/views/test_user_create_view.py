@@ -1,7 +1,9 @@
+from unittest.mock import patch, Mock
+
 from django.contrib.auth import get_user_model
 from django.urls import reverse
-from rest_framework.test import APITestCase
 from rest_framework import status
+from rest_framework.test import APITestCase
 
 from apps.users.factories.user_factory import UserFactory
 
@@ -20,7 +22,8 @@ class UserCreateViewTestCase(APITestCase):
             "password2": "strongpassword123",
         }
 
-    def test_create_user_successfully(self):
+    @patch("stripe.Customer.create", return_value=Mock(id="cus_mocked_123456"))
+    def test_create_user_successfully(self, mock_create_customer):
         response = self.client.post(self.url, self.valid_user_data)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -30,6 +33,19 @@ class UserCreateViewTestCase(APITestCase):
         self.assertTrue(
             User.objects.filter(username=self.valid_user_data["username"]).exists()
         )
+
+    @patch("stripe.Customer.create", return_value=Mock(id="cus_mocked_123456"))
+    def test_create_profile_successfully(self, mock_create_customer):
+        response = self.client.post(self.url, self.valid_user_data)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIn("username", response.data)
+        self.assertEqual(response.data["username"], self.valid_user_data["username"])
+        self.assertEqual(response.data["email"], self.valid_user_data["email"])
+        user = User.objects.get(username=self.valid_user_data["username"])
+        self.assertTrue(user.profile)
+        self.assertTrue(user.profile.stripe_customer_id)
+        mock_create_customer.assert_called_once()
 
     def test_user_create_get_not_allowed(self):
         response = self.client.get(self.url)
@@ -79,7 +95,8 @@ class UserCreateViewTestCase(APITestCase):
         self.assertIn("password", response.data)
         self.assertIn("email", response.data)
 
-    def test_create_user_with_extra_fields(self):
+    @patch("stripe.Customer.create", return_value=Mock(id="cus_mocked_123456"))
+    def test_create_user_with_extra_fields(self, mock_create_customer):
         extra_data = {
             "username": "extrafielduser",
             "password": "extrafieldpassword123",

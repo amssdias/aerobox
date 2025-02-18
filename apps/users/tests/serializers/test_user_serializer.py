@@ -1,3 +1,5 @@
+from unittest.mock import patch, Mock
+
 from django.test import TestCase
 
 from apps.users.factories.user_factory import UserFactory
@@ -18,7 +20,8 @@ class UserSerializerTest(TestCase):
             "password2": "StrongPassword123!",
         }
 
-    def test_serializer_valid_data_creates_user(self):
+    @patch("stripe.Customer.create", return_value=Mock(id="cus_mocked_123456"))
+    def test_serializer_valid_data_creates_user(self, mock_create_customer):
         serializer = self.serializer(data=self.data)
         self.assertTrue(serializer.is_valid(), serializer.errors)
 
@@ -28,6 +31,23 @@ class UserSerializerTest(TestCase):
 
         # Verify password is hashed
         self.assertTrue(user.check_password(self.data["password"]))
+
+    @patch("stripe.Customer.create", return_value=Mock(id="cus_mocked_123456"))
+    def test_serializer_valid_data_creates_profile(self, mock_create_customer):
+        serializer = self.serializer(data=self.data)
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+
+        user = serializer.save()
+        self.assertTrue(user.profile)
+
+    @patch("stripe.Customer.create", return_value=Mock(id="cus_mocked_123456"))
+    def test_serializer_valid_data_creates_stripe_customer(self, mock_create_customer):
+        serializer = self.serializer(data=self.data)
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+
+        user = serializer.save()
+        self.assertTrue(user.profile.stripe_customer_id)
+        mock_create_customer.assert_called_once()
 
     def test_serializer_password_mismatch(self):
         self.data["password2"] = "1234"
