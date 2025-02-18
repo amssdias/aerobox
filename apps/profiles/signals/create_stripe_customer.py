@@ -1,12 +1,10 @@
 import stripe
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.contrib.auth import get_user_model
 from django.conf import settings
 
 from apps.profiles.models import Profile
 
-User = get_user_model()
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
