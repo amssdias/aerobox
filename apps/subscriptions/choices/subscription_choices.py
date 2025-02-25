@@ -10,5 +10,5 @@ class SubscriptionStatusChoices(models.TextChoices):
 
 
 class SubscriptionBillingCycleChoices(models.TextChoices):
-    MONTHLY = "monthly", _("Monthly")
-    YEARLY = "yearly", _("Yearly")
+    MONTH = "month", _("Monthly")
+    YEAR = "year", _("Yearly")
