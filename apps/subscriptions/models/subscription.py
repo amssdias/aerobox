@@ -32,6 +32,9 @@ class Subscription(Timestampable):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="subscriptions"
     )
     plan = models.ForeignKey(Plan, on_delete=models.CASCADE)
+    stripe_subscription_id = models.CharField(
+        max_length=255, unique=True, blank=True, null=True
+    )
     billing_cycle = models.CharField(
         max_length=10, choices=SubscriptionBillingCycleChoices.choices
     )
