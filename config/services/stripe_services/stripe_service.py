@@ -6,6 +6,7 @@ from django.conf import settings
 from apps.subscriptions.services.stripe_events.stripe_subscription import (
     SubscriptiondHandler,
 )
+from apps.subscriptions.services.stripe_events.stripe_subscription_deleted import SubscriptionDeleteddHandler
 
 logger = logging.getLogger("aerobox")
 
@@ -37,5 +38,6 @@ class StripeService:
         """
         handlers = {
             "customer.subscription.created": SubscriptiondHandler,
+            "customer.subscription.deleted": SubscriptionDeleteddHandler,
         }
         return handlers.get(event_type, None)(event) if event_type in handlers else None
