@@ -49,8 +49,9 @@ class CheckoutSubscriptionSerializer(serializers.Serializer):
 
     def get_checkout_session_url(self, user):
         plan = self.validated_data["plan"]
+        stripe_customer_id = user.profile.stripe_customer_id
 
         # Call Stripe API service
-        checkout_url = create_stripe_checkout_session(plan)
+        checkout_url = create_stripe_checkout_session(plan, stripe_customer_id)
 
         return {"checkout_url": checkout_url}

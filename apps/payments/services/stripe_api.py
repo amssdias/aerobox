@@ -5,12 +5,12 @@ from apps.payments.choices.payment_choices import PaymentMethodChoices
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
-def create_stripe_checkout_session(plan):
+def create_stripe_checkout_session(plan, stripe_customer_id):
     success_url = f"{settings.FRONTEND_DOMAIN}/success"
     cancel_url = f"{settings.FRONTEND_DOMAIN}/cancel"
 
     session = stripe.checkout.Session.create(
-        # customer=user.stripe_customer_id, # TODO: Associate a user from stripe to this payment
+        customer=stripe_customer_id,
         payment_method_types=PaymentMethodChoices.values,
         line_items=[{
             "price": plan.stripe_price_id,
