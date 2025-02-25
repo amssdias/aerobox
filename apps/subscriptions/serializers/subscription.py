@@ -41,7 +41,10 @@ class CheckoutSubscriptionSerializer(serializers.Serializer):
         billing_cycle = data.get("billing_cycle")
         plan = data.get("plan")
 
-        amount = plan.monthly_price if billing_cycle == "monthly" else plan.yearly_price
+        amount = plan.monthly_price \
+            if billing_cycle == SubscriptionBillingCycleChoices.MONTH.value \
+            else plan.yearly_price
+
         if not amount:
             raise serializers.ValidationError(_("Sorry, no amount defined for this plan."))
 
