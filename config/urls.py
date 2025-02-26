@@ -28,7 +28,7 @@ urlpatterns = [
     path("api/payments/", include("apps.payments.urls")),
     path("api/subscriptions/", include("apps.subscriptions.urls")),
     path("api/users/", include("apps.users.urls")),
-    path("api/stripe/webhook/", StripeWebhookView.as_view(), name="stripe_webhook"),
+    path("api/stripe/webhook/", StripeWebhookView.as_view(), name="stripe-webhook"),
 ]
 
 # Add documentation URLs with superuser restriction
