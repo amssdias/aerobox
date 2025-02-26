@@ -15,9 +15,6 @@ class SubscriptionCreateddHandlerTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = UserFactory(username="testuser")
-        cls.profile = cls.user.profile
-        cls.profile.stripe_customer_id = "cus_test"
-        cls.profile.save()
         cls.plan = PlanFactory(name="Test Plan", stripe_price_id="price_test")
 
     def setUp(self):

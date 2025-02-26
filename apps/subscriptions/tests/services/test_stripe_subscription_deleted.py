@@ -15,11 +15,7 @@ from apps.users.factories.user_factory import UserFactory
 class SubscriptionDeletedHandlerTest(TestCase):
 
     def setUp(self):
-        self.client = Client()
         self.user = UserFactory(username="testuser")
-        self.profile = self.user.profile
-        self.profile.stripe_customer_id = "cus_test"
-        self.profile.save()
 
         self.plan = PlanFactory(name="Test Plan", stripe_price_id="price_test")
         self.subscription = SubscriptionFactory(

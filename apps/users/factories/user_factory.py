@@ -27,6 +27,7 @@ class UserFactory(factory.django.DjangoModelFactory):
         post_save.disconnect(create_stripe_customer, sender=Profile)
 
         user = super().create(**kwargs)
-
+        user.profile.stripe_customer_id = "cus_test"
+        user.profile.save()
         post_save.connect(create_stripe_customer, sender=Profile)
         return user

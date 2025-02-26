@@ -140,9 +140,6 @@ class CheckoutSubscriptionSerializerTest(TestCase):
         )
 
         user = UserFactory(username="testuser1")
-        profile = user.profile
-        profile.stripe_customer_id = "1234"
-        profile.save()
 
         serializer = self.serializer(
             data={"plan": self.monthly_plan.id, "billing_cycle": self.month}
