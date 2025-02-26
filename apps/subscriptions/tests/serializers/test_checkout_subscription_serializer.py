@@ -152,5 +152,5 @@ class CheckoutSubscriptionSerializerTest(TestCase):
             checkout_url["checkout_url"], "https://stripe.com/checkout_test"
         )
         mock_create_stripe_checkout_session.assert_called_once_with(
-            self.monthly_plan, "1234"
+            self.monthly_plan, user.profile.stripe_customer_id
         )
