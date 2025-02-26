@@ -22,23 +22,30 @@ class SubscriptionCreateddHandler(StripeEventHandler):
         self.create_subscription()
 
     def get_user(self):
-        customer_id = self.data["customer"]
 
         try:
+            customer_id = self.data["customer"]
             return Profile.objects.get(stripe_customer_id=customer_id).user
+
         except Profile.DoesNotExist:
-            logger.error("Profile does not exist", extra={"stripe_id": customer_id})
-            return None
+            logger.error("No profile found for the given Stripe customer ID.", extra={"stripe_id": customer_id})
+        except KeyError:
+            logger.error("Missing 'customer' key in Stripe event data.", extra={"stripe_data": self.data})
+        return None
 
     def get_plan(self):
-        stripe_price_id = self.data.plan.id
         try:
+            stripe_price_id = self.data["plan"]["id"]
             return Plan.objects.get(stripe_price_id=stripe_price_id)
+
         except Plan.DoesNotExist:
             logger.error(
-                "Plan does not exist", extra={"stripe_price_id": stripe_price_id}
+                "No plan found for the given Stripe price ID.", extra={"stripe_price_id": stripe_price_id}
             )
-            return None
+        except KeyError:
+            logger.error("Missing 'id' key under 'plan' in Stripe event data.", extra={"stripe_data": self.data})
+
+        return None
 
     def create_subscription(self):
         user = self.get_user()
@@ -52,7 +59,10 @@ class SubscriptionCreateddHandler(StripeEventHandler):
 
         billing_cycle = self.get_billing_cycle()
 
-        Subscription.objects.get_or_create(
+        if not user or not plan or not status or not billing_start or not billing_end or not billing_cycle:
+            return False
+
+        obj, created = Subscription.objects.get_or_create(
             user=user,
             stripe_subscription_id=self.data["id"],
             defaults={
@@ -66,11 +76,15 @@ class SubscriptionCreateddHandler(StripeEventHandler):
             },
         )
 
+        if created:
+            return True
+
     def get_subscription_status(self):
-        if self.data.status == "incomplete":
-            return SubscriptionStatusChoices.INACTIVE
-        elif self.data.status == "active":
-            return SubscriptionStatusChoices.ACTIVE
+        data_status = self.data["status"]
+        if data_status == "incomplete":
+            return SubscriptionStatusChoices.INACTIVE.value
+        elif data_status == "active":
+            return SubscriptionStatusChoices.ACTIVE.value
 
     def get_billing_cycle(self):
         billing_cycle = self.data["items"]["data"][0]["plan"]["interval"]
