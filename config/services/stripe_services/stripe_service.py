@@ -3,8 +3,8 @@ import logging
 import stripe
 from django.conf import settings
 
-from apps.subscriptions.services.stripe_events.stripe_subscription import (
-    SubscriptiondHandler,
+from apps.subscriptions.services.stripe_events.stripe_subscription_created import (
+    SubscriptionCreateddHandler,
 )
 from apps.subscriptions.services.stripe_events.stripe_subscription_deleted import (
     SubscriptionDeleteddHandler,
@@ -61,7 +61,7 @@ class StripeService:
         Returns the correct event handler based on the event type.
         """
         handlers = {
-            "customer.subscription.created": SubscriptiondHandler,
+            "customer.subscription.created": SubscriptionCreateddHandler,
             "customer.subscription.deleted": SubscriptionDeleteddHandler,
         }
         return handlers.get(event_type, None)(event) if event_type in handlers else None

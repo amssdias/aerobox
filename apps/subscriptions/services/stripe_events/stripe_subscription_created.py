@@ -13,7 +13,7 @@ from config.services.stripe_services.stripe_events.base_event import StripeEvent
 logger = logging.getLogger("aerobox")
 
 
-class SubscriptiondHandler(StripeEventHandler):
+class SubscriptionCreateddHandler(StripeEventHandler):
     """
     Handles `customer.subscription.created` event.
     """
