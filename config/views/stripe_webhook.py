@@ -27,9 +27,9 @@ class StripeWebhookView(View):
                 payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
             )
         except stripe.error.SignatureVerificationError:
-            return JsonResponse({"error": "Invalid signature"}, status=400)
+            return JsonResponse({"error": "Invalid Stripe signature. Request could not be verified."}, status=400)
         except Exception:
-            return JsonResponse({"error": "Webhook error"}, status=400)
+            return JsonResponse({"error": "Unexpected error while processing the Stripe webhook."}, status=400)
 
         stripe_service = StripeService()
         stripe_service.process_webhook_event(event)
