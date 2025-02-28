@@ -11,6 +11,10 @@ class PaymentMethodChoices(models.TextChoices):
 
 
 class PaymentStatusChoices(models.TextChoices):
-    SUCCESS = "success", _("Success")
-    FAILED = "failed", _("Failed")
     PENDING = "pending", _("Pending")
+    PAID = "paid", _("Paid")
+    CANCELED = "canceled", _("Canceled (Void)")
+
+
+class PaymentCurrenciesChoices(models.TextChoices):
+    EUR = "eur", _("Euro")
