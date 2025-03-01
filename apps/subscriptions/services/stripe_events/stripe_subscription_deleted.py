@@ -1,14 +1,11 @@
-import logging
 from datetime import datetime
 
 from apps.subscriptions.choices.subscription_choices import (
     SubscriptionStatusChoices,
 )
-from apps.subscriptions.models import Subscription
 from config.services.stripe_services.stripe_events.base_event import StripeEventHandler
 from config.services.stripe_services.stripe_events.customer_event import StripeCustomerMixin
 
-logger = logging.getLogger("aerobox")
 
 
 class SubscriptionDeleteddHandler(StripeEventHandler, StripeCustomerMixin):

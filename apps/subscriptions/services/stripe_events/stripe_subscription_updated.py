@@ -1,12 +1,8 @@
-import logging
-
 from apps.subscriptions.choices.subscription_choices import (
     SubscriptionStatusChoices,
 )
 from config.services.stripe_services.stripe_events.base_event import StripeEventHandler
 from config.services.stripe_services.stripe_events.customer_event import StripeCustomerMixin
-
-logger = logging.getLogger("aerobox")
 
 
 class SubscriptionUpdateddHandler(StripeEventHandler, StripeCustomerMixin):
@@ -23,11 +19,9 @@ class SubscriptionUpdateddHandler(StripeEventHandler, StripeCustomerMixin):
         subscription = self.get_subscription(subscription_id)
         status = self.get_subscription_status()
 
-        if not subscription or not status:
-            return False
-
-        subscription.status = status
-        subscription.save()
+        if self.can_update(subscription, subscription_id, status):
+            subscription.status = status
+            subscription.save()
 
     def get_subscription_status(self):
         if "status" not in self.data:
@@ -36,3 +30,11 @@ class SubscriptionUpdateddHandler(StripeEventHandler, StripeCustomerMixin):
             return SubscriptionStatusChoices.INACTIVE.value
         elif self.data["status"] == "active":
             return SubscriptionStatusChoices.ACTIVE.value
+
+    def can_update(self, subscription, subscription_id, status):
+        if not subscription:
+            raise ValueError(f"Subscription with Stripe ID '{subscription_id}' not found.")
+        if not status:
+            raise ValueError(f"Subscription status missing in Stripe event: {self.data}")
+
+        return True
