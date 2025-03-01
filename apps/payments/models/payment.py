@@ -19,7 +19,7 @@ class Payment(Timestampable):
     subscription = models.ForeignKey(
         Subscription, on_delete=models.CASCADE, related_name="payments"
     )
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     payment_date = models.DateTimeField(
         null=True,
         blank=True,
@@ -30,7 +30,7 @@ class Payment(Timestampable):
     )
     status = models.CharField(max_length=20, choices=PaymentStatusChoices.choices)
     currency = models.CharField(
-        max_length=3, default=PaymentCurrenciesChoices.EUR.value
+        max_length=3, choices=PaymentCurrenciesChoices.choices, default=PaymentCurrenciesChoices.EUR.value
     )
 
     stripe_invoice_id = models.CharField(max_length=60, unique=True)
