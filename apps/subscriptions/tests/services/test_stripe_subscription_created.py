@@ -43,7 +43,7 @@ class SubscriptionCreateddHandlerTest(TestCase):
         self.handler = SubscriptionCreateddHandler(self.data)
 
     def test_get_user_success(self):
-        user = self.handler.get_user()
+        user = self.handler.get_user(data=self.data["data"]["object"])
         self.assertEqual(user, self.user)
 
     @patch("apps.subscriptions.services.stripe_events.stripe_subscription_created.logger.error")
@@ -51,7 +51,7 @@ class SubscriptionCreateddHandlerTest(TestCase):
         self.data["data"]["object"]["customer"] = "cus_non_existing"
         handler = SubscriptionCreateddHandler(self.data)
 
-        user = handler.get_user()
+        user = handler.get_user(data=self.data["data"]["object"])
         self.assertIsNone(user)
         customer_id = self.data.get("data").get("object").get("customer")
         mock_logger.assert_called_once_with("No profile found for the given Stripe customer ID.", extra={"stripe_id": customer_id})
@@ -60,7 +60,7 @@ class SubscriptionCreateddHandlerTest(TestCase):
     def test_get_user_with_missing_customer_id(self, mock_logger):
         self.handler.data.pop("customer", None)
 
-        user = self.handler.get_user()
+        user = self.handler.get_user(data=self.data["data"]["object"])
         self.assertIsNone(user)
 
         mock_logger.assert_called_once_with("Missing 'customer' key in Stripe event data.",

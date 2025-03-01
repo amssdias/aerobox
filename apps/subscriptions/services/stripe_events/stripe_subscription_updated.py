@@ -3,13 +3,13 @@ import logging
 from apps.subscriptions.choices.subscription_choices import (
     SubscriptionStatusChoices,
 )
-from apps.subscriptions.models import Subscription
 from config.services.stripe_services.stripe_events.base_event import StripeEventHandler
+from config.services.stripe_services.stripe_events.customer_event import StripeCustomerMixin
 
 logger = logging.getLogger("aerobox")
 
 
-class SubscriptionUpdateddHandler(StripeEventHandler):
+class SubscriptionUpdateddHandler(StripeEventHandler, StripeCustomerMixin):
     """
     Handles `customer.subscription.updated` event.
     """
@@ -28,16 +28,6 @@ class SubscriptionUpdateddHandler(StripeEventHandler):
 
         subscription.status = status
         subscription.save()
-
-    @staticmethod
-    def get_subscription(subscription_id):
-        try:
-            return Subscription.objects.get(stripe_subscription_id=subscription_id)
-        except Subscription.DoesNotExist:
-            logger.error(
-                "Subscription not found: The provided Stripe subscription ID does not exist.",
-                extra={"stripe_subscription_id": subscription_id},
-            )
 
     def get_subscription_status(self):
         if "status" not in self.data:

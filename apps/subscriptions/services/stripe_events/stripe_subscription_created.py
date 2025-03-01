@@ -1,37 +1,24 @@
 import logging
 from datetime import datetime
 
-from apps.profiles.models import Profile
 from apps.subscriptions.choices.subscription_choices import (
     SubscriptionStatusChoices,
     SubscriptionBillingCycleChoices,
 )
 from apps.subscriptions.models import Plan, Subscription
 from config.services.stripe_services.stripe_events.base_event import StripeEventHandler
-
+from config.services.stripe_services.stripe_events.customer_event import StripeCustomerMixin
 
 logger = logging.getLogger("aerobox")
 
 
-class SubscriptionCreateddHandler(StripeEventHandler):
+class SubscriptionCreateddHandler(StripeEventHandler, StripeCustomerMixin):
     """
     Handles `customer.subscription.created` event.
     """
 
     def process(self):
         self.create_subscription()
-
-    def get_user(self):
-
-        try:
-            customer_id = self.data["customer"]
-            return Profile.objects.get(stripe_customer_id=customer_id).user
-
-        except Profile.DoesNotExist:
-            logger.error("No profile found for the given Stripe customer ID.", extra={"stripe_id": customer_id})
-        except KeyError:
-            logger.error("Missing 'customer' key in Stripe event data.", extra={"stripe_data": self.data})
-        return None
 
     def get_plan(self):
         try:
@@ -48,7 +35,7 @@ class SubscriptionCreateddHandler(StripeEventHandler):
         return None
 
     def create_subscription(self):
-        user = self.get_user()
+        user = self.get_user(data=self.data)
         plan = self.get_plan()
         status = self.get_subscription_status()
 
