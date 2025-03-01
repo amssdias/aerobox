@@ -3,6 +3,7 @@ import logging
 import stripe
 from django.conf import settings
 
+from apps.payments.services.stripe_events.invoice_created import InvoiceCreatedHandler
 from apps.subscriptions.services.stripe_events.stripe_subscription_created import (
     SubscriptionCreateddHandler,
 )
@@ -65,5 +66,6 @@ class StripeService:
             "customer.subscription.created": SubscriptionCreateddHandler,
             "customer.subscription.updated": SubscriptionUpdateddHandler,
             "customer.subscription.deleted": SubscriptionDeleteddHandler,
+            "invoice.created": InvoiceCreatedHandler,
         }
         return handlers.get(event_type, None)(event) if event_type in handlers else None
