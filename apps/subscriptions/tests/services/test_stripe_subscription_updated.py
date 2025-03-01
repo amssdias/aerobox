@@ -41,12 +41,14 @@ class SubscriptionUpdatedHandlerTest(TestCase):
         )
 
     @patch(
-        "apps.subscriptions.services.stripe_events.stripe_subscription_updated.logger.error"
+        "config.services.stripe_services.stripe_events.customer_event.logger.error"
     )
     def test_process_subscription_does_not_exist(self, mock_logger):
-        self.handler.data["id"] = "non_existent_sub"
+        subscription_id = "non_existent_sub"
+        self.handler.data["id"] = subscription_id
+        with self.assertRaises(ValueError) as context:
+            self.handler.process()
 
-        self.handler.process()
         mock_logger.assert_called_once_with(
             "Subscription not found: The provided Stripe subscription ID does not exist.",
             extra={"stripe_subscription_id": self.data.get("id")},
@@ -78,7 +80,7 @@ class SubscriptionUpdatedHandlerTest(TestCase):
         subscription = self.handler.get_subscription("sub_test")
         self.assertEqual(subscription.id, self.subscription.id)
 
-    @patch("apps.subscriptions.services.stripe_events.stripe_subscription_updated.logger.error")
+    @patch("config.services.stripe_services.stripe_events.customer_event.logger.error")
     @patch(
         "apps.subscriptions.models.Subscription.objects.get",
         side_effect=Subscription.DoesNotExist,

@@ -48,7 +48,7 @@ class SubscriptionDeletedHandlerTest(TestCase):
         )
 
     @patch(
-        "apps.subscriptions.services.stripe_events.stripe_subscription_deleted.logger.error"
+        "config.services.stripe_services.stripe_events.customer_event.logger.error"
     )
     def test_process_subscription_does_not_exist(self, mock_logger):
         self.handler.data["id"] = "non_existent_sub"
