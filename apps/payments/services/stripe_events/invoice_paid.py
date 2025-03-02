@@ -2,6 +2,7 @@ import logging
 from datetime import datetime, timezone
 
 from apps.payments.choices.payment_choices import PaymentStatusChoices
+from apps.payments.constants.stripe_invoice import PAID
 from apps.payments.models import Payment
 from apps.payments.services.stripe_api import get_payment_intent, get_payment_method
 from config.services.stripe_services.stripe_events.base_event import StripeEventHandler
@@ -121,7 +122,7 @@ class InvoicePaidHandler(StripeEventHandler):
 
     def get_status(self):
         try:
-            if self.data["status"] == "paid":
+            if self.data["status"] == PAID:
                 return PaymentStatusChoices.PAID.value
         except KeyError:
             logger.error(

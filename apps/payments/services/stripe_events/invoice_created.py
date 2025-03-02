@@ -1,6 +1,7 @@
 import logging
 
 from apps.payments.choices.payment_choices import PaymentStatusChoices
+from apps.payments.constants.stripe_invoice import OPEN
 from apps.payments.models import Payment
 from config.services.stripe_services.stripe_events.base_event import StripeEventHandler
 from config.services.stripe_services.stripe_events.customer_event import StripeCustomerMixin
@@ -54,7 +55,7 @@ class InvoiceCreatedHandler(StripeEventHandler, StripeCustomerMixin):
             )
             return PaymentStatusChoices.PENDING.value
 
-        if data_status == "open":
+        if data_status == OPEN:
             return PaymentStatusChoices.PENDING.value
         else:
             return None
