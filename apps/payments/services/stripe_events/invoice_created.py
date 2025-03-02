@@ -95,7 +95,7 @@ class InvoiceCreatedHandler(StripeEventHandler, StripeCustomerMixin):
                 "Check if the Stripe event contains valid customer and subscription data.",
                 extra={"stripe_data": self.data},
             )
-            return False
+            raise RuntimeError(f"Payment data is incomplete for Invoice ID: {invoice_id}. Stripe should retry.")
 
         return True
 
