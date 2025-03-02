@@ -22,12 +22,15 @@ class UserFactory(factory.django.DjangoModelFactory):
     last_name = factory.LazyAttribute(lambda _: fake.last_name())
 
     @classmethod
-    def create(cls, **kwargs):
-        """Temporarily disable only the Stripe signal"""
-        post_save.disconnect(create_stripe_customer, sender=Profile)
+    def _create(cls, model_class, *args, disable_signals=True, **kwargs):
+        if disable_signals:
+            post_save.disconnect(create_stripe_customer, sender=Profile)
 
-        user = super().create(**kwargs)
+        user = super()._create(model_class, *args, **kwargs)
         user.profile.stripe_customer_id = "cus_test"
         user.profile.save()
-        post_save.connect(create_stripe_customer, sender=Profile)
+
+        if disable_signals:
+            post_save.connect(create_stripe_customer, sender=Profile)
+
         return user
