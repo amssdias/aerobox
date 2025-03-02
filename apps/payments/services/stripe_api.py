@@ -22,3 +22,10 @@ def create_stripe_checkout_session(plan, stripe_customer_id):
     )
 
     return session.url
+
+
+def get_payment_intent(payment_intent_id):
+    return stripe.PaymentIntent.retrieve(payment_intent_id)
+
+def get_payment_method(payment_method_id):
+    return stripe.PaymentMethod.retrieve(payment_method_id)
