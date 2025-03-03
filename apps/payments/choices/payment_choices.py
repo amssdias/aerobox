@@ -14,6 +14,7 @@ class PaymentStatusChoices(models.TextChoices):
     PENDING = "pending", _("Pending")
     PAID = "paid", _("Paid")
     CANCELED = "canceled", _("Canceled (Void)")
+    RETRYING = "retrying", _("Retrying")
 
 
 class PaymentCurrenciesChoices(models.TextChoices):
