@@ -1,8 +1,10 @@
 from datetime import datetime
 from unittest.mock import patch
 
-from django.test import TestCase, Client
+from django.test import TestCase
 
+from apps.payments.choices.payment_choices import PaymentStatusChoices
+from apps.payments.factories.payment import PaymentFactory
 from apps.subscriptions.choices.subscription_choices import SubscriptionStatusChoices
 from apps.subscriptions.factories.plan_factory import PlanFactory
 from apps.subscriptions.factories.subscription import SubscriptionFactory
@@ -47,9 +49,7 @@ class SubscriptionDeletedHandlerTest(TestCase):
             self.subscription.status, SubscriptionStatusChoices.CANCELED.value
         )
 
-    @patch(
-        "config.services.stripe_services.stripe_events.customer_event.logger.error"
-    )
+    @patch("config.services.stripe_services.stripe_events.customer_event.logger.error")
     def test_process_subscription_does_not_exist(self, mock_logger):
         self.handler.data["id"] = "non_existent_sub"
 
@@ -66,3 +66,30 @@ class SubscriptionDeletedHandlerTest(TestCase):
         self.assertEqual(
             self.subscription.status, SubscriptionStatusChoices.CANCELED.value
         )
+
+    def test_cancel_pending_payments_updates_only_pending(self):
+        payment_1 = PaymentFactory(subscription=self.subscription)
+        payment_2 = PaymentFactory(
+            subscription=self.subscription, status=PaymentStatusChoices.RETRYING.value
+        )
+        canceled_payment = PaymentFactory(
+            subscription=self.subscription, status=PaymentStatusChoices.CANCELED.value
+        )
+        completed_payment = PaymentFactory(
+            subscription=self.subscription, status=PaymentStatusChoices.PAID.value
+        )
+
+        self.handler.cancel_pending_payments(self.subscription)
+
+        payment_1.refresh_from_db()
+        payment_2.refresh_from_db()
+        canceled_payment.refresh_from_db()
+        completed_payment.refresh_from_db()
+
+        # Check pending payments are now canceled
+        self.assertEqual(payment_1.status, PaymentStatusChoices.CANCELED.value)
+        self.assertEqual(payment_2.status, PaymentStatusChoices.CANCELED.value)
+
+        # Ensure completed and cancelled payments are not changed
+        self.assertEqual(completed_payment.status, PaymentStatusChoices.PAID.value)
+        self.assertEqual(canceled_payment.status, PaymentStatusChoices.CANCELED.value)
