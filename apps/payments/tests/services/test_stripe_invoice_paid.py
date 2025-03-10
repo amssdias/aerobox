@@ -11,7 +11,9 @@ class InvoicePaidHandlerTest(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        cls.payment = PaymentFactory()
+        cls.payment = PaymentFactory(
+            amount=15.00,
+        )
 
     def setUp(self):
         self.timestamp = int(datetime.now(tz=timezone.utc).timestamp())
@@ -163,19 +165,7 @@ class InvoicePaidHandlerTest(TestCase):
             invoice_id=self.payment.stripe_invoice_id,
             payment=self.payment,
             payment_method="card",
-            amount=10.00,
-            payment_date=datetime.now(timezone.utc),
-            status="paid",
-        )
-
-        self.assertTrue(result)
-
-    def test_can_update_amount_0(self):
-        result = self.handler.can_update(
-            invoice_id=self.payment.stripe_invoice_id,
-            payment=self.payment,
-            payment_method="card",
-            amount=0,
+            amount=self.payment.amount,
             payment_date=datetime.now(timezone.utc),
             status="paid",
         )
@@ -236,6 +226,20 @@ class InvoicePaidHandlerTest(TestCase):
                 payment_method="card",
                 amount=10.00,
                 payment_date=None,
+                invoice_id=self.payment.stripe_invoice_id,
+                status="paid",
+            )
+
+        mock_logger.assert_called_once()
+
+    @patch("apps.payments.services.stripe_events.invoice_paid.logger.error")
+    def test_can_update_amount_distinct(self, mock_logger):
+        with self.assertRaises(RuntimeError) as context:
+            self.handler.can_update(
+                payment=self.payment,
+                payment_method="card",
+                amount=self.payment.amount + 2,
+                payment_date=datetime.now(timezone.utc),
                 invoice_id=self.payment.stripe_invoice_id,
                 status="paid",
             )

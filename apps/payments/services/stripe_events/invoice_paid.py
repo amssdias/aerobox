@@ -27,7 +27,7 @@ class InvoicePaidHandler(StripeEventHandler):
         if self.can_update(
             invoice_id, payment, payment_method, amount, payment_date, status
         ):
-            self.update_payment(payment, payment_method, amount, payment_date, status)
+            self.update_payment(payment, payment_method, payment_date, status)
 
     def get_invoice_id(self):
         try:
@@ -133,26 +133,49 @@ class InvoicePaidHandler(StripeEventHandler):
 
     @staticmethod
     def can_update(invoice_id, payment, payment_method, amount, payment_date, status):
-        if not all([payment, payment_method, payment_date, status]) or amount is None:
-            logger.error(
-                f"Payment data is incomplete for Invoice ID: {invoice_id}. Stripe should retry.",
-                extra={
-                    "payment": payment,
-                    "method": payment_method,
-                    "amount": amount,
-                    "date": payment_date,
-                },
+        missing_fields = [
+            field_name for field_name, value in [
+                ("payment", payment),
+                ("payment_method", payment_method),
+                ("amount", amount),
+                ("payment_date", payment_date),
+                ("status", status),
+            ] if value is None
+        ]
+
+        if missing_fields:
+            error_msg = (
+                f"Invoice ID: {invoice_id} - Payment update failed due to missing fields: {', '.join(missing_fields)}. "
+                "Stripe should retry."
             )
-            raise RuntimeError(
-                f"Payment data is incomplete for Invoice ID: {invoice_id}. Stripe should retry."
+            logger.error(error_msg, extra={
+                "payment": payment,
+                "method": payment_method,
+                "amount": amount,
+                "date": payment_date,
+                "missing_fields": missing_fields,
+            })
+            raise RuntimeError(error_msg)
+
+        if payment.amount != amount:
+            error_msg = (
+                f"Invoice ID: {invoice_id} - Payment amount mismatch. Expected: {payment.amount}, Received: {amount}. "
+                "Possible double charge or incorrect Stripe data."
             )
+            logger.error(error_msg, extra={
+                "payment": payment,
+                "method": payment_method,
+                "expected_amount": payment.amount,
+                "received_amount": amount,
+                "date": payment_date,
+            })
+            raise RuntimeError(error_msg)
 
         return True
 
     @staticmethod
-    def update_payment(payment, payment_method, amount, payment_date, status):
+    def update_payment(payment, payment_method, payment_date, status):
         payment.payment_method = payment_method
-        payment.amount = amount
         payment.payment_date = payment_date
         payment.status = status
         payment.save()
