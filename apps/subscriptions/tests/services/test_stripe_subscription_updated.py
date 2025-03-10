@@ -4,6 +4,11 @@ from unittest.mock import patch
 from django.test import TestCase
 
 from apps.subscriptions.choices.subscription_choices import SubscriptionStatusChoices
+from apps.subscriptions.constants.stripe_subscription_status import (
+    INCOMPLETE,
+    ACTIVE,
+    PAST_DUE,
+)
 from apps.subscriptions.factories.plan_factory import PlanFactory
 from apps.subscriptions.factories.subscription import SubscriptionFactory
 from apps.subscriptions.models import Subscription
@@ -40,9 +45,7 @@ class SubscriptionUpdatedHandlerTest(TestCase):
             self.subscription.status, SubscriptionStatusChoices.INACTIVE.value
         )
 
-    @patch(
-        "config.services.stripe_services.stripe_events.customer_event.logger.error"
-    )
+    @patch("config.services.stripe_services.stripe_events.customer_event.logger.error")
     def test_process_subscription_does_not_exist(self, mock_logger):
         subscription_id = "non_existent_sub"
         self.handler.data["id"] = subscription_id
@@ -55,12 +58,17 @@ class SubscriptionUpdatedHandlerTest(TestCase):
         )
 
     def test_get_subscription_status_active(self):
-        self.handler.data["status"] = "active"
+        self.handler.data["status"] = ACTIVE
         status = self.handler.get_subscription_status()
         self.assertEqual(status, SubscriptionStatusChoices.ACTIVE.value)
 
     def test_get_subscription_status_incomplete(self):
-        self.handler.data["status"] = "incomplete"
+        self.handler.data["status"] = INCOMPLETE
+        status = self.handler.get_subscription_status()
+        self.assertEqual(status, SubscriptionStatusChoices.INACTIVE.value)
+
+    def test_get_subscription_status_past_due(self):
+        self.handler.data["status"] = PAST_DUE
         status = self.handler.get_subscription_status()
         self.assertEqual(status, SubscriptionStatusChoices.INACTIVE.value)
 
