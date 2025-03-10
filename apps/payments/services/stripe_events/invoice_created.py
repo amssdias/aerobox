@@ -1,7 +1,7 @@
 import logging
 
 from apps.payments.choices.payment_choices import PaymentStatusChoices
-from apps.payments.constants.stripe_invoice import OPEN
+from apps.payments.constants.stripe_invoice import OPEN, DRAFT
 from apps.payments.models import Payment
 from config.services.stripe_services.stripe_events.base_event import StripeEventHandler
 from config.services.stripe_services.stripe_events.customer_event import StripeCustomerMixin
@@ -21,8 +21,9 @@ class InvoiceCreatedHandler(StripeEventHandler, StripeCustomerMixin):
         status = self.get_invoice_status()
         hosted_invoice_url = self.get_hosted_invoice_url()
         invoice_pdf_url = self.get_invoice_pdf_url()
+        amount_due = self.extract_amount_due()
 
-        if not self.is_valid_payment(user, subscription, invoice_id, status):
+        if not self.is_valid_payment(user, subscription, invoice_id, status, amount_due):
             return
 
         self.create_payment(
@@ -32,6 +33,7 @@ class InvoiceCreatedHandler(StripeEventHandler, StripeCustomerMixin):
             invoice_id=invoice_id,
             invoice_url=hosted_invoice_url,
             invoice_pdf_url=invoice_pdf_url,
+            amount_due=amount_due,
         )
 
     def get_invoice_id(self):
@@ -55,7 +57,7 @@ class InvoiceCreatedHandler(StripeEventHandler, StripeCustomerMixin):
             )
             return PaymentStatusChoices.PENDING.value
 
-        if data_status == OPEN:
+        if data_status in [OPEN, DRAFT]:
             return PaymentStatusChoices.PENDING.value
         else:
             return None
@@ -78,7 +80,24 @@ class InvoiceCreatedHandler(StripeEventHandler, StripeCustomerMixin):
             )
         return invoice_pdf_url
 
-    def is_valid_payment(self, user, subscription, invoice_id, status):
+    def extract_amount_due(self):
+        try:
+            return self.data["amount_due"] / 100  # Convert cents to euros
+        except KeyError:
+            logger.error(
+                "Missing 'amount_paid' key in Stripe event data.",
+                extra={"stripe_data": self.data},
+            )
+            return None
+        except TypeError:
+            logger.error(
+                "Invalid type for 'amount_paid' in Stripe event data. Expected an integer value in cents, "
+                f"but got {type(self.data.get('amount_paid'))} instead.",
+                extra={"stripe_data": self.data},
+            )
+            return None
+
+    def is_valid_payment(self, user, subscription, invoice_id, status, amount_due):
         missing_fields = []
         if not user:
             missing_fields.append("user")
@@ -88,6 +107,8 @@ class InvoiceCreatedHandler(StripeEventHandler, StripeCustomerMixin):
             missing_fields.append("invoice_id")
         if not status:
             missing_fields.append("status")
+        if not amount_due:
+            missing_fields.append("amount_due")
 
         if missing_fields:
             logger.critical(
@@ -101,7 +122,7 @@ class InvoiceCreatedHandler(StripeEventHandler, StripeCustomerMixin):
         return True
 
     @staticmethod
-    def create_payment(user, subscription, status, invoice_id, invoice_url, invoice_pdf_url):
+    def create_payment(user, subscription, status, invoice_id, invoice_url, invoice_pdf_url, amount_due):
         Payment.objects.create(
             user=user,
             subscription=subscription,
@@ -109,5 +130,6 @@ class InvoiceCreatedHandler(StripeEventHandler, StripeCustomerMixin):
             stripe_invoice_id=invoice_id,
             invoice_url=invoice_url,
             invoice_pdf_url=invoice_pdf_url,
+            amount=amount_due
         )
         logger.info(f"Payment created successfully for invoice {invoice_id}.")

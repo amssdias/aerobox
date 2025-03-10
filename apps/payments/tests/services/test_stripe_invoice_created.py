@@ -3,6 +3,7 @@ from unittest.mock import patch
 from django.test import TestCase
 
 from apps.payments.choices.payment_choices import PaymentStatusChoices
+from apps.payments.constants.stripe_invoice import DRAFT
 from apps.payments.models import Payment
 from apps.payments.services.stripe_events.invoice_created import InvoiceCreatedHandler
 from apps.subscriptions.factories.subscription import SubscriptionFactory
@@ -20,6 +21,7 @@ class InvoiceCreatedHandlerTest(TestCase):
             "data": {
                 "object": {
                     "id": "invoice_123",
+                    "amount_due": 499,
                     "customer": self.user.profile.stripe_customer_id,
                     "subscription": self.subscription.stripe_subscription_id,
                     "status": "open",
@@ -71,6 +73,12 @@ class InvoiceCreatedHandlerTest(TestCase):
         mock_logger.assert_called_once()
 
     def test_get_invoice_status_returns_pending_for_open(self):
+        self.assertEqual(
+            self.handler.get_invoice_status(), PaymentStatusChoices.PENDING.value
+        )
+
+    def test_get_invoice_status_returns_pending_for_draft(self):
+        self.handler.data["status"] = DRAFT
         self.assertEqual(
             self.handler.get_invoice_status(), PaymentStatusChoices.PENDING.value
         )
@@ -128,6 +136,7 @@ class InvoiceCreatedHandlerTest(TestCase):
             self.subscription,
             "invoice_123",
             PaymentStatusChoices.PENDING.value,
+            5,
         )
 
         self.assertTrue(result)
@@ -135,26 +144,31 @@ class InvoiceCreatedHandlerTest(TestCase):
     def test_is_valid_payment_returns_false_if_user_missing(self):
         with self.assertRaises(RuntimeError) as context:
             self.handler.is_valid_payment(
-                None, self.subscription, "invoice_123", PaymentStatusChoices.PENDING.value
+                None, self.subscription, "invoice_123", PaymentStatusChoices.PENDING.value, 4.99
             )
 
     def test_is_valid_payment_returns_false_if_subscription_missing(self):
         with self.assertRaises(RuntimeError) as context:
             self.handler.is_valid_payment(
-                self.user, None, "invoice_123", PaymentStatusChoices.PENDING.value
+                self.user, None, "invoice_123", PaymentStatusChoices.PENDING.value, 4.99
             )
-
 
     def test_is_valid_payment_returns_false_if_invoice_id_missing(self):
         with self.assertRaises(RuntimeError) as context:
             self.handler.is_valid_payment(
-                self.user, self.subscription, None, PaymentStatusChoices.PENDING.value
+                self.user, self.subscription, None, PaymentStatusChoices.PENDING.value, 4.99
             )
 
     def test_is_valid_payment_returns_false_if_status_missing(self):
         with self.assertRaises(RuntimeError) as context:
             self.handler.is_valid_payment(
-                self.user, self.subscription, "invoice_123", None
+                self.user, self.subscription, "invoice_123", None, 4.99
+            )
+
+    def test_is_valid_payment_returns_false_if_amount_due_missing(self):
+        with self.assertRaises(RuntimeError) as context:
+            self.handler.is_valid_payment(
+                self.user, self.subscription, "invoice_123", PaymentStatusChoices.PENDING.value, None
             )
 
     def test_create_payment_creates_payment_successfully(self):
@@ -165,6 +179,7 @@ class InvoiceCreatedHandlerTest(TestCase):
             invoice_id="invoice_123",
             invoice_url="https://stripe.com/invoice_123",
             invoice_pdf_url="https://stripe.com/invoice_123.pdf",
+            amount_due=4.99,
         )
 
         self.assertTrue(
@@ -174,7 +189,7 @@ class InvoiceCreatedHandlerTest(TestCase):
     @patch("apps.payments.services.stripe_events.invoice_created.logger.critical")
     def test_is_valid_payment_logs_critical_error_if_missing_fields(self, mock_logger):
         with self.assertRaises(RuntimeError) as context:
-            self.handler.is_valid_payment(None, None, None, None)
+            self.handler.is_valid_payment(None, None, None, None, None)
 
         mock_logger.assert_called_once()
 
@@ -187,6 +202,7 @@ class InvoiceCreatedHandlerTest(TestCase):
             invoice_id="invoice_123",
             invoice_url="https://stripe.com/invoice_123",
             invoice_pdf_url="https://stripe.com/invoice_123.pdf",
+            amount_due=4.99,
         )
 
         mock_logger.assert_called_once()
