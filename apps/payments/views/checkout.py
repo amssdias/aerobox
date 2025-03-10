@@ -12,6 +12,13 @@ class CheckoutSessionViewSet(viewsets.GenericViewSet):
 
     @action(detail=False, methods=["post"], url_path="session")
     def create_checkout(self, request):
+        """
+        Creates a Stripe checkout session URL for the user to complete their payment.
+
+        This endpoint generates a checkout session, allowing the user to proceed with
+        the payment for their subscription.
+        """
+
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             data = serializer.get_checkout_session_url(user=request.user)
