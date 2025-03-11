@@ -48,7 +48,7 @@ class InvoicePaidHandlerTest(TestCase):
 
         self.assertEqual(retrieved_payment, self.payment)
 
-    @patch("apps.payments.services.stripe_events.invoice_paid.logger.error")
+    @patch("config.services.stripe_services.stripe_events.invoice_event_mixin.logger.error")
     def test_get_payment_not_found(self, mock_logger):
         retrieved_payment = self.handler.get_payment("nonexistent_id")
 
@@ -68,8 +68,8 @@ class InvoicePaidHandlerTest(TestCase):
         result = self.handler.extract_payment_date()
         self.assertIsNone(result)
 
-    @patch("apps.payments.services.stripe_events.invoice_paid.get_payment_intent")
-    @patch("apps.payments.services.stripe_events.invoice_paid.get_payment_method")
+    @patch("config.services.stripe_services.stripe_events.invoice_event_mixin.get_payment_intent")
+    @patch("config.services.stripe_services.stripe_events.invoice_event_mixin.get_payment_method")
     def test_get_payment_method_success(
         self, mock_get_payment_method, mock_get_payment_intent
     ):
@@ -82,8 +82,8 @@ class InvoicePaidHandlerTest(TestCase):
         mock_get_payment_intent.assert_called_once_with("pi_123")
         mock_get_payment_method.assert_called_once_with("pm_123")
 
-    @patch("apps.payments.services.stripe_events.invoice_paid.logger.error")
-    @patch("apps.payments.services.stripe_events.invoice_paid.get_payment_intent")
+    @patch("config.services.stripe_services.stripe_events.invoice_event_mixin.logger.error")
+    @patch("config.services.stripe_services.stripe_events.invoice_event_mixin.get_payment_intent")
     def test_get_payment_method_missing_payment_intent_id(
         self, mock_get_payment_intent, mock_logger
     ):
@@ -95,8 +95,8 @@ class InvoicePaidHandlerTest(TestCase):
         mock_get_payment_intent.assert_not_called()
         mock_logger.asser_called_once()
 
-    @patch("apps.payments.services.stripe_events.invoice_paid.logger.error")
-    @patch("apps.payments.services.stripe_events.invoice_paid.get_payment_intent")
+    @patch("config.services.stripe_services.stripe_events.invoice_event_mixin.logger.error")
+    @patch("config.services.stripe_services.stripe_events.invoice_event_mixin.get_payment_intent")
     def test_get_payment_method_payment_intent_not_found(
         self, mock_get_payment_intent, mock_logger
     ):
@@ -108,8 +108,8 @@ class InvoicePaidHandlerTest(TestCase):
         mock_get_payment_intent.assert_called_once()
         mock_logger.asser_called_once()
 
-    @patch("apps.payments.services.stripe_events.invoice_paid.logger.error")
-    @patch("apps.payments.services.stripe_events.invoice_paid.get_payment_intent")
+    @patch("config.services.stripe_services.stripe_events.invoice_event_mixin.logger.error")
+    @patch("config.services.stripe_services.stripe_events.invoice_event_mixin.get_payment_intent")
     def test_get_payment_method_missing_payment_method(
         self, mock_get_payment_intent, mock_logger
     ):
@@ -121,9 +121,9 @@ class InvoicePaidHandlerTest(TestCase):
         mock_get_payment_intent.assert_called_once_with("pi_123")
         mock_logger.asser_called_once()
 
-    @patch("apps.payments.services.stripe_events.invoice_paid.logger.error")
-    @patch("apps.payments.services.stripe_events.invoice_paid.get_payment_intent")
-    @patch("apps.payments.services.stripe_events.invoice_paid.get_payment_method")
+    @patch("config.services.stripe_services.stripe_events.invoice_event_mixin.logger.error")
+    @patch("config.services.stripe_services.stripe_events.invoice_event_mixin.get_payment_intent")
+    @patch("config.services.stripe_services.stripe_events.invoice_event_mixin.get_payment_method")
     def test_get_payment_method_payment_method_not_found(
         self, mock_get_payment_method, mock_get_payment_intent, mock_logger
     ):
@@ -149,13 +149,13 @@ class InvoicePaidHandlerTest(TestCase):
         self.assertIsNone(result)
 
     def test_get_status_success(self):
-        result = self.handler.get_status()
+        result = self.handler.get_invoice_status()
         self.assertEqual(result, "paid")
 
-    @patch("apps.payments.services.stripe_events.invoice_paid.logger.error")
+    @patch("config.services.stripe_services.stripe_events.invoice_event_mixin.logger.error")
     def test_get_status_missing_key(self, mock_logger):
         del self.handler.data["status"]
-        result = self.handler.get_status()
+        result = self.handler.get_invoice_status()
 
         self.assertIsNone(result)
         mock_logger.assert_called_once()

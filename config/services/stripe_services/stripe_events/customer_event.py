@@ -34,3 +34,12 @@ class StripeCustomerMixin:
                 "Subscription not found: The provided Stripe subscription ID does not exist.",
                 extra={"stripe_subscription_id": subscription_id},
             )
+
+    def get_subscription_id(self):
+        subscription_id = self.data.get("subscription")
+        if not subscription_id:
+            logger.error(
+                "Missing 'subscription' key in Stripe event data.",
+                extra={"stripe_data": self.data}
+            )
+        return subscription_id

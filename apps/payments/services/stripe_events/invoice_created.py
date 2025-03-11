@@ -1,15 +1,18 @@
 import logging
 
-from apps.payments.choices.payment_choices import PaymentStatusChoices
-from apps.payments.constants.stripe_invoice import OPEN, DRAFT
 from apps.payments.models import Payment
 from config.services.stripe_services.stripe_events.base_event import StripeEventHandler
 from config.services.stripe_services.stripe_events.customer_event import StripeCustomerMixin
+from config.services.stripe_services.stripe_events.invoice_event_mixin import StripeInvoiceMixin
 
 logger = logging.getLogger("aerobox")
 
 
-class InvoiceCreatedHandler(StripeEventHandler, StripeCustomerMixin):
+class InvoiceCreatedHandler(
+    StripeEventHandler,
+    StripeCustomerMixin,
+    StripeInvoiceMixin
+):
     """
     Handles the `invoice.created` event.
     """
@@ -35,67 +38,6 @@ class InvoiceCreatedHandler(StripeEventHandler, StripeCustomerMixin):
             invoice_pdf_url=invoice_pdf_url,
             amount_due=amount_due,
         )
-
-    def get_invoice_id(self):
-        return self.data.get("id")
-
-    def get_subscription_id(self):
-        subscription_id = self.data.get("subscription")
-        if not subscription_id:
-            logger.error(
-                "Missing 'subscription' key in Stripe event data.",
-                extra={"stripe_data": self.data}
-            )
-        return subscription_id
-
-    def get_invoice_status(self):
-        data_status = self.data.get("status")
-        if not data_status:
-            logger.error(
-                "Missing 'status' key in Stripe event data.",
-                extra={"stripe_data": self.data}
-            )
-            return PaymentStatusChoices.PENDING.value
-
-        if data_status in [OPEN, DRAFT]:
-            return PaymentStatusChoices.PENDING.value
-        else:
-            return None
-
-    def get_hosted_invoice_url(self):
-        hosted_invoice_url = self.data.get("hosted_invoice_url")
-        if not hosted_invoice_url:
-            logger.error(
-                "Missing 'hosted_invoice_url' key in Stripe event data.",
-                extra={"stripe_data": self.data}
-            )
-        return hosted_invoice_url
-
-    def get_invoice_pdf_url(self):
-        invoice_pdf_url = self.data.get("invoice_pdf")
-        if not invoice_pdf_url:
-            logger.error(
-                "Missing 'invoice_pdf' key in Stripe event data.",
-                extra={"stripe_data": self.data}
-            )
-        return invoice_pdf_url
-
-    def extract_amount_due(self):
-        try:
-            return self.data["amount_due"] / 100  # Convert cents to euros
-        except KeyError:
-            logger.error(
-                "Missing 'amount_paid' key in Stripe event data.",
-                extra={"stripe_data": self.data},
-            )
-            return None
-        except TypeError:
-            logger.error(
-                "Invalid type for 'amount_paid' in Stripe event data. Expected an integer value in cents, "
-                f"but got {type(self.data.get('amount_paid'))} instead.",
-                extra={"stripe_data": self.data},
-            )
-            return None
 
     def is_valid_payment(self, user, subscription, invoice_id, status, amount_due):
         missing_fields = []

@@ -89,7 +89,7 @@ class InvoiceCreatedHandlerTest(TestCase):
         self.assertIsNone(result)
 
     def test_get_invoice_status_returns_none_for_invalid_status(self):
-        self.handler.data["status"] = "paid"
+        self.handler.data["status"] = "invalid_status"
 
         self.assertIsNone(self.handler.get_invoice_status())
 
@@ -97,9 +97,7 @@ class InvoiceCreatedHandlerTest(TestCase):
     def test_get_invoice_status_returns_pending_for_empty_status(self, mock_logger):
         self.handler.data["status"] = ""
 
-        self.assertEqual(
-            self.handler.get_invoice_status(), PaymentStatusChoices.PENDING.value
-        )
+        self.assertIsNone(self.handler.get_invoice_status())
         mock_logger.assert_called_once()
 
     def test_get_hosted_invoice_url_returns_correct_url(self):
