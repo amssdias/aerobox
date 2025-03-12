@@ -146,6 +146,16 @@ class StripeInvoiceMixin:
             )
             return None
 
+    def get_billing_reason(self):
+        try:
+            return self.data["billing_reason"]
+        except KeyError:
+            logger.error(
+                "Missing 'billing_reason' key in Stripe event data.",
+                extra={"stripe_data": self.data},
+            )
+            return None
+
     @staticmethod
     def get_payment(invoice_id):
         try:
