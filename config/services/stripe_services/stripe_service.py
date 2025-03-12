@@ -6,6 +6,7 @@ from django.conf import settings
 from apps.payments.services.stripe_events.invoice_created import InvoiceCreatedHandler
 from apps.payments.services.stripe_events.invoice_finalized import InvoiceFinalizedHandler
 from apps.payments.services.stripe_events.invoice_paid import InvoicePaidHandler
+from apps.payments.services.stripe_events.invoice_payment_failed import InvoicePaymentFailedHandler
 from apps.subscriptions.services.stripe_events.stripe_subscription_created import (
     SubscriptionCreateddHandler,
 )
@@ -71,5 +72,6 @@ class StripeService:
             "invoice.created": InvoiceCreatedHandler,
             "invoice.paid": InvoicePaidHandler,
             "invoice.finalized": InvoiceFinalizedHandler,
+            "invoice.payment_failed": InvoicePaymentFailedHandler,
         }
         return handlers.get(event_type, None)(event) if event_type in handlers else None
