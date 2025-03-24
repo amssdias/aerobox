@@ -19,6 +19,8 @@ def create_stripe_checkout_session(plan, stripe_customer_id):
         mode="subscription",
         success_url=success_url,
         cancel_url=cancel_url,
+        automatic_tax={"enabled": True},
+        customer_update={"address": "auto"},
     )
 
     return session.url
