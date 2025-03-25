@@ -1,5 +1,6 @@
 import logging
 
+from apps.payments.tasks.send_invoice_paid_email import send_invoice_payment_success_email
 from config.services.stripe_services.stripe_events.base_event import StripeEventHandler
 from config.services.stripe_services.stripe_events.invoice_event_mixin import StripeInvoiceMixin
 
@@ -23,6 +24,7 @@ class InvoicePaidHandler(StripeEventHandler, StripeInvoiceMixin):
             invoice_id, payment, payment_method, amount, payment_date, status
         ):
             self.update_payment(payment, payment_method, payment_date, status)
+            self.send_invoice_paid_email(payment=payment)
 
     @staticmethod
     def can_update(invoice_id, payment, payment_method, amount, payment_date, status):
@@ -72,3 +74,10 @@ class InvoicePaidHandler(StripeEventHandler, StripeInvoiceMixin):
         payment.payment_date = payment_date
         payment.status = status
         payment.save()
+
+    @staticmethod
+    def send_invoice_paid_email(payment):
+        send_invoice_payment_success_email.delay(
+            user_id=payment.user.id,
+            invoice_pdf_url=payment.invoice_pdf_url
+        )

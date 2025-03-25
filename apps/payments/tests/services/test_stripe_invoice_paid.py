@@ -1,5 +1,6 @@
 from unittest.mock import patch
 
+from django.core import mail
 from django.test import TestCase
 
 from datetime import datetime, timezone
@@ -300,3 +301,14 @@ class InvoicePaidHandlerTest(TestCase):
 
         with self.assertRaises(RuntimeError) as context:
             self.handler.process()
+
+    @patch(
+        "apps.payments.services.stripe_events.invoice_paid.InvoicePaidHandler.get_payment_method"
+    )
+    def test_update_payment_success_email_sent(self, mock_get_payment_method):
+        mock_get_payment_method.return_value = "card"
+
+        self.handler.process()
+
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn(self.payment.user.email, mail.outbox[0].to)
