@@ -9,7 +9,13 @@ class FeatureFactory(factory.django.DjangoModelFactory):
         model = Feature
 
     code = FeatureCodeChoices.CLOUD_STORAGE.value
-    name = "Cloud storage"
-    description = factory.Faker("sentence")
-    metadata = {}
+    name = {
+        "en": "Cloud Storage",
+        "es": "Almacenamiento en la Nube"
+    }
+    description = {
+        "en": "Cloud file storage with upload support.",
+        "es": "Almacenamiento de archivos en la nube con soporte de subida."
+    }
+    metadata = factory.LazyFunction(dict)
     is_active = True

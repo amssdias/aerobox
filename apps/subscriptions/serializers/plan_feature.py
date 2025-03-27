@@ -4,8 +4,8 @@ from apps.subscriptions.models import PlanFeature
 
 
 class FeaturePlanSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(source="feature.name")  # Pull from Feature model
-    description = serializers.CharField(source="feature.description")
+    name = serializers.JSONField(source="feature.name")
+    description = serializers.JSONField(source="feature.description")
     code = serializers.CharField(source="feature.code")
     default_metadata = serializers.JSONField(source="feature.metadata")
     metadata = serializers.JSONField()

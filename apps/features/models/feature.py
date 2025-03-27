@@ -11,8 +11,8 @@ class Feature(models.Model):
         choices=FeatureCodeChoices.choices,
         help_text=_("Unique identifier for the feature")
     )
-    name = models.CharField(max_length=100, unique=True)
-    description = models.TextField(blank=True, null=True)
+    name = models.JSONField(default=dict)
+    description = models.JSONField(default=dict, blank=True, null=True)
     metadata = models.JSONField(
         blank=True,
         null=True,
