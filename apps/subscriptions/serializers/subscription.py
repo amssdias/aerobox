@@ -6,14 +6,17 @@ from django.utils.translation import gettext_lazy as _
 from apps.payments.services.stripe_api import create_stripe_checkout_session
 from apps.subscriptions.choices.subscription_choices import SubscriptionBillingCycleChoices
 from apps.subscriptions.models import Subscription, Plan
+from apps.subscriptions.serializers.plan import PlanSerializer
 
 logger = logging.getLogger("aerobox")
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
+    plan = PlanSerializer()
+
     class Meta:
         model = Subscription
-        fields = "__all__"
+        exclude = ("id", "user", "stripe_subscription_id", "created_at", "updated_at",)
 
 
 class CheckoutSubscriptionSerializer(serializers.Serializer):
