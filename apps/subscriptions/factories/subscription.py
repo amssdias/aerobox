@@ -20,7 +20,7 @@ class SubscriptionFactory(factory.django.DjangoModelFactory):
     plan = factory.SubFactory(PlanFactory)
     stripe_subscription_id = factory.Faker("uuid4")
     billing_cycle = SubscriptionBillingCycleChoices.MONTH.value
-    start_date = factory.LazyFunction(now)
+    start_date = factory.LazyFunction(lambda: now().date())
     end_date = factory.LazyAttribute(lambda obj: obj.start_date + timedelta(days=31))
     status = SubscriptionStatusChoices.ACTIVE.value
     is_recurring = True
