@@ -7,6 +7,11 @@ class Profile(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profile"
     )
     stripe_customer_id = models.CharField(max_length=255, blank=True, null=True)
+    language = models.CharField(
+        max_length=4,
+        choices=settings.LANGUAGES,
+        default="en"
+    )
 
     def __str__(self):
         return f"Profile of {self.user.username}"
