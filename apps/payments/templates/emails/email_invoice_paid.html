@@ -80,13 +80,13 @@
 			</p>
 
 			<p style="text-align: center">
-				<a href="http://localhost:3000/bill" class="link">{% trans "View Invoice" %}</a>
+				<a href="{{ invoice_pdf_url }}" class="link">{% trans "View Invoice" %}</a>
 			</p>
 
 			<p>{% trans "You can also return to the homepage by clicking the button below:" %}</p>
 
 			<p style="text-align: center">
-				<a href="http://localhost:3000/" class="button">{% trans "Go to Homepage" %}</a>
+				<a href="{{ dashboard_url }}" class="button">{% trans "Go to Homepage" %}</a>
 			</p>
 
 			<p>{% trans "Thank you for trusting us." %}</p>

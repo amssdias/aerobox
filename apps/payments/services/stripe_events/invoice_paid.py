@@ -1,4 +1,7 @@
 import logging
+from datetime import timedelta
+
+from django.utils import timezone
 
 from apps.payments.tasks.send_invoice_paid_email import send_invoice_payment_success_email
 from config.services.stripe_services.stripe_events.base_event import StripeEventHandler
@@ -24,6 +27,7 @@ class InvoicePaidHandler(StripeEventHandler, StripeInvoiceMixin):
             invoice_id, payment, payment_method, amount, payment_date, status
         ):
             self.update_payment(payment, payment_method, payment_date, status)
+            self.update_subscription(payment.subscription)
             self.send_invoice_paid_email(payment=payment)
 
     @staticmethod
@@ -73,7 +77,18 @@ class InvoicePaidHandler(StripeEventHandler, StripeInvoiceMixin):
         payment.payment_method = payment_method
         payment.payment_date = payment_date
         payment.status = status
-        payment.save()
+        payment.save(update_fields=["payment_method", "payment_date", "status"])
+
+    @staticmethod
+    def update_subscription(subscription):
+        today = timezone.now().date()
+
+        if subscription.end_date and subscription.end_date <= today:
+            subscription.end_date = today + timedelta(days=30)
+            subscription.save(update_fields=["end_date"])
+            logger.info(f"Subscription {subscription.id} extended to {subscription.end_date}.")
+        else:
+            logger.info(f"Subscription {subscription.id} not updated. Current end date is {subscription.end_date}.")
 
     @staticmethod
     def send_invoice_paid_email(payment):
