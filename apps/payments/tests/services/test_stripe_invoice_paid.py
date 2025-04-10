@@ -1,11 +1,13 @@
+from datetime import datetime, timedelta
 from unittest.mock import patch
 
 from django.core import mail
 from django.test import TestCase
+from django.utils import timezone
 
-from datetime import datetime, timezone
 from apps.payments.factories.payment import PaymentFactory
 from apps.payments.services.stripe_events.invoice_paid import InvoicePaidHandler
+from apps.subscriptions.factories.subscription import SubscriptionFactory
 
 
 class InvoicePaidHandlerTest(TestCase):
@@ -312,3 +314,32 @@ class InvoicePaidHandlerTest(TestCase):
 
         self.assertEqual(len(mail.outbox), 1)
         self.assertIn(self.payment.user.email, mail.outbox[0].to)
+
+    def test_updates_subscription_when_end_date_is_today(self):
+        subscription = SubscriptionFactory(end_date=timezone.now().date())
+        self.handler.update_subscription(subscription)
+        subscription.refresh_from_db()
+
+        self.assertEqual(subscription.end_date, timezone.now().date() + timedelta(days=30))
+
+    def test_updates_subscription_when_end_date_is_in_the_past(self):
+        subscription = SubscriptionFactory(end_date=timezone.now().date() - timedelta(days=1))
+        self.handler.update_subscription(subscription)
+        subscription.refresh_from_db()
+
+        self.assertEqual(subscription.end_date, timezone.now().date() + timedelta(days=30))
+
+    def test_does_not_update_subscription_when_end_date_is_in_the_future(self):
+        future_date = timezone.now().date() + timedelta(days=10)
+        subscription = SubscriptionFactory(end_date=future_date)
+        self.handler.update_subscription(subscription)
+        subscription.refresh_from_db()
+
+        self.assertEqual(subscription.end_date, future_date)
+
+    def test_does_not_update_subscription_when_end_date_is_none(self):
+        subscription = SubscriptionFactory(end_date=None)
+        self.handler.update_subscription(subscription)
+        subscription.refresh_from_db()
+
+        self.assertIsNone(subscription.end_date)
