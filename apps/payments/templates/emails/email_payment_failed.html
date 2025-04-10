@@ -1,0 +1,107 @@
+{% load i18n %}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="UTF-8"/>
+	<title>{% trans "Payment Failed – Update Your Payment Method" %}</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+	<style type="text/css">
+		/* Estilos generales */
+		body {
+			margin: 0;
+			padding: 0;
+			background-color: #f4f4f4;
+			font-family: Arial, sans-serif;
+			color: #333333;
+		}
+		table {
+			border-collapse: collapse;
+			width: 100%;
+		}
+		.container {
+			max-width: 600px;
+			margin: 0 auto;
+		}
+		.header {
+			background-color: #007bff;
+			padding: 20px;
+			text-align: center;
+			color: #ffffff;
+		}
+		.content {
+			background-color: #ffffff;
+			padding: 20px;
+		}
+		.content h2 {
+			color: #007bff;
+		}
+		.error {
+			color: #d9534f;
+			font-weight: bold;
+			margin: 15px 0;
+		}
+		.button {
+			display: inline-block;
+			padding: 10px 20px;
+			background-color: #007bff;
+			color: #ffffff !important;
+			text-decoration: none;
+			border-radius: 5px;
+			font-weight: bold;
+			margin-top: 10px;
+		}
+		.link {
+			color: #007bff;
+			text-decoration: none;
+			font-weight: bold;
+		}
+		.footer {
+			text-align: center;
+			font-size: 12px;
+			color: #999999;
+			padding: 20px;
+		}
+	</style>
+</head>
+<body>
+<table class="container" cellpadding="0" cellspacing="0">
+	<tr>
+		<td class="header">
+			<h1>Aerobox</h1>
+		</td>
+	</tr>
+	<tr>
+		<td class="content">
+			<h2>{% trans "Payment Failed – Update Your Payment Method" %}</h2>
+			<p>{% trans "Hello, " %} {{ user.username }}</p>
+			<p class="error">{% trans "Attention! We’ve detected a problem with the payment for your subscription
+				renewal." %}</p>
+			<p>{% trans "We regret to inform you that the payment for renewing your subscription has failed." %}</p>
+			<p>
+				{% blocktrans trimmed with attempts=attempts %}
+				We’ve attempted to process your payment {{ attempts }} times without success.
+				{% endblocktrans %}
+			</p>
+			<p>{% trans "To avoid cancellation of your subscription, please update your payment method by clicking the
+				button below:" %}</p>
+			<p style="text-align: center">
+				<a href="https://www.aerobox.com/update-payment" class="button">{% trans "Update Payment Method" %}</a>
+			</p>
+			<p>
+				{% blocktrans trimmed with deadline_date=deadline_date %}
+				If you don’t update your payment method before {{ deadline_date }}, your subscription will be canceled.
+				{% endblocktrans %}
+			</p>
+			<p>{% trans "Thank you for your attention." %}</p>
+			<p>{% trans "Best regards," %}<br/>{% trans "The Aerobox Team"%}</p>
+		</td>
+	</tr>
+	<tr>
+		<td class="footer">
+			<p>&copy; 2025 Aerobox. {% trans "All rights reserved." %}</p>
+		</td>
+	</tr>
+</table>
+</body>
+</html>

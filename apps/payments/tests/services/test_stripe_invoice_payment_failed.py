@@ -1,5 +1,6 @@
-from django.test import TestCase
 from unittest.mock import patch, MagicMock
+
+from django.test import TestCase
 
 from apps.payments.choices.payment_choices import PaymentStatusChoices
 from apps.payments.factories.payment import PaymentFactory
@@ -69,3 +70,12 @@ class InvoicePaymentFailedHandlerTests(TestCase):
     def test_update_payment_changes_status_to_retrying(self):
         self.handler.update_payment(self.payment)
         self.assertEqual(self.payment.status, PaymentStatusChoices.RETRYING.value)
+
+    @patch(
+        "apps.payments.services.stripe_events.invoice_payment_failed.InvoicePaymentFailedHandler.send_invoice_payment_failed_email")
+    def test_process_subscription_email_payment_failed(self, mock_send_invoice_payment_failed_email):
+        self.handler.process()
+
+        self.payment.refresh_from_db()
+        self.assertEqual(self.payment.status, PaymentStatusChoices.RETRYING.value)
+        mock_send_invoice_payment_failed_email.assert_called_once()

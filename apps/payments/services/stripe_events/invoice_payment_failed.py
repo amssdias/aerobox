@@ -2,6 +2,7 @@ import logging
 
 from apps.payments.choices.payment_choices import PaymentStatusChoices
 from apps.payments.constants.stripe_invoice import SUBSCRIPTION_CYCLE
+from apps.payments.tasks.send_payment_failed_email import send_invoice_payment_failed_email
 from config.services.stripe_services.stripe_events.base_event import StripeEventHandler
 from config.services.stripe_services.stripe_events.invoice_event_mixin import (
     StripeInvoiceMixin,
@@ -23,6 +24,7 @@ class InvoicePaymentFailedHandler(StripeEventHandler, StripeInvoiceMixin):
 
         if self.is_subscription_cycle(billing_reason):
             self.update_payment(payment)
+            self.send_invoice_payment_failed_email(payment)
 
     @staticmethod
     def is_subscription_cycle(billing_reason):
@@ -39,4 +41,10 @@ class InvoicePaymentFailedHandler(StripeEventHandler, StripeInvoiceMixin):
         payment.save()
         logger.info(
             f"Payment retrying: Payment ID {payment.id} failed. User ID {payment.user_id} will be retried based on Stripe's dunning settings."
+        )
+
+    @staticmethod
+    def send_invoice_payment_failed_email(payment):
+        send_invoice_payment_failed_email.delay(
+            user_id=payment.user.id,
         )
