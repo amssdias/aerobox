@@ -61,15 +61,15 @@ class FolderSerializer(serializers.ModelSerializer):
 
 class FolderDetailSerializer(serializers.ModelSerializer):
     parent = FolderParentSerializer(read_only=True)
-    children_folders = serializers.SerializerMethodField()
-    children_files = serializers.SerializerMethodField()
+    subfolders = serializers.SerializerMethodField()
+    files = serializers.SerializerMethodField()
 
     class Meta:
         model = Folder
-        fields = ["id", "name", "parent", "children_folders", "children_files"]
+        fields = ["id", "name", "parent", "subfolders", "files"]
 
-    def get_children_folders(self, obj):
+    def get_subfolders(self, obj):
         return FolderSerializer(obj.subfolders.all(), many=True, context=self.context).data
 
-    def get_children_files(self, obj):
+    def get_files(self, obj):
         return CloudFilesSerializer(obj.files.all(), many=True, context=self.context).data
