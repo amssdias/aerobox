@@ -1,0 +1,462 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-04-07 21:20+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: apps/cloud_storage/exceptions.py:12
+msgid "An error occurred while processing your file. Please try again later."
+msgstr "An error occurred while processing your file. Please try again later."
+
+#: apps/cloud_storage/models/cloud_files.py:13
+#: apps/payments/choices/payment_choices.py:14
+msgid "Pending"
+msgstr "Pending"
+
+#: apps/cloud_storage/models/cloud_files.py:14
+msgid "Success"
+msgstr "Success"
+
+#: apps/cloud_storage/models/cloud_files.py:15
+msgid "Failed"
+msgstr "Failed"
+
+#: apps/cloud_storage/models/cloud_files.py:28
+msgid "The intended name of the file to be stored in S3."
+msgstr "The intended name of the file to be stored in S3."
+
+#: apps/cloud_storage/models/cloud_files.py:33
+msgid "The S3 path where the file is stored."
+msgstr "The S3 path where the file is stored."
+
+#: apps/cloud_storage/models/cloud_files.py:36
+msgid ""
+"The size of the file in bytes. This can be updated after the file is "
+"uploaded."
+msgstr ""
+"The size of the file in bytes. This can be updated after the file is "
+"uploaded."
+
+#: apps/cloud_storage/models/cloud_files.py:40
+msgid "The MIME type of the file (e.g., 'image/jpeg', 'application/pdf')."
+msgstr "The MIME type of the file (e.g., 'image/jpeg', 'application/pdf')."
+
+#: apps/cloud_storage/models/cloud_files.py:47
+msgid "The user who uploaded the file (owner)."
+msgstr "The user who uploaded the file (owner)."
+
+#: apps/cloud_storage/models/cloud_files.py:53
+msgid "The current status of the file upload process."
+msgstr "The current status of the file upload process."
+
+#: apps/cloud_storage/models/cloud_files.py:58
+msgid "Any error message encountered during the file upload process."
+msgstr "Any error message encountered during the file upload process."
+
+#: apps/cloud_storage/models/cloud_files.py:63
+msgid "Additional metadata related to the file, stored as a JSON object."
+msgstr "Additional metadata related to the file, stored as a JSON object."
+
+#: apps/cloud_storage/models/cloud_files.py:75
+msgid "Cloud File"
+msgstr "Cloud File"
+
+#: apps/cloud_storage/models/cloud_files.py:76
+msgid "Cloud Files"
+msgstr "Cloud Files"
+
+#: apps/cloud_storage/serializers/cloud_files.py:48
+#: apps/cloud_storage/serializers/cloud_files.py:183
+msgid "The file name cannot contain '/' or '\\'."
+msgstr "The file name cannot contain '/' or '\\'."
+
+#: apps/cloud_storage/serializers/cloud_files.py:52
+#: apps/cloud_storage/serializers/cloud_files.py:197
+msgid "The file name cannot be empty or consist only of whitespace."
+msgstr "The file name cannot be empty or consist only of whitespace."
+
+#: apps/cloud_storage/serializers/cloud_files.py:77
+msgid "The file path must use '/' instead of '\\'."
+msgstr "The file path must use '/' instead of '\\'."
+
+#: apps/cloud_storage/serializers/cloud_files.py:83
+msgid "The file path cannot start or end with '/'."
+msgstr "The file path cannot start or end with '/'."
+
+#: apps/cloud_storage/serializers/cloud_files.py:89
+msgid "The file path cannot contain consecutive slashes."
+msgstr "The file path cannot contain consecutive slashes."
+
+#: apps/cloud_storage/serializers/cloud_files.py:96
+msgid ""
+"The file path cannot contain dots (`.`). Dots are only allowed in file names "
+"for extensions."
+msgstr ""
+"The file path cannot contain dots (`.`). Dots are only allowed in file names "
+"for extensions."
+
+#: apps/cloud_storage/serializers/cloud_files.py:111
+msgid "User is not authenticated."
+msgstr "User is not authenticated."
+
+#: apps/cloud_storage/serializers/cloud_files.py:116
+msgid "Content type sent is not correct."
+msgstr "Content type sent is not correct."
+
+#: apps/cloud_storage/serializers/cloud_files.py:148
+msgid "Failed to retrieve file. Please try again later."
+msgstr "Failed to retrieve file. Please try again later."
+
+#: apps/cloud_storage/serializers/cloud_files.py:154
+msgid ""
+"Unable to generate download URL. The file may not exist or there was an "
+"error with the storage service."
+msgstr ""
+"Unable to generate download URL. The file may not exist or there was an "
+"error with the storage service."
+
+#: apps/cloud_storage/serializers/cloud_files.py:187
+msgid "The file name cannot contain '.' or extensions."
+msgstr "The file name cannot contain '.' or extensions."
+
+#: apps/cloud_storage/serializers/cloud_files.py:192
+msgid "The new file name cannot be the same as the current file name."
+msgstr "The new file name cannot be the same as the current file name."
+
+#: apps/cloud_storage/serializers/folder_serializer.py:41
+msgid "A folder with this name already exists in the same parent folder."
+msgstr "A folder with this name already exists in the same parent folder."
+
+#: apps/cloud_storage/views/cloud_storage.py:60
+msgid "Received empty presigned URL"
+msgstr "Received empty presigned URL"
+
+#: apps/features/choices/feature_code_choices.py:6
+msgid "Cloud Storage"
+msgstr "Cloud Storage"
+
+#: apps/features/choices/feature_code_choices.py:7
+msgid "File Preview"
+msgstr "File Preview"
+
+#: apps/features/choices/feature_code_choices.py:8
+msgid "File Sharing via Link"
+msgstr "File Sharing via Link"
+
+#: apps/features/choices/feature_code_choices.py:9
+msgid "Folder Creation"
+msgstr "Folder Creation"
+
+#: apps/features/choices/feature_code_choices.py:10
+msgid "Basic Email Support"
+msgstr "Basic Email Support"
+
+#: apps/features/models/feature.py:12
+msgid "Unique identifier for the feature"
+msgstr "Unique identifier for the feature"
+
+#: apps/features/models/feature.py:19
+msgid "Optional: store feature-specific config"
+msgstr "Optional: store feature-specific config"
+
+#: apps/payments/choices/payment_choices.py:9
+msgid "Credit Card"
+msgstr "Credit Card"
+
+#: apps/payments/choices/payment_choices.py:10
+msgid "PayPal"
+msgstr "PayPal"
+
+#: apps/payments/choices/payment_choices.py:15
+msgid "Paid"
+msgstr "Paid"
+
+#: apps/payments/choices/payment_choices.py:16
+msgid "Canceled (Void)"
+msgstr "Canceled (Void)"
+
+#: apps/payments/choices/payment_choices.py:17
+msgid "Retrying"
+msgstr "Retrying"
+
+#: apps/payments/choices/payment_choices.py:21
+msgid "Euro"
+msgstr "Euro"
+
+#: apps/payments/models/payment.py:26
+msgid "The date and time when the payment was made."
+msgstr "The date and time when the payment was made."
+
+#: apps/payments/tasks/send_invoice_paid_email.py:19
+msgid "Payment Successful — Your Invoice is Ready"
+msgstr "Payment Successful — Your Invoice is Ready"
+
+#: apps/payments/tasks/send_invoice_paid_email.py:24
+#, python-brace-format
+msgid "Use this link to see your invoice: {link}"
+msgstr "Use this link to see your invoice: {link}"
+
+#: apps/payments/tasks/send_payment_failed_email.py:18
+#: apps/payments/tasks/send_payment_failed_email.py:23
+msgid "Payment Failed"
+msgstr "Payment Failed"
+
+#: apps/payments/templates/emails/email_invoice_paid.html:7
+#, fuzzy
+#| msgid "Payment Successful!"
+msgid "Payment Successful"
+msgstr "Payment Successful!"
+
+#: apps/payments/templates/emails/email_invoice_paid.html:74
+msgid "Payment Successful!"
+msgstr "Payment Successful!"
+
+#: apps/payments/templates/emails/email_invoice_paid.html:75
+msgid "Dear user,"
+msgstr "Dear user,"
+
+#: apps/payments/templates/emails/email_invoice_paid.html:78
+msgid ""
+"We are pleased to inform you that your payment has been processed "
+"successfully. To check your invoice, please click the link below:"
+msgstr ""
+"We are pleased to inform you that your payment has been processed "
+"successfully. To check your invoice, please click the link below:"
+
+#: apps/payments/templates/emails/email_invoice_paid.html:82
+msgid "View Invoice"
+msgstr "View Invoice"
+
+#: apps/payments/templates/emails/email_invoice_paid.html:85
+msgid "You can also return to the homepage by clicking the button below:"
+msgstr "You can also return to the homepage by clicking the button below:"
+
+#: apps/payments/templates/emails/email_invoice_paid.html:88
+msgid "Go to Homepage"
+msgstr "Go to Homepage"
+
+#: apps/payments/templates/emails/email_invoice_paid.html:91
+msgid "Thank you for trusting us."
+msgstr "Thank you for trusting us."
+
+#: apps/payments/templates/emails/email_invoice_paid.html:92
+#: apps/payments/templates/emails/email_payment_failed.html:95
+msgid "Best regards,"
+msgstr "Best regards,"
+
+#: apps/payments/templates/emails/email_invoice_paid.html:92
+#: apps/payments/templates/emails/email_payment_failed.html:95
+msgid "The Aerobox Team"
+msgstr "The Aerobox Team"
+
+#: apps/payments/templates/emails/email_invoice_paid.html:98
+#: apps/payments/templates/emails/email_payment_failed.html:100
+msgid "All rights reserved."
+msgstr "All rights reserved."
+
+#: apps/payments/templates/emails/email_payment_failed.html:7
+#: apps/payments/templates/emails/email_payment_failed.html:76
+msgid "Payment Failed – Update Your Payment Method"
+msgstr "Payment Failed – Update Your Payment Method"
+
+#: apps/payments/templates/emails/email_payment_failed.html:77
+msgid "Hello, "
+msgstr "Hello, "
+
+#: apps/payments/templates/emails/email_payment_failed.html:78
+msgid ""
+"Attention! We’ve detected a problem with the payment for your subscription "
+"renewal."
+msgstr ""
+"Attention! We’ve detected a problem with the payment for your subscription "
+"renewal."
+
+#: apps/payments/templates/emails/email_payment_failed.html:79
+msgid ""
+"We regret to inform you that the payment for renewing your subscription has "
+"failed."
+msgstr ""
+"We regret to inform you that the payment for renewing your subscription has "
+"failed."
+
+#: apps/payments/templates/emails/email_payment_failed.html:81
+#, python-format
+msgid ""
+"We’ve attempted to process your payment %(attempts)s times without success."
+msgstr ""
+"We’ve attempted to process your payment %(attempts)s times without success."
+
+#: apps/payments/templates/emails/email_payment_failed.html:85
+msgid ""
+"To avoid cancellation of your subscription, please update your payment "
+"method by clicking the button below:"
+msgstr ""
+"To avoid cancellation of your subscription, please update your payment "
+"method by clicking the button below:"
+
+#: apps/payments/templates/emails/email_payment_failed.html:87
+msgid "Update Payment Method"
+msgstr "Update Payment Method"
+
+#: apps/payments/templates/emails/email_payment_failed.html:90
+#, python-format
+msgid ""
+"If you don’t update your payment method before %(deadline_date)s, your "
+"subscription will be canceled."
+msgstr ""
+"If you don’t update your payment method before %(deadline_date)s, your "
+"subscription will be canceled."
+
+#: apps/payments/templates/emails/email_payment_failed.html:94
+msgid "Thank you for your attention."
+msgstr "Thank you for your attention."
+
+#: apps/subscriptions/choices/subscription_choices.py:6
+msgid "Active"
+msgstr "Active"
+
+#: apps/subscriptions/choices/subscription_choices.py:7
+msgid "Inactive"
+msgstr "Inactive"
+
+#: apps/subscriptions/choices/subscription_choices.py:8
+msgid "Canceled"
+msgstr "Canceled"
+
+#: apps/subscriptions/choices/subscription_choices.py:9
+msgid "Expired"
+msgstr "Expired"
+
+#: apps/subscriptions/choices/subscription_choices.py:13
+msgid "Monthly"
+msgstr "Monthly"
+
+#: apps/subscriptions/choices/subscription_choices.py:14
+msgid "Yearly"
+msgstr "Yearly"
+
+#: apps/subscriptions/models/plan_feature.py:14
+msgid "Custom configuration for the feature in this plan"
+msgstr "Custom configuration for the feature in this plan"
+
+#: apps/subscriptions/models/subscription.py:51
+msgid "Date when the trial started, if applicable."
+msgstr "Date when the trial started, if applicable."
+
+#: apps/subscriptions/serializers/subscription.py:39
+msgid "This plan is currently unavailable for purchase."
+msgstr "This plan is currently unavailable for purchase."
+
+#: apps/subscriptions/serializers/subscription.py:52
+msgid "Sorry, no amount defined for this plan."
+msgstr "Sorry, no amount defined for this plan."
+
+#: apps/subscriptions/views/user_subscription.py:35
+msgid "No active subscription found for the current user."
+msgstr "No active subscription found for the current user."
+
+#: apps/subscriptions/views/user_subscription.py:39
+msgid "Multiple active subscriptions found. Please contact support."
+msgstr "Multiple active subscriptions found. Please contact support."
+
+#: apps/users/serializers/password_reset_serializer.py:17
+msgid "User with this email does not exist."
+msgstr "User with this email does not exist."
+
+#: apps/users/serializers/password_reset_serializer.py:34
+msgid "Both passwords are required."
+msgstr "Both passwords are required."
+
+#: apps/users/serializers/password_reset_serializer.py:36
+msgid "Passwords do not match."
+msgstr "Passwords do not match."
+
+#: apps/users/serializers/password_reset_serializer.py:47
+msgid "Invalid UID."
+msgstr "Invalid UID."
+
+#: apps/users/serializers/password_reset_serializer.py:50
+msgid "Invalid or expired token."
+msgstr "Invalid or expired token."
+
+#: apps/users/serializers/user_serializer.py:31
+msgid ""
+"A user with this email already exists. Please use a different email address."
+msgstr ""
+"A user with this email already exists. Please use a different email address."
+
+#: apps/users/serializers/user_serializer.py:40
+msgid "The two password fields must match."
+msgstr "The two password fields must match."
+
+#: apps/users/tasks/email_tasks.py:37
+msgid "Password Reset Request"
+msgstr "Password Reset Request"
+
+#: apps/users/tasks/email_tasks.py:42
+#, python-brace-format
+msgid "Use this link to reset your password: {link}"
+msgstr "Use this link to reset your password: {link}"
+
+#: apps/users/templates/emails/password_reset_email.html:85
+msgid "Reset your password"
+msgstr "Reset your password"
+
+#: apps/users/templates/emails/password_reset_email.html:87
+#, python-format
+msgid "Hello %(user.username)s,"
+msgstr "Hello %(user.username)s,"
+
+#: apps/users/templates/emails/password_reset_email.html:88
+msgid ""
+"You requested to reset your password for your Aerobox account. Click the "
+"button below to create a new password:"
+msgstr ""
+"You requested to reset your password for your Aerobox account. Click the "
+"button below to create a new password:"
+
+#: apps/users/templates/emails/password_reset_email.html:91
+msgid "Reset Password"
+msgstr "Reset Password"
+
+#: apps/users/templates/emails/password_reset_email.html:94
+msgid ""
+"If you didn't request to reset your password, you can ignore this email. "
+"Your account remains secure."
+msgstr ""
+"If you didn't request to reset your password, you can ignore this email. "
+"Your account remains secure."
+
+#: apps/users/templates/emails/password_reset_email.html:95
+msgid ""
+"If you're having trouble clicking the 'Reset Password' button, copy and "
+"paste the following link into your browser:"
+msgstr ""
+"If you're having trouble clicking the 'Reset Password' button, copy and "
+"paste the following link into your browser:"
+
+#: apps/users/templates/emails/password_reset_email.html:104
+msgid "© 2023 Aerobox. All rights reserved."
+msgstr "© 2023 Aerobox. All rights reserved."
+
+#: apps/users/views/password_reset.py:36
+msgid "Password reset link sent."
+msgstr "Password reset link sent."
+
+#: apps/users/views/password_reset.py:58
+msgid "Password has been reset successfully."
+msgstr "Password has been reset successfully."
