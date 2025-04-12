@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-04-07 21:20+0000\n"
+"POT-Creation-Date: 2025-04-12 15:40+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -137,13 +137,38 @@ msgstr "The file name cannot contain '.' or extensions."
 msgid "The new file name cannot be the same as the current file name."
 msgstr "The new file name cannot be the same as the current file name."
 
-#: apps/cloud_storage/serializers/folder_serializer.py:41
+#: apps/cloud_storage/serializers/folder_serializer.py:37
 msgid "A folder with this name already exists in the same parent folder."
 msgstr "A folder with this name already exists in the same parent folder."
 
+#: apps/cloud_storage/serializers/folder_serializer.py:48
+msgid ""
+"You need an active subscription to use this feature. Please check your "
+"billing or subscribe to a plan."
+msgstr ""
+
+#: apps/cloud_storage/serializers/folder_serializer.py:53
+msgid ""
+"Your current subscription plan does not include the folder creation feature. "
+"Please upgrade your plan to access this functionality."
+msgstr ""
+
 #: apps/cloud_storage/views/cloud_storage.py:60
-msgid "Received empty presigned URL"
-msgstr "Received empty presigned URL"
+#, fuzzy
+#| msgid ""
+#| "An error occurred while processing your file. Please try again later."
+msgid ""
+"Something went wrong while preparing your file upload. Please try again."
+msgstr "An error occurred while processing your file. Please try again later."
+
+#: apps/cloud_storage/views/cloud_storage.py:93
+#, python-format
+msgid "File successfully renamed to %(filename)s."
+msgstr ""
+
+#: apps/cloud_storage/views/folder.py:55
+msgid "Cannot delete a folder that contains files or subfolders."
+msgstr ""
 
 #: apps/features/choices/feature_code_choices.py:6
 msgid "Cloud Storage"
@@ -201,19 +226,22 @@ msgstr "Euro"
 msgid "The date and time when the payment was made."
 msgstr "The date and time when the payment was made."
 
-#: apps/payments/tasks/send_invoice_paid_email.py:19
+#: apps/payments/tasks/send_invoice_paid_email.py:20
 msgid "Payment Successful — Your Invoice is Ready"
 msgstr "Payment Successful — Your Invoice is Ready"
 
-#: apps/payments/tasks/send_invoice_paid_email.py:24
+#: apps/payments/tasks/send_invoice_paid_email.py:29
 #, python-brace-format
 msgid "Use this link to see your invoice: {link}"
 msgstr "Use this link to see your invoice: {link}"
 
-#: apps/payments/tasks/send_payment_failed_email.py:18
-#: apps/payments/tasks/send_payment_failed_email.py:23
-msgid "Payment Failed"
-msgstr "Payment Failed"
+#: apps/payments/tasks/send_payment_failed_email.py:25
+#: apps/payments/tasks/send_payment_failed_email.py:41
+#: apps/payments/templates/emails/email_payment_failed.html:7
+#: apps/payments/templates/emails/email_payment_failed.html:76
+#: apps/payments/tests/tasks/test_payment_failed_email.py:96
+msgid "Payment Failed – Update Your Payment Method"
+msgstr "Payment Failed – Update Your Payment Method"
 
 #: apps/payments/templates/emails/email_invoice_paid.html:7
 #, fuzzy
@@ -229,63 +257,42 @@ msgstr "Payment Successful!"
 msgid "Dear user,"
 msgstr "Dear user,"
 
-#: apps/payments/templates/emails/email_invoice_paid.html:78
-msgid ""
-"We are pleased to inform you that your payment has been processed "
-"successfully. To check your invoice, please click the link below:"
-msgstr ""
-"We are pleased to inform you that your payment has been processed "
-"successfully. To check your invoice, please click the link below:"
-
-#: apps/payments/templates/emails/email_invoice_paid.html:82
+#: apps/payments/templates/emails/email_invoice_paid.html:83
 msgid "View Invoice"
 msgstr "View Invoice"
 
-#: apps/payments/templates/emails/email_invoice_paid.html:85
+#: apps/payments/templates/emails/email_invoice_paid.html:86
 msgid "You can also return to the homepage by clicking the button below:"
 msgstr "You can also return to the homepage by clicking the button below:"
 
-#: apps/payments/templates/emails/email_invoice_paid.html:88
+#: apps/payments/templates/emails/email_invoice_paid.html:89
 msgid "Go to Homepage"
 msgstr "Go to Homepage"
 
-#: apps/payments/templates/emails/email_invoice_paid.html:91
+#: apps/payments/templates/emails/email_invoice_paid.html:92
 msgid "Thank you for trusting us."
 msgstr "Thank you for trusting us."
 
-#: apps/payments/templates/emails/email_invoice_paid.html:92
-#: apps/payments/templates/emails/email_payment_failed.html:95
+#: apps/payments/templates/emails/email_invoice_paid.html:93
+#: apps/payments/templates/emails/email_payment_failed.html:97
 msgid "Best regards,"
 msgstr "Best regards,"
 
-#: apps/payments/templates/emails/email_invoice_paid.html:92
-#: apps/payments/templates/emails/email_payment_failed.html:95
+#: apps/payments/templates/emails/email_invoice_paid.html:93
+#: apps/payments/templates/emails/email_payment_failed.html:97
 msgid "The Aerobox Team"
 msgstr "The Aerobox Team"
 
-#: apps/payments/templates/emails/email_invoice_paid.html:98
-#: apps/payments/templates/emails/email_payment_failed.html:100
+#: apps/payments/templates/emails/email_invoice_paid.html:99
+#: apps/payments/templates/emails/email_payment_failed.html:102
 msgid "All rights reserved."
 msgstr "All rights reserved."
-
-#: apps/payments/templates/emails/email_payment_failed.html:7
-#: apps/payments/templates/emails/email_payment_failed.html:76
-msgid "Payment Failed – Update Your Payment Method"
-msgstr "Payment Failed – Update Your Payment Method"
 
 #: apps/payments/templates/emails/email_payment_failed.html:77
 msgid "Hello, "
 msgstr "Hello, "
 
-#: apps/payments/templates/emails/email_payment_failed.html:78
-msgid ""
-"Attention! We’ve detected a problem with the payment for your subscription "
-"renewal."
-msgstr ""
-"Attention! We’ve detected a problem with the payment for your subscription "
-"renewal."
-
-#: apps/payments/templates/emails/email_payment_failed.html:79
+#: apps/payments/templates/emails/email_payment_failed.html:80
 msgid ""
 "We regret to inform you that the payment for renewing your subscription has "
 "failed."
@@ -293,26 +300,18 @@ msgstr ""
 "We regret to inform you that the payment for renewing your subscription has "
 "failed."
 
-#: apps/payments/templates/emails/email_payment_failed.html:81
+#: apps/payments/templates/emails/email_payment_failed.html:82
 #, python-format
 msgid ""
 "We’ve attempted to process your payment %(attempts)s times without success."
 msgstr ""
 "We’ve attempted to process your payment %(attempts)s times without success."
 
-#: apps/payments/templates/emails/email_payment_failed.html:85
-msgid ""
-"To avoid cancellation of your subscription, please update your payment "
-"method by clicking the button below:"
-msgstr ""
-"To avoid cancellation of your subscription, please update your payment "
-"method by clicking the button below:"
-
-#: apps/payments/templates/emails/email_payment_failed.html:87
+#: apps/payments/templates/emails/email_payment_failed.html:89
 msgid "Update Payment Method"
 msgstr "Update Payment Method"
 
-#: apps/payments/templates/emails/email_payment_failed.html:90
+#: apps/payments/templates/emails/email_payment_failed.html:92
 #, python-format
 msgid ""
 "If you don’t update your payment method before %(deadline_date)s, your "
@@ -321,7 +320,7 @@ msgstr ""
 "If you don’t update your payment method before %(deadline_date)s, your "
 "subscription will be canceled."
 
-#: apps/payments/templates/emails/email_payment_failed.html:94
+#: apps/payments/templates/emails/email_payment_failed.html:96
 msgid "Thank you for your attention."
 msgstr "Thank you for your attention."
 
@@ -460,3 +459,30 @@ msgstr "Password reset link sent."
 #: apps/users/views/password_reset.py:58
 msgid "Password has been reset successfully."
 msgstr "Password has been reset successfully."
+
+#~ msgid "Received empty presigned URL"
+#~ msgstr "Received empty presigned URL"
+
+#~ msgid "Payment Failed"
+#~ msgstr "Payment Failed"
+
+#~ msgid ""
+#~ "We are pleased to inform you that your payment has been processed "
+#~ "successfully. To check your invoice, please click the link below:"
+#~ msgstr ""
+#~ "We are pleased to inform you that your payment has been processed "
+#~ "successfully. To check your invoice, please click the link below:"
+
+#~ msgid ""
+#~ "Attention! We’ve detected a problem with the payment for your "
+#~ "subscription renewal."
+#~ msgstr ""
+#~ "Attention! We’ve detected a problem with the payment for your "
+#~ "subscription renewal."
+
+#~ msgid ""
+#~ "To avoid cancellation of your subscription, please update your payment "
+#~ "method by clicking the button below:"
+#~ msgstr ""
+#~ "To avoid cancellation of your subscription, please update your payment "
+#~ "method by clicking the button below:"
