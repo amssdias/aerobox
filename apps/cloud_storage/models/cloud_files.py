@@ -15,6 +15,14 @@ class CloudFile(Timestampable, SoftDeleteModel):
         (FAILED, _("Failed")),
     )
 
+    folder = models.ForeignKey(
+        "cloud_storage.Folder",
+        null=True,
+        blank=True,
+        related_name='files',
+        on_delete=models.SET_NULL
+    )
+
     file_name = models.CharField(
         max_length=255,
         help_text=_("The intended name of the file to be stored in S3.")
