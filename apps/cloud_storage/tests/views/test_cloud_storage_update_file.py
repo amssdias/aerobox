@@ -143,7 +143,7 @@ class UpdateFileIntegrationTests(APITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["message"], "File renamed to renamed_file.txt")
+        self.assertEqual(response.data["message"], "File successfully renamed to renamed_file.txt.")
 
     def test_cannot_rename_failed_upload(self):
         path = build_s3_path(
