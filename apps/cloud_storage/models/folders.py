@@ -25,3 +25,13 @@ class Folder(Timestampable):
 
     def __str__(self):
         return f"{self.name} (ID:{self.id}) - {self.user}"
+
+    def build_path(self):
+        parts = []
+        current = self
+
+        while current is not None:
+            parts.insert(0, current.name)
+            current = current.parent
+
+        return "/".join(parts) + "/"
