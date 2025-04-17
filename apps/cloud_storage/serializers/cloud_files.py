@@ -1,29 +1,33 @@
 import logging
 import mimetypes
-import re
 
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.exceptions import NotFound
 
-from apps.cloud_storage.models import CloudFile
+from apps.cloud_storage.models import CloudFile, Folder
 from apps.cloud_storage.services import S3Service
-from apps.cloud_storage.utils.path_utils import build_s3_path
+from apps.cloud_storage.utils.path_utils import build_s3_object_path
 
 logger = logging.getLogger("aerobox")
 
 
 class CloudFilesSerializer(serializers.ModelSerializer):
     relative_path = serializers.SerializerMethodField()
-    path = serializers.CharField(write_only=True, allow_blank=True)
     url = serializers.SerializerMethodField(read_only=True)
+    folder = serializers.PrimaryKeyRelatedField(
+        queryset=Folder.objects.all(),
+        required=False,
+        allow_null=True,
+        write_only=True,
+    )
 
     class Meta:
         model = CloudFile
         fields = (
             "id",
             "file_name",
-            "path",
+            "folder",
             "size",
             "content_type",
             "relative_path",
@@ -53,57 +57,12 @@ class CloudFilesSerializer(serializers.ModelSerializer):
             )
         return value.lower()
 
-    def validate_path(self, value):
-        """
-        Validates the file path:
-        - Allows an empty string `""` for the root path.
-        - Ensures only forward slashes `/`, no leading/trailing slashes, and no consecutive slashes.
-        - Rejects paths that contain dots (`.`) to prevent incorrect file names.
-        """
-        user = self.context["request"].user
-
-        folder_path = value.strip().lower()
-
-        # Get file name from request data
-        file_name = self.initial_data.get("file_name")
-
-        # Allow empty path (interpreted as root)
-        if not folder_path:
-            full_path = build_s3_path(user.id, file_name)
-        else:
-            # Reject paths that contain backslashes `\`
-            if "\\" in folder_path:
-                raise serializers.ValidationError(
-                    _("The file path must use '/' instead of '\\'.")
-                )
-
-            # Ensure the path does NOT start or end with a slash
-            if folder_path.startswith("/") or folder_path.endswith("/"):
-                raise serializers.ValidationError(
-                    _("The file path cannot start or end with '/'.")
-                )
-
-            # Ensure the path does NOT contain consecutive slashes (e.g., "folder1////folder2")
-            if re.search(r"//+", folder_path):
-                raise serializers.ValidationError(
-                    _("The file path cannot contain consecutive slashes.")
-                )
-
-            # Reject paths that contain dots (`.`), ensuring only file names can have extensions
-            if "." in folder_path:
-                raise serializers.ValidationError(
-                    _(
-                        "The file path cannot contain dots (`.`). Dots are only allowed in file names for extensions."
-                    )
-                )
-
-            # Construct the full path
-            full_path = build_s3_path(user.id, f"{folder_path}/{file_name}")
-
-        if CloudFile.objects.filter(path=full_path).exists():
-            raise serializers.ValidationError("A file with this name already exists.")
-
-        return full_path
+    def validate_folder(self, folder):
+        if folder and folder.user != self.context["request"].user:
+            raise serializers.ValidationError(
+                _("You don’t have permission to upload files to this folder. Please select one of your own folders.")
+            )
+        return folder
 
     def validate(self, data):
         user = self.context["request"].user
@@ -123,6 +82,12 @@ class CloudFilesSerializer(serializers.ModelSerializer):
 
         file_name = validated_data.get("file_name")
         validated_data["content_type"], _encoding_type = mimetypes.guess_type(file_name)
+
+        validated_data["path"] = build_s3_object_path(
+            user=user,
+            file_name=file_name,
+            folder=validated_data.get("folder"),
+        )
 
         return super().create(validated_data)
 

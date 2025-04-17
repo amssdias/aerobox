@@ -14,6 +14,7 @@ from apps.cloud_storage.models import CloudFile
 from apps.cloud_storage.serializers import CloudFilesSerializer
 from apps.cloud_storage.serializers.cloud_files import CloudFileUpdateSerializer, RenameFileSerializer
 from apps.cloud_storage.services import S3Service
+from apps.cloud_storage.utils.path_utils import build_s3_object_path
 from config.api_docs.openapi_schemas import RESPONSE_SCHEMA_GET_PRESIGNED_URL
 
 logger = logging.getLogger("aerobox")
@@ -52,12 +53,16 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
 
         # Generate a presigned URL for uploading
         s3_service = S3Service()
-        file_path = serializer.validated_data.get("path")
+        file_path = build_s3_object_path(
+            user=self.request.user,
+            file_name=serializer.validated_data.get("file_name"),
+            folder=serializer.validated_data.get("folder"),
+        )
 
         try:
             presigned_url = s3_service.generate_presigned_upload_url(object_name=file_path)
             if not presigned_url:
-                raise ValueError(_("Received empty presigned URL"))
+                raise ValueError(_("Something went wrong while preparing your file upload. Please try again."))
         except Exception as e:
             logger.error(f"File upload error for path {file_path}: {str(e)}", exc_info=True)
             raise FileUploadError()
@@ -90,8 +95,9 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         serializer.save()
-
-        return Response({"message": f"File renamed to {serializer.instance.file_name}"}, status=status.HTTP_200_OK)
+        return Response(
+            {"message": _("File successfully renamed to %(filename)s.") % {"filename": serializer.instance.file_name}},
+            status=status.HTTP_200_OK)
 
     def destroy(self, request, *args, **kwargs):
         """Soft delete the file by setting 'deleted_at' instead of deleting it."""
