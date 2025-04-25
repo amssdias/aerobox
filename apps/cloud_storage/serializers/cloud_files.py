@@ -97,7 +97,7 @@ class CloudFilesSerializer(serializers.ModelSerializer):
 
             try:
                 download_url = s3_service.generate_presigned_download_url(
-                    object_name=obj.path
+                    object_name=obj.s3_key
                 )
 
             except Exception as e:
