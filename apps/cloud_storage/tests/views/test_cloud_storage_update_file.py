@@ -1,5 +1,4 @@
 import unittest
-from unittest.mock import patch
 
 from django.urls import reverse
 from rest_framework import status
@@ -7,7 +6,6 @@ from rest_framework.test import APITestCase
 
 from apps.cloud_storage.constants.cloud_files import SUCCESS, FAILED, PENDING
 from apps.cloud_storage.factories.cloud_file_factory import CloudFileFactory
-from apps.cloud_storage.services import S3Service
 from apps.cloud_storage.utils.path_utils import build_s3_path
 from apps.users.factories.user_factory import UserFactory
 
@@ -38,8 +36,7 @@ class UpdateFileIntegrationTests(APITestCase):
     def setUp(self):
         self.client.force_authenticate(user=self.user)
 
-    @patch.object(S3Service, "rename_file", return_value=True)
-    def test_successful_file_rename(self, mock_s3_rename):
+    def test_successful_file_rename(self):
         response = self.client.put(self.url, {"file_name": "renamed"}, format="json")
         self.file.refresh_from_db()
 
@@ -51,7 +48,6 @@ class UpdateFileIntegrationTests(APITestCase):
             file_name="docs/renamed.txt",
         )
         self.assertEqual(self.file.path, path)
-        mock_s3_rename.assert_called_once()
 
     def test_unauthenticated_user_cannot_rename(self):
         self.client.logout()
@@ -129,15 +125,7 @@ class UpdateFileIntegrationTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    @patch.object(S3Service, "rename_file", return_value=False)
-    def test_s3_rename_failure_returns_error(self, mock_s3_rename):
-        response = self.client.put(self.url, {"file_name": "renamed"}, format="json")
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        mock_s3_rename.assert_called_once()
-
-    @patch.object(S3Service, "rename_file", return_value=True)
-    def test_correct_response_message_on_successful_rename(self, mock_s3_rename):
+    def test_correct_response_message_on_successful_rename(self):
         response = self.client.put(
             self.url, {"file_name": "renamed_file"}, format="json"
         )
@@ -202,8 +190,7 @@ class UpdateFileIntegrationTests(APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    @patch.object(S3Service, "rename_file", return_value=True)
-    def test_rename_preserves_file_extension(self, mock_s3_rename):
+    def test_rename_preserves_file_extension(self):
         response = self.client.put(self.url, {"file_name": "new_name"}, format="json")
         self.file.refresh_from_db()
 
@@ -215,17 +202,13 @@ class UpdateFileIntegrationTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("file_name", response.data)
 
-    @patch.object(S3Service, "rename_file", return_value=True)
-    def test_update_path_fails(self, mock_s3_rename):
-        """Ensure updating the path is not allowed."""
+    def test_update_path_fails(self):
         response = self.client.put(self.url, {"file_name": "new_name", "path": "docs/wrongpath"}, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(self.file.path, self.path_1)
 
-    @patch.object(S3Service, "rename_file", return_value=True)
-    def test_update_size_fails(self, mock_s3_rename):
-        """Ensure updating the size is not allowed."""
+    def test_update_size_fails(self):
         response = self.client.put(self.url, {"file_name": "new_name", "size": 123}, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)

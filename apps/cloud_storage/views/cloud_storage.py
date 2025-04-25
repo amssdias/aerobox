@@ -99,7 +99,8 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
         serializer.save()
         return Response(
             {"message": _("File successfully renamed to %(filename)s.") % {"filename": serializer.instance.file_name}},
-            status=status.HTTP_200_OK)
+            status=status.HTTP_200_OK
+        )
 
     def destroy(self, request, *args, **kwargs):
         """Soft delete the file by setting 'deleted_at' instead of deleting it."""
