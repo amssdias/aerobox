@@ -40,7 +40,7 @@ class S3Service:
             )
             return presigned_url
         except (NoCredentialsError, ClientError) as e:
-            print(f"Error generating presigned URL: {e}")
+            logger.exception(f"Error generating presigned URL: {e}")
             return None
 
     def generate_presigned_download_url(

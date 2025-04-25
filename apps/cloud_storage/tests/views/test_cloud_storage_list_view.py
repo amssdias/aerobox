@@ -1,9 +1,9 @@
+from django.conf import settings
+from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
-from rest_framework.test import APITestCase
-from django.urls import reverse
 from rest_framework.authtoken.models import Token
-from django.conf import settings
+from rest_framework.test import APITestCase
 
 from apps.cloud_storage.factories.cloud_file_factory import CloudFileFactory
 from apps.cloud_storage.models import CloudFile
@@ -20,31 +20,15 @@ class CloudStorageViewSetListTests(APITestCase):
         cls.other_user = UserFactory(username="otheruser", password="password")
 
         # Create files for the authenticated user
-        cls.path_1 = build_s3_path(
-            user_id=cls.user.id,
-            file_name="docs/file1.txt",
-        )
-        cls.path_2 = build_s3_path(
-            user_id=cls.user.id,
-            file_name="docs/file2.txt",
-        )
-        cls.path_3 = build_s3_path(
-            user_id=cls.user.id,
-            file_name="docs/file3.txt",
-        )
-        cls.file1 = CloudFileFactory(user=cls.user, path=cls.path_1)
+        cls.file1 = CloudFileFactory(user=cls.user, path="docs/file1.txt")
         cls.file2 = CloudFileFactory(
-            user=cls.user, path=cls.path_2, deleted_at=timezone.now()
+            user=cls.user, path="docs/file2.txt", deleted_at=timezone.now()
         )
-        cls.file3 = CloudFileFactory(user=cls.user, path=cls.path_3)
+        cls.file3 = CloudFileFactory(user=cls.user, path="docs/file3.txt")
 
         # Create a file for another user (should not appear in results)
-        cls.path_other_user = build_s3_path(
-            user_id=cls.user.id,
-            file_name="docs/other_user_file.txt",
-        )
         cls.other_user_file = CloudFileFactory(
-            user=cls.other_user, path=cls.path_other_user
+            user=cls.other_user, path="docs/other_user_file.txt"
         )
 
         cls.url = reverse("storage-list")
@@ -63,7 +47,7 @@ class CloudStorageViewSetListTests(APITestCase):
         self.assertEqual(len(response.data.get("results")), count_user_files)
 
         returned_file_paths = [
-            file["relative_path"] for file in response.data.get("results")
+            file["path"] for file in response.data.get("results")
         ]
 
         self.assertIn("docs/file1.txt", returned_file_paths)
@@ -119,7 +103,7 @@ class CloudStorageViewSetListTests(APITestCase):
     def test_list_works_with_multiple_users(self):
         response = self.client.get(self.url)
         returned_file_paths = [
-            file["relative_path"] for file in response.data.get("results")
+            file["path"] for file in response.data.get("results")
         ]
 
         self.assertIn("docs/file1.txt", returned_file_paths)
@@ -137,7 +121,7 @@ class CloudStorageViewSetListTests(APITestCase):
                 "file_name",
                 "size",
                 "content_type",
-                "relative_path",
+                "path",
                 "created_at",
             }
             self.assertTrue(expected_fields.issubset(sample_file.keys()))

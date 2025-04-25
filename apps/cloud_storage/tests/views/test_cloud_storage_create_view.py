@@ -9,7 +9,7 @@ from apps.cloud_storage.exceptions import FileUploadError
 from apps.cloud_storage.factories.folder_factory import FolderFactory
 from apps.cloud_storage.models import CloudFile
 from apps.cloud_storage.services import S3Service
-from apps.cloud_storage.utils.path_utils import build_s3_object_path
+from apps.cloud_storage.utils.path_utils import build_object_path
 from apps.users.factories.user_factory import UserFactory
 
 
@@ -46,15 +46,10 @@ class CloudStoragePresignedURLTests(APITestCase):
         self.assertIn("file_name", response.data)
         self.assertIn("size", response.data)
         self.assertIn("content_type", response.data)
-        self.assertIn("relative_path", response.data)
+        self.assertIn("path", response.data)
         self.assertEqual(response.data["presigned-url"], "https://s3-presigned-url.com")
 
-        path = build_s3_object_path(
-            self.user,
-            file_name=self.data.get('file_name'),
-            folder=self.folder,
-        )
-        mock_s3.assert_called_once_with(object_name=path)
+        mock_s3.assert_called_once()
 
     def test_create_file_and_presigned_url_requires_authentication(self):
         self.client.logout()
@@ -80,8 +75,7 @@ class CloudStoragePresignedURLTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        path = build_s3_object_path(
-            self.user,
+        path = build_object_path(
             file_name=self.data.get('file_name'),
             folder=self.folder,
         )
@@ -133,4 +127,8 @@ class CloudStoragePresignedURLTests(APITestCase):
         folder = FolderFactory(user=self.user, parent=self.folder)
         self.data["folder"] = folder.id
         response = self.client.post(self.url, self.data, format="json")
+
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        file_path = build_object_path(folder=folder, file_name=self.data.get("file_name"))
+        self.assertEqual(response.data.get("path"), file_path)

@@ -7,12 +7,12 @@ def build_s3_path(user_id, file_name):
     return f"{user_prefix}/{file_name}".strip("/")
 
 
-def build_s3_object_path(user, file_name, folder=None):
+def build_object_path(file_name, folder=None):
     """
     Builds the full S3 object path for a file inside a folder (if provided),
     or at the root user level if no folder is specified.
     """
     if folder:
         folder_path = folder.build_path()
-        return build_s3_path(user.id, f"{folder_path}{file_name}")
-    return build_s3_path(user.id, file_name)
+        return f"{folder_path}{file_name}"
+    return file_name

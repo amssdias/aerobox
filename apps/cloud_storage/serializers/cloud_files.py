@@ -7,13 +7,13 @@ from rest_framework.exceptions import NotFound
 
 from apps.cloud_storage.models import CloudFile, Folder
 from apps.cloud_storage.services import S3Service
-from apps.cloud_storage.utils.path_utils import build_s3_object_path
+from apps.cloud_storage.utils.path_utils import build_object_path
 
 logger = logging.getLogger("aerobox")
 
 
 class CloudFilesSerializer(serializers.ModelSerializer):
-    relative_path = serializers.SerializerMethodField()
+    path = serializers.CharField(read_only=True)
     url = serializers.SerializerMethodField(read_only=True)
     folder = serializers.PrimaryKeyRelatedField(
         queryset=Folder.objects.all(),
@@ -30,7 +30,7 @@ class CloudFilesSerializer(serializers.ModelSerializer):
             "folder",
             "size",
             "content_type",
-            "relative_path",
+            "path",
             "url",
             "created_at",
         )
@@ -83,16 +83,12 @@ class CloudFilesSerializer(serializers.ModelSerializer):
         file_name = validated_data.get("file_name")
         validated_data["content_type"], _encoding_type = mimetypes.guess_type(file_name)
 
-        validated_data["path"] = build_s3_object_path(
-            user=user,
+        validated_data["path"] = build_object_path(
             file_name=file_name,
             folder=validated_data.get("folder"),
         )
 
         return super().create(validated_data)
-
-    def get_relative_path(self, obj):
-        return obj.get_relative_path()
 
     def get_url(self, obj):
         """Only add extra_info when retrieving a single object"""

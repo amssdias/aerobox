@@ -14,7 +14,8 @@ from apps.cloud_storage.models import CloudFile
 from apps.cloud_storage.serializers import CloudFilesSerializer
 from apps.cloud_storage.serializers.cloud_files import CloudFileUpdateSerializer, RenameFileSerializer
 from apps.cloud_storage.services import S3Service
-from apps.cloud_storage.utils.path_utils import build_s3_object_path
+from apps.cloud_storage.utils.hash_utils import generate_unique_hash
+from apps.cloud_storage.utils.path_utils import build_s3_path
 from config.api_docs.openapi_schemas import RESPONSE_SCHEMA_GET_PRESIGNED_URL
 
 logger = logging.getLogger("aerobox")
@@ -53,10 +54,10 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
 
         # Generate a presigned URL for uploading
         s3_service = S3Service()
-        file_path = build_s3_object_path(
-            user=self.request.user,
-            file_name=serializer.validated_data.get("file_name"),
-            folder=serializer.validated_data.get("folder"),
+        hashed_file_name = generate_unique_hash(serializer.validated_data.get("file_name"))
+        file_path = build_s3_path(
+            user_id=self.request.user.id,
+            file_name=hashed_file_name,
         )
 
         try:
@@ -68,6 +69,7 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
             raise FileUploadError()
 
         # Save file metadata in DB
+        serializer.validated_data["s3_key"] = file_path
         self.perform_create(serializer)
 
         return Response(

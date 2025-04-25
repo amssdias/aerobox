@@ -46,7 +46,7 @@ class CloudFilesSerializerTests(TestCase):
         self.assertFalse(serializer.is_valid())
         self.assertIn("file_name", serializer.errors)
 
-    def test_valid_path(self):
+    def test_path_not_used(self):
         data = {
             "file_name": "image.png",
             "path": "pictures",
@@ -55,6 +55,7 @@ class CloudFilesSerializerTests(TestCase):
         }
         serializer = self.serializer(data=data, context=self.context)
         self.assertTrue(serializer.is_valid(), serializer.errors)
+        self.assertIsNone(serializer.validated_data.get("path"))
 
     def test_valid_folder(self):
         data = {
@@ -78,7 +79,7 @@ class CloudFilesSerializerTests(TestCase):
         serializer = self.serializer(data=data, context=self.context)
         self.assertFalse(serializer.is_valid(), serializer.errors)
 
-    def _test_missing_user_context(self):
+    def test_missing_user_context(self):
         invalid_context = {"request": Mock(user=None)}
         data = {
             "file_name": "test.txt",
@@ -101,7 +102,7 @@ class CloudFilesSerializerTests(TestCase):
         self.assertIn("non_field_errors", serializer.errors)
 
     @patch("stripe.Customer.create", return_value=Mock(id="cus_mocked_123456"))
-    def test_valid_relative_path_method(self, mock_create_customer):
+    def test_valid_path_method(self, mock_create_customer):
         cloud_file = CloudFileFactory(
             file_name="test.txt",
             path="docs",
@@ -110,7 +111,7 @@ class CloudFilesSerializerTests(TestCase):
         )
         serializer = self.serializer(instance=cloud_file, context=self.context)
         self.assertEqual(
-            serializer.data["relative_path"], cloud_file.get_relative_path()
+            serializer.data["path"], cloud_file.path
         )
 
     def test_missing_file_name(self):
