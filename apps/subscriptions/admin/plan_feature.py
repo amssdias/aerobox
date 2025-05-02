@@ -7,10 +7,16 @@ from apps.subscriptions.models import PlanFeature
 class PlanFeatureAdmin(admin.ModelAdmin):
     list_display = (
         "id",
-        "plan",
+        "get_plan_name",
         "feature",
     )
     list_filter = (
-        "plan",
         "feature",
     )
+    raw_id_fields = ("plan",)
+
+    def get_plan_name(self, obj):
+        return obj.plan.name.get("en", "Unnamed Plan")
+
+    get_plan_name.short_description = "Plan Name"
+    get_plan_name.admin_order_field = "plan"
