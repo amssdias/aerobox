@@ -18,9 +18,9 @@ class PlanListAPIViewTests(TestCase):
         cls.list_url = reverse("plan-list")
 
         # Create test plans using PlanFactory
-        cls.plan1 = PlanFactory(name="Basic", is_active=True)
-        cls.plan2 = PlanFactory(name="Premium", is_active=True)
-        cls.plan3 = PlanFactory(name="Legacy", is_active=False)
+        cls.plan1 = PlanFactory(is_active=True)
+        cls.plan2 = PlanFactory(is_active=True)
+        cls.plan3 = PlanFactory(is_active=False)
 
         # Create test features
         cls.feature = FeatureFactory(name="Cloud Storage", description="Store files securely")
@@ -28,7 +28,6 @@ class PlanListAPIViewTests(TestCase):
         # Link features to the plan with metadata
         cls.plan_feature1 = PlanFeatureFactory(plan=cls.plan1, feature=cls.feature, metadata={"storage_limit_gb": 100})
         cls.plan_feature2 = PlanFeatureFactory(plan=cls.plan2, feature=cls.feature, metadata={"priority": True})
-
 
     def test_plan_list_endpoint_success(self):
         response = self.client.get(self.list_url)
@@ -55,13 +54,13 @@ class PlanListAPIViewTests(TestCase):
             self.assertIn("features", plan)
 
     def test_plan_with_no_description(self):
-        plan = PlanFactory(description=None, is_active=True)
+        plan = PlanFactory(description={}, is_active=True)
         response = self.client.get(self.list_url)
         self.assertEqual(len(response.data), 3)
 
         for p in response.data:
             if p["name"] == plan.name:
-                self.assertIsNone(p["description"])
+                self.assertEqual({}, p["description"])
 
     def test_empty_database(self):
         PlanFactory._meta.model.objects.all().delete()

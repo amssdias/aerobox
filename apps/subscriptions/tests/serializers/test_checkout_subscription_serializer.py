@@ -1,7 +1,7 @@
+from unittest.mock import patch
+
 from django.test import TestCase
 from rest_framework.exceptions import ValidationError
-
-from unittest.mock import patch
 
 from apps.subscriptions.choices.subscription_choices import (
     SubscriptionBillingCycleChoices,
@@ -16,16 +16,16 @@ class CheckoutSubscriptionSerializerTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.monthly_plan = PlanFactory(
-            name="Basic", stripe_price_id="price_123", monthly_price=10
+            name={"en": "Basic"}, stripe_price_id="price_123", monthly_price=10
         )
         cls.yearly_plan = PlanFactory(
-            name="Premium", stripe_price_id="price_456", yearly_price=100
+            name={"en": "Premium"}, stripe_price_id="price_456", yearly_price=100
         )
         cls.plan_without_stripe_id = PlanFactory(
-            name="Invalid Plan", stripe_price_id="", monthly_price=5
+            name={"en": "Invalid Plan"}, stripe_price_id="", monthly_price=5
         )
         cls.plan_without_price = PlanFactory(
-            name="No Price Plan",
+            name={"en": "No Price Plan"},
             stripe_price_id="price_789",
             monthly_price=None,
             yearly_price=None,
