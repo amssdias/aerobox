@@ -24,12 +24,12 @@ class SubscriptionCreateddHandlerTest(TestCase):
                     "id": "sub_123",
                     "customer" : "cus_test",
                     "status": "incomplete",
-                    "current_period_start": 1700000000,
-                    "current_period_end": 1702592000,
                     "plan": {"id": "price_test"},
                     "items": {
                         "data": [
                             {
+                                "current_period_start": 1700000000,
+                                "current_period_end": 1702592000,
                                 "plan": {
                                     "interval": "month"
                                 }

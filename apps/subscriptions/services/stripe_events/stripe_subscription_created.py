@@ -40,9 +40,9 @@ class SubscriptionCreateddHandler(StripeEventHandler, StripeCustomerMixin):
         status = self.get_subscription_status()
 
         billing_start = datetime.utcfromtimestamp(
-            self.data["current_period_start"]
+            self.data["items"]["data"][0]["current_period_start"]
         ).date()
-        billing_end = datetime.utcfromtimestamp(self.data["current_period_end"]).date()
+        billing_end = datetime.utcfromtimestamp(self.data["items"]["data"][0]["current_period_end"]).date()
 
         billing_cycle = self.get_billing_cycle()
 
