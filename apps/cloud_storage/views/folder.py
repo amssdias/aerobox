@@ -49,7 +49,7 @@ class FolderViewSet(viewsets.ModelViewSet):
         """
         folder = self.get_object()
 
-        if folder.subfolders.exists():
+        if folder.subfolders.exists() or folder.files.exists():
             return Response({"detail": _("Cannot delete a folder that contains files or subfolders.")}, status=400)
 
         folder.delete()
