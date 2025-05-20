@@ -1,3 +1,5 @@
+import re
+
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
@@ -10,6 +12,7 @@ class FolderParentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Folder
         fields = ["id", "name"]
+        read_only_fields = ["id", "name"]
 
 
 class FolderSerializer(serializers.ModelSerializer):
@@ -27,13 +30,35 @@ class FolderSerializer(serializers.ModelSerializer):
         fields = ["id", "name", "parent", "parent_id", "user", "created_at", "updated_at"]
         read_only_fields = ["id", "user", "parent", "created_at", "updated_at", ]
 
+    def validate_name(self, value):
+        # Reject paths that contain backslashes `\`
+        if "\\" in value:
+            raise serializers.ValidationError(
+                _("The file path must use '/' instead of '\\'.")
+            )
+
+        # Ensure the path does NOT start or end with a slash
+        if value.startswith("/") or value.endswith("/"):
+            raise serializers.ValidationError(
+                _("The file path cannot start or end with '/'.")
+            )
+
+        # Ensure the path does NOT contain consecutive slashes (e.g., "folder1////folder2")
+        if re.search(r"//+", value):
+            raise serializers.ValidationError(
+                _("The file path cannot contain consecutive slashes.")
+            )
+
+        return value
+
     def validate(self, attrs):
         user = self.context["request"].user
         parent = attrs.get("parent")
         name = attrs.get("name", self.instance.name if self.instance else None)
 
         if Folder.objects.filter(user=user, parent=parent, name__iexact=name).exclude(
-                pk=getattr(self.instance, "pk", None)).exists():
+                pk=getattr(self.instance, "pk", None)
+        ).exists():
             raise serializers.ValidationError(_("A folder with this name already exists in the same parent folder."))
 
         self.validate_user_subscription()
