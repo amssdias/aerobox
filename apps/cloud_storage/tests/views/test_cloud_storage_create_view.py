@@ -51,6 +51,27 @@ class CloudStoragePresignedURLTests(APITestCase):
 
         mock_s3.assert_called_once()
 
+    @patch.object(
+        S3Service,
+        "generate_presigned_upload_url",
+        return_value="https://s3-presigned-url.com",
+    )
+    @patch("apps.cloud_storage.views.cloud_storage.generate_unique_hash")
+    def test_generate_unique_hash_called_on_file_creation(self, mock_generate_unique_hash, mock_s3):
+        response = self.client.post(self.url, self.data, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIn("presigned-url", response.data)
+        self.assertIn("id", response.data)
+        self.assertIn("file_name", response.data)
+        self.assertIn("size", response.data)
+        self.assertIn("content_type", response.data)
+        self.assertIn("path", response.data)
+        self.assertEqual(response.data["presigned-url"], "https://s3-presigned-url.com")
+
+        mock_s3.assert_called_once()
+        mock_generate_unique_hash.assert_called_once()
+
     def test_create_file_and_presigned_url_requires_authentication(self):
         self.client.logout()
         response = self.client.post(self.url, self.data, format="json")
