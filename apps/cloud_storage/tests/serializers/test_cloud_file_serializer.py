@@ -28,6 +28,39 @@ class CloudFilesSerializerTests(TestCase):
         serializer = self.serializer(data=data, context=self.context)
         self.assertTrue(serializer.is_valid(), serializer.errors)
 
+    def test_valid_file_name_with_multiple_dots(self):
+        data = {
+            "file_name": "file.name.pdf",
+            "size": 1024,
+            "content_type": "application/pdf",
+        }
+        serializer = self.serializer(data=data, context=self.context)
+        self.assertTrue(serializer.is_valid())
+
+    def test_invalid_file_name_starting_with_dots(self):
+        data = {"file_name": ".filename.pdf"}
+        serializer = self.serializer(data=data, context=self.context)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("file_name", serializer.errors)
+
+    def test_invalid_file_name_ending_with_dots(self):
+        data = {"file_name": "filename.pdf."}
+        serializer = self.serializer(data=data, context=self.context)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("file_name", serializer.errors)
+
+    def test_invalid_file_name_with_only_extension(self):
+        data = {"file_name": ".pdf"}
+        serializer = self.serializer(data=data, context=self.context)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("file_name", serializer.errors)
+
+    def test_invalid_file_name_with_only_dots(self):
+        data = {"file_name": "..."}
+        serializer = self.serializer(data=data, context=self.context)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("file_name", serializer.errors)
+
     def test_invalid_file_name_with_slash(self):
         data = {"file_name": "invalid/name.pdf"}
         serializer = self.serializer(data=data, context=self.context)

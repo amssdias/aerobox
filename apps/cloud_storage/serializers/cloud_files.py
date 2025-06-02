@@ -55,6 +55,11 @@ class CloudFilesSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 _("The file name cannot be empty or consist only of whitespace.")
             )
+
+        if value.startswith(".") or value.endswith("."):
+            raise serializers.ValidationError(
+                _("The file name cannot start or end with a '.'.")
+            )
         return value.lower()
 
     def validate_folder(self, folder):
