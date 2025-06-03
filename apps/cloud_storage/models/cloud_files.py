@@ -4,6 +4,7 @@ from django.utils.translation import gettext_lazy as _
 
 from apps.cloud_storage.constants.cloud_files import PENDING, SUCCESS, FAILED
 from apps.cloud_storage.models.managers.cloud_file import CloudFileManager
+from apps.cloud_storage.utils.path_utils import build_object_path
 from config.models.soft_delete import SoftDeleteModel
 from config.models.timestampable import Timestampable
 
@@ -90,3 +91,6 @@ class CloudFile(Timestampable, SoftDeleteModel):
     @property
     def file_url(self):
         return f"{settings.AWS_S3_BASE_URL}/{self.path}"
+
+    def rebuild_path(self):
+        self.path = build_object_path(self.file_name, self.folder)

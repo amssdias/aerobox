@@ -98,7 +98,7 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
 
         serializer.save()
         return Response(
-            {"message": _("File successfully renamed to %(filename)s.") % {"filename": serializer.instance.file_name}},
+            {"message": _("File successfully updated.")},
             status=status.HTTP_200_OK
         )
 

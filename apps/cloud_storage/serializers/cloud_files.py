@@ -132,26 +132,35 @@ class CloudFileUpdateSerializer(serializers.ModelSerializer):
 
 
 class RenameFileSerializer(serializers.ModelSerializer):
-    file_name = serializers.CharField(required=True, max_length=255,)
-    path = serializers.CharField(required=False, allow_blank=True)
+    file_name = serializers.CharField(
+        required=False,
+        max_length=255,
+    )
+    folder = serializers.PrimaryKeyRelatedField(
+        queryset=Folder.objects.all(),
+        required=False,
+        allow_null=True,
+        write_only=True,
+    )
 
     class Meta:
         model = CloudFile
-        fields = ("file_name", "path")
+        fields = ("file_name", "folder")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        user = self.context["request"].user
+        self.fields["folder"].queryset = Folder.objects.filter(user=user)
 
     def validate_file_name(self, value):
         if "/" in value or "\\" in value:
             raise serializers.ValidationError(
                 _("The file name cannot contain '/' or '\\'.")
             )
-        if "." in value:
-            raise serializers.ValidationError(
-                _("The file name cannot contain '.' or extensions.")
-            )
 
-        if self.instance.file_name.split(".")[0] == value:
+        if value.startswith(".") or value.endswith("."):
             raise serializers.ValidationError(
-                _("The new file name cannot be the same as the current file name.")
+                _("The file name cannot start or end with a '.'.")
             )
 
         if not value.strip():
@@ -160,19 +169,20 @@ class RenameFileSerializer(serializers.ModelSerializer):
             )
         return value.lower()
 
+    def validate(self, attrs):
+        if not attrs.get("file_name") and not attrs.get("folder"):
+            raise serializers.ValidationError("You must provide either file_name or folder.")
+        return attrs
+
     def update(self, instance, validated_data):
-        """
-        Handles renaming the file in S3 and updating the database.
-        """
+        new_name = validated_data.pop("file_name", None)
+        if new_name:
+            old_extension = instance.file_name.split(".")[-1]
+            instance.file_name = f"{new_name}.{old_extension}"
 
-        old_file_name = instance.file_name
-        file_extension = old_file_name.split(".")[-1]
-        new_name = validated_data.get("file_name")
-        new_file_name = f"{new_name}.{file_extension}"
+        instance = super().update(instance, validated_data)
 
-        instance.file_name = new_file_name
-        instance.path = instance.path.replace(old_file_name, new_file_name)
-
+        instance.rebuild_path()
         instance.save()
 
         return instance

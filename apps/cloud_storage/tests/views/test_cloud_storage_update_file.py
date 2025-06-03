@@ -1,12 +1,11 @@
-import unittest
-
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
 from apps.cloud_storage.constants.cloud_files import SUCCESS, FAILED, PENDING
 from apps.cloud_storage.factories.cloud_file_factory import CloudFileFactory
-from apps.cloud_storage.utils.path_utils import build_s3_path
+from apps.cloud_storage.factories.folder_factory import FolderFactory
+from apps.cloud_storage.utils.path_utils import build_s3_path, build_object_path
 from apps.users.factories.user_factory import UserFactory
 
 
@@ -16,19 +15,15 @@ class UpdateFileIntegrationTests(APITestCase):
     def setUpTestData(cls):
         cls.user = UserFactory(username="user1", password="password123")
 
-        # Create file for the authenticated user
-        cls.path_1 = build_s3_path(
-            user_id=cls.user.id,
-            file_name="docs/file1.txt",
-        )
-
         cls.file = CloudFileFactory(
             user=cls.user,
             file_name="file1.txt",
-            path=cls.path_1,
+            path="file1.txt",
             status=SUCCESS,
             size=999,
         )
+
+        cls.folder = FolderFactory(user=cls.user)
 
         # URL for renaming
         cls.url = reverse("storage-detail", kwargs={"pk": cls.file.pk})
@@ -43,11 +38,126 @@ class UpdateFileIntegrationTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(self.file.file_name, "renamed.txt")
 
-        path = build_s3_path(
-            user_id=self.user.id,
-            file_name="docs/renamed.txt",
-        )
-        self.assertEqual(self.file.path, path)
+        self.assertEqual(self.file.path, "renamed.txt")
+
+    def test_put_allows_file_name_with_internal_dots(self):
+        response = self.client.put(self.url, {"file_name": "renamed.with.dots"}, format="json")
+        self.file.refresh_from_db()
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(self.file.file_name, "renamed.with.dots.txt")
+
+        self.assertEqual(self.file.path, "renamed.with.dots.txt")
+
+    def test_put_rejects_file_name_with_only_dots(self):
+        response = self.client.put(self.url, {"file_name": "..."}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("file_name", response.data)
+
+    def test_put_rejects_file_name_starting_with_dot(self):
+        response = self.client.put(self.url, {"file_name": ".renamed.with.dots"}, format="json")
+        self.file.refresh_from_db()
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("file_name", response.data)
+
+    def test_put_rejects_file_name_ending_with_dot(self):
+        response = self.client.put(self.url, {"file_name": "renamed.with.dots."}, format="json")
+        self.file.refresh_from_db()
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("file_name", response.data)
+
+    def test_successful_update_file_folder(self):
+        data = {
+            "file_name": "test1",
+            "folder": self.folder.id,
+        }
+        response = self.client.put(self.url, data, format="json")
+        self.file.refresh_from_db()
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(self.file.folder.id, self.folder.id)
+        self.assertEqual(self.file.file_name, "test1.txt")
+        self.assertEqual(self.file.path, build_object_path(self.file.file_name, self.file.folder))
+
+    def test_update_with_invalid_folder(self):
+        data = {
+            "folder": 9999
+        }
+        response = self.client.put(self.url, data, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("folder", response.data)
+
+    def test_put_rejects_folder_not_owned_by_user(self):
+        user = UserFactory(username="user2", password="password123")
+        folder = FolderFactory(user=user)
+        data = {
+            "folder": folder.id
+        }
+        response = self.client.put(self.url, data, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("folder", response.data)
+
+    def test_update_with_null_folder(self):
+        data = {
+            "file_name": self.file.file_name,
+            "folder": None
+        }
+        response = self.client.put(self.url, data, format="json")
+        self.file.refresh_from_db()
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsNone(self.file.folder)
+
+    def test_update_with_blank_file_name(self):
+        data = {
+            "file_name": "",
+            "folder": self.folder.id
+        }
+        current_file_name = self.file.file_name
+        response = self.client.put(self.url, data, format="json")
+        self.file.refresh_from_db()
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("file_name", response.data)
+        self.assertEqual(self.file.file_name, current_file_name)
+
+    def test_update_with_null_file_name(self):
+        data = {
+            "file_name": None,
+            "folder": self.folder.id
+        }
+        response = self.client.put(self.url, data, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("file_name", response.data)
+
+    def test_update_with_missing_file_name(self):
+        folder = FolderFactory(user=self.user)
+        data = {
+            "folder": folder.id
+        }
+        response = self.client.put(self.url, data, format="json")
+        self.file.refresh_from_db()
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("message", response.data)
+        self.assertEqual(self.file.folder.id, folder.id)
+
+    def test_update_file_name_only(self):
+        new_name = "updated_name"
+        data = {
+            "file_name": new_name
+        }
+        response = self.client.put(self.url, data, format="json")
+        self.file.refresh_from_db()
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(self.file.file_name, "updated_name.txt")
 
     def test_unauthenticated_user_cannot_rename(self):
         self.client.logout()
@@ -107,20 +217,10 @@ class UpdateFileIntegrationTests(APITestCase):
             "The file name cannot contain '/' or '\\'.",
         )
 
-    def test_cannot_rename_with_extension(self):
-        response = self.client.put(self.url, {"file_name": "name.txt"}, format="json")
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("file_name", response.data)
-        self.assertEqual(
-            str(response.data.get("file_name")[0]),
-            "The file name cannot contain '.' or extensions.",
-        )
-
     def test_cannot_rename_non_existent_file(self):
         non_existent_url = reverse("storage-detail", kwargs={"pk": 999})
         response = self.client.put(
-            non_existent_url, {"file_name": "new_name.txt"}, format="json"
+            non_existent_url, {"file_name": "non_existent"}, format="json"
         )
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -131,7 +231,7 @@ class UpdateFileIntegrationTests(APITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["message"], "File successfully renamed to renamed_file.txt.")
+        self.assertEqual(response.data["message"], "File successfully updated.")
 
     def test_cannot_rename_failed_upload(self):
         path = build_s3_path(
@@ -164,16 +264,11 @@ class UpdateFileIntegrationTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_cannot_rename_with_same_name(self):
-        """Test renaming a file to the same name should fail."""
         response = self.client.put(
             self.url, {"file_name": self.file.file_name.split(".")[0]}, format="json"
         )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("file_name", response.data)
-        self.assertEqual(
-            str(response.data.get("file_name")[0]),
-            "The new file name cannot be the same as the current file name.",
-        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("message", response.data)
 
     def test_cannot_rename_to_too_long_name(self):
         """Test renaming a file with an excessively long name should fail."""
@@ -182,14 +277,6 @@ class UpdateFileIntegrationTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("file_name", response.data)
 
-    @unittest.skip("Skipping: Unsupported extensions not implemented yet.")
-    def test_cannot_rename_to_unsupported_extension(self):
-        """Test renaming a file to an unsupported extension should fail."""
-        response = self.client.put(
-            self.url, {"file_name": "new_name.exe"}, format="json"
-        )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
     def test_rename_preserves_file_extension(self):
         response = self.client.put(self.url, {"file_name": "new_name"}, format="json")
         self.file.refresh_from_db()
@@ -197,18 +284,19 @@ class UpdateFileIntegrationTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(self.file.file_name.endswith(".txt"))
 
-    def test_cannot_rename_without_required_field(self):
+    def test_put_fails_when_no_fields_are_provided(self):
         response = self.client.put(self.url, {}, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("file_name", response.data)
+        self.assertIn("non_field_errors", response.data)
 
-    def test_update_path_fails(self):
+    def test_put_ignores_unallowed_fields_like_path(self):
         response = self.client.put(self.url, {"file_name": "new_name", "path": "docs/wrongpath"}, format="json")
+        self.file.refresh_from_db()
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(self.file.path, self.path_1)
+        self.assertEqual(self.file.path, "new_name.txt")
 
-    def test_update_size_fails(self):
+    def test_put_ignores_unallowed_fields_like_size(self):
         response = self.client.put(self.url, {"file_name": "new_name", "size": 123}, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
