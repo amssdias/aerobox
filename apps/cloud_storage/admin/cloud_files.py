@@ -8,9 +8,9 @@ class CloudFilesAdmin(admin.ModelAdmin):
     list_display = (
         "id",
         "file_name",
-        "path",
-        "content_type",
+        "folder",
         "user",
+        "deleted_at",
         "status",
     )
     list_per_page = 25
