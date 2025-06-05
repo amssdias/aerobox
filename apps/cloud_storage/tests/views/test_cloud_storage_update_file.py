@@ -284,10 +284,19 @@ class UpdateFileIntegrationTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(self.file.file_name.endswith(".txt"))
 
-    def test_put_fails_when_no_fields_are_provided(self):
+    def test_put_does_nothing_when_no_fields_are_provided(self):
+        file_name = self.file.file_name
+        self.file.folder = None
+        self.file.save()
+
         response = self.client.put(self.url, {}, format="json")
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("non_field_errors", response.data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.file.refresh_from_db()
+
+        self.assertEqual(self.file.file_name, file_name)
+        self.assertIsNone(self.file.folder)
 
     def test_put_ignores_unallowed_fields_like_path(self):
         response = self.client.put(self.url, {"file_name": "new_name", "path": "docs/wrongpath"}, format="json")
