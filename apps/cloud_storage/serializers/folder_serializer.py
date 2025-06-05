@@ -30,6 +30,11 @@ class FolderSerializer(serializers.ModelSerializer):
         fields = ["id", "name", "parent", "parent_id", "user", "created_at", "updated_at"]
         read_only_fields = ["id", "user", "parent", "created_at", "updated_at", ]
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        user = self.context["request"].user
+        self.fields["parent_id"].queryset = Folder.objects.filter(user=user)
+
     def validate_name(self, value):
         # Reject paths that contain backslashes `\`
         if "\\" in value:

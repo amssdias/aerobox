@@ -169,11 +169,6 @@ class RenameFileSerializer(serializers.ModelSerializer):
             )
         return value.lower()
 
-    def validate(self, attrs):
-        if not attrs.get("file_name") and not attrs.get("folder"):
-            raise serializers.ValidationError("You must provide either file_name or folder.")
-        return attrs
-
     def update(self, instance, validated_data):
         new_name = validated_data.pop("file_name", None)
         if new_name:

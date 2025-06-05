@@ -88,7 +88,7 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
 
     def update(self, request, *args, **kwargs):
         """
-        Rename a file in both the database and S3 storage.
+        Rename a file or change it's folder.
         """
         cloud_file = self.get_object()
 
