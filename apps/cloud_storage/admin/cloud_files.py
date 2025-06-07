@@ -9,6 +9,7 @@ class CloudFilesAdmin(admin.ModelAdmin):
         "id",
         "file_name",
         "folder",
+        "path",
         "user",
         "deleted_at",
         "status",
