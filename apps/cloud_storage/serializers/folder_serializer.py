@@ -5,6 +5,7 @@ from rest_framework import serializers
 
 from apps.cloud_storage.models import Folder
 from apps.cloud_storage.serializers import CloudFilesSerializer
+from apps.cloud_storage.tasks.file_path_updates import update_folder_file_paths_task
 from apps.features.choices.feature_code_choices import FeatureCodeChoices
 
 
@@ -87,6 +88,20 @@ class FolderSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data["user"] = self.context["request"].user
         return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        old_name = instance.name
+        old_parent_id = instance.parent_id
+
+        updated_folder = super().update(instance, validated_data)
+
+        name_changed = "name" in validated_data and validated_data["name"] != old_name
+        parent_changed = "parent" in validated_data and updated_folder.parent_id != old_parent_id
+
+        if name_changed or parent_changed:
+            update_folder_file_paths_task.delay(updated_folder.id)
+
+        return updated_folder
 
 
 class FolderDetailSerializer(serializers.ModelSerializer):
