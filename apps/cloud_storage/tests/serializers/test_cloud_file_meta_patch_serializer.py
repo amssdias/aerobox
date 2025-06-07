@@ -3,19 +3,19 @@ from django.test import TestCase
 
 from apps.cloud_storage.constants.cloud_files import SUCCESS, FAILED, PENDING
 from apps.cloud_storage.factories.cloud_file_factory import CloudFileFactory
-from apps.cloud_storage.serializers import CloudFileUpdateSerializer
+from apps.cloud_storage.serializers import CloudFileMetaPatchSerializer
 from apps.profiles.models import Profile
 from apps.profiles.signals import create_stripe_customer
 
 
-class CloudFileUpdateSerializerTests(TestCase):
+class CloudFileMetaPatchSerializerTests(TestCase):
 
     @classmethod
     def setUpTestData(cls):
         # Disconnect stripe
         post_save.disconnect(create_stripe_customer, sender=Profile)
 
-        cls.serializer = CloudFileUpdateSerializer
+        cls.serializer = CloudFileMetaPatchSerializer
         cls.cloud_file = CloudFileFactory()
 
     @classmethod

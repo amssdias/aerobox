@@ -12,7 +12,7 @@ from apps.cloud_storage.constants.cloud_files import SUCCESS
 from apps.cloud_storage.exceptions import FileUploadError
 from apps.cloud_storage.models import CloudFile
 from apps.cloud_storage.serializers import CloudFilesSerializer
-from apps.cloud_storage.serializers.cloud_files import CloudFileUpdateSerializer, RenameFileSerializer
+from apps.cloud_storage.serializers.cloud_files import CloudFileMetaPatchSerializer, CloudFileUpdateSerializer
 from apps.cloud_storage.services import S3Service
 from apps.cloud_storage.utils.hash_utils import generate_unique_hash
 from apps.cloud_storage.utils.path_utils import build_s3_path
@@ -37,9 +37,9 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         if self.action == "partial_update":
-            return CloudFileUpdateSerializer
+            return CloudFileMetaPatchSerializer
         elif self.action == "update":
-            return RenameFileSerializer
+            return CloudFileUpdateSerializer
         return CloudFilesSerializer
 
     @extend_schema(

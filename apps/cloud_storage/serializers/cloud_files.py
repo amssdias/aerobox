@@ -125,13 +125,13 @@ class CloudFilesSerializer(serializers.ModelSerializer):
         return None
 
 
-class CloudFileUpdateSerializer(serializers.ModelSerializer):
+class CloudFileMetaPatchSerializer(serializers.ModelSerializer):
     class Meta:
         model = CloudFile
         fields = ("status", "error_message")
 
 
-class RenameFileSerializer(serializers.ModelSerializer):
+class CloudFileUpdateSerializer(serializers.ModelSerializer):
     file_name = serializers.CharField(
         required=False,
         max_length=255,

@@ -1,2 +1,2 @@
-from .cloud_files import CloudFilesSerializer, CloudFileUpdateSerializer
+from .cloud_files import CloudFilesSerializer, CloudFileMetaPatchSerializer
 from .folder_serializer import FolderParentSerializer, FolderSerializer, FolderDetailSerializer
