@@ -12,8 +12,8 @@ class CloudFileMetaPatchSerializerTests(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        # Disconnect stripe
-        post_save.disconnect(create_stripe_customer, sender=Profile)
+        # # Disconnect stripe
+        # post_save.disconnect(create_stripe_customer, sender=Profile)
 
         cls.serializer = CloudFileMetaPatchSerializer
         cls.cloud_file = CloudFileFactory()
