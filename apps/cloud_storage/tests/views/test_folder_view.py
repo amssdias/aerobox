@@ -79,6 +79,18 @@ class FolderViewSetTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("detail", response.data)
 
+    def test_delete_folder_containing_soft_deleted_file(self):
+        folder_with_file = FolderFactory(name="HasFile", user=self.user)
+        CloudFileFactory(
+            folder=folder_with_file,
+            file_name="test.pdf",
+            deleted_at=timezone.now(),
+        )
+        response = self.client.delete(reverse("folders-detail", args=[folder_with_file.id]))
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Folder.objects.filter(id=folder_with_file.id).exists())
+
     def test_delete_folder_from_another_user_returns_404(self):
         response = self.client.delete(reverse("folders-detail", args=[self.other_user_folder.id]))
 
