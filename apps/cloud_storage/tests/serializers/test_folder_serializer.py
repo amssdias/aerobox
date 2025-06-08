@@ -1,4 +1,5 @@
 from datetime import timedelta
+from unittest.mock import patch
 
 from django.test import TestCase, RequestFactory
 from django.utils import timezone
@@ -197,7 +198,56 @@ class FolderSerializerTests(TestCase):
             self.assertFalse(serializer.is_valid(raise_exception=True))
             self.assertIn("name", serializer.errors)
 
-    # def test_create_file_and_presigned_url_special_unicode_characters(self, mock_s3):
-    #     data = {"path": "uploads/测试文件📁"}
-    #     response = self.client.post(self.url, data, format="json")
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
+    @patch("apps.cloud_storage.serializers.folder_serializer.update_folder_file_paths_task.delay")
+    def test_update_name_triggers_path_update(self, mock_task):
+        serializer = FolderSerializer(
+            instance=self.parent_folder,
+            data={"name": "Renamed"},
+            context=self.get_context(),
+            partial=True
+        )
+        self.assertTrue(serializer.is_valid())
+        folder = serializer.save()
+
+        self.assertEqual(folder.name, "Renamed")
+        mock_task.assert_called_once_with(folder.id)
+
+    @patch("apps.cloud_storage.serializers.folder_serializer.update_folder_file_paths_task.delay")
+    def test_update_parent_triggers_path_update(self, mock_task):
+        new_parent = FolderFactory(name="NewParent", user=self.user)
+        serializer = FolderSerializer(
+            instance=self.parent_folder,
+            data={"parent_id": new_parent.id},
+            context=self.get_context(),
+            partial=True
+        )
+        self.assertTrue(serializer.is_valid())
+        folder = serializer.save()
+
+        self.assertEqual(folder.parent, new_parent)
+        mock_task.assert_called_once_with(folder.id)
+
+    @patch("apps.cloud_storage.serializers.folder_serializer.update_folder_file_paths_task.delay")
+    def test_update_name_and_parent_triggers_path_update_once(self, mock_task):
+        new_parent = FolderFactory(name="NP", user=self.user)
+        data = {"name": "Combo", "parent_id": new_parent.id}
+        serializer = FolderSerializer(
+            instance=self.parent_folder,
+            data=data,
+            context=self.get_context(),
+            partial=True
+        )
+        self.assertTrue(serializer.is_valid())
+        folder = serializer.save()
+
+        self.assertEqual(folder.name, "Combo")
+        self.assertEqual(folder.parent, new_parent)
+        mock_task.assert_called_once_with(folder.id)
+
+    @patch("apps.cloud_storage.serializers.folder_serializer.update_folder_file_paths_task.delay")
+    def test_partial_update_without_name_or_parent_does_not_trigger_task(self, mock_task):
+        serializer = FolderSerializer(instance=self.parent_folder, data={}, context=self.get_context(), partial=True)
+        self.assertTrue(serializer.is_valid())
+        serializer.save()
+
+        mock_task.assert_not_called()
