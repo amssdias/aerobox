@@ -1,18 +1,9 @@
-from apps.subscriptions.choices.subscription_choices import (
-    SubscriptionStatusChoices,
-)
-from apps.subscriptions.constants.stripe_subscription_status import (
-    INCOMPLETE,
-    ACTIVE,
-    PAST_DUE,
-)
+from apps.subscriptions.services.stripe_events.stripe_subscription_created import SubscriptionCreateddHandler
 from config.services.stripe_services.stripe_events.base_event import StripeEventHandler
-from config.services.stripe_services.stripe_events.customer_event import (
-    StripeCustomerMixin,
-)
+from config.services.stripe_services.stripe_events.subscription_mixin import StripeSubscriptionMixin
 
 
-class SubscriptionUpdateddHandler(StripeEventHandler, StripeCustomerMixin):
+class SubscriptionUpdateddHandler(StripeEventHandler, StripeSubscriptionMixin):
     """
     Handles `customer.subscription.updated` event.
     """
@@ -21,33 +12,14 @@ class SubscriptionUpdateddHandler(StripeEventHandler, StripeCustomerMixin):
         self.update_subscription()
 
     def update_subscription(self):
-        subscription_id = self.data["id"]
+        stripe_subscription = self.get_stripe_subscription(stripe_subscription_id=self.data.get("id"))
+        subscription = self.get_or_create_subscription()
+        status = self.get_subscription_status(stripe_subscription.status)
 
-        subscription = self.get_subscription(subscription_id)
-        status = self.get_subscription_status()
-
-        if self.can_update(subscription, subscription_id, status):
+        if subscription.status != status:
             subscription.status = status
             subscription.save()
 
-    def get_subscription_status(self):
-        if "status" not in self.data:
-            return None
-
-        # PAST_DUE: When a user's payment fails, the subscription is marked as inactive.
-        if self.data["status"] in [INCOMPLETE, PAST_DUE]:
-            return SubscriptionStatusChoices.INACTIVE.value
-        elif self.data["status"] == ACTIVE:
-            return SubscriptionStatusChoices.ACTIVE.value
-
-    def can_update(self, subscription, subscription_id, status):
-        if not subscription:
-            raise ValueError(
-                f"Subscription with Stripe ID '{subscription_id}' not found."
-            )
-        if not status:
-            raise ValueError(
-                f"Subscription status missing in Stripe event: {self.data}"
-            )
-
-        return True
+    def get_or_create_subscription(self):
+        subscription = self.get_subscription(self.data["id"])
+        return subscription or SubscriptionCreateddHandler(event=self.event).create_subscription()

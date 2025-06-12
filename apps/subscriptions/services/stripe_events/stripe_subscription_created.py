@@ -1,18 +1,16 @@
 import logging
-from datetime import datetime
 
-from apps.subscriptions.choices.subscription_choices import (
-    SubscriptionStatusChoices,
-    SubscriptionBillingCycleChoices,
-)
+from django.db import transaction, IntegrityError
+
+from apps.profiles.models import Profile
 from apps.subscriptions.models import Plan, Subscription
 from config.services.stripe_services.stripe_events.base_event import StripeEventHandler
-from config.services.stripe_services.stripe_events.customer_event import StripeCustomerMixin
+from config.services.stripe_services.stripe_events.subscription_mixin import StripeSubscriptionMixin
 
 logger = logging.getLogger("aerobox")
 
 
-class SubscriptionCreateddHandler(StripeEventHandler, StripeCustomerMixin):
+class SubscriptionCreateddHandler(StripeEventHandler, StripeSubscriptionMixin):
     """
     Handles `customer.subscription.created` event.
     """
@@ -20,61 +18,56 @@ class SubscriptionCreateddHandler(StripeEventHandler, StripeCustomerMixin):
     def process(self):
         self.create_subscription()
 
-    def get_plan(self):
+    def get_plan(self, plan_stripe_price_id):
         try:
-            stripe_price_id = self.data["plan"]["id"]
-            return Plan.objects.get(stripe_price_id=stripe_price_id)
+            return Plan.objects.get(stripe_price_id=plan_stripe_price_id)
 
         except Plan.DoesNotExist:
             logger.error(
-                "No plan found for the given Stripe price ID.", extra={"stripe_price_id": stripe_price_id}
+                "No plan found for the given Stripe price ID.", extra={"stripe_price_id": plan_stripe_price_id}
             )
-        except KeyError:
-            logger.error("Missing 'id' key under 'plan' in Stripe event data.", extra={"stripe_data": self.data})
 
         return None
 
     def create_subscription(self):
-        user = self.get_user(data=self.data)
-        plan = self.get_plan()
-        status = self.get_subscription_status()
+        stripe_subscription = self.get_stripe_subscription(stripe_subscription_id=self.data.get("id"))
+        user = self.get_user(stripe_customer_id=stripe_subscription.customer)
+        plan = self.get_plan(plan_stripe_price_id=stripe_subscription.plan.get("id"))
+        status = self.get_subscription_status(status=stripe_subscription.status)
 
-        billing_start = datetime.utcfromtimestamp(
-            self.data["items"]["data"][0]["current_period_start"]
-        ).date()
-        billing_end = datetime.utcfromtimestamp(self.data["items"]["data"][0]["current_period_end"]).date()
-
-        billing_cycle = self.get_billing_cycle()
+        billing_start = self.get_subscription_billing_cycle_start(stripe_subscription)
+        billing_end = self.get_subscription_billing_cycle_end(stripe_subscription)
+        billing_cycle = self.get_subscription_billing_cycle_interval(stripe_subscription)
 
         if not user or not plan or not status or not billing_start or not billing_end or not billing_cycle:
             return False
 
-        obj, created = Subscription.objects.get_or_create(
-            user=user,
-            stripe_subscription_id=self.data["id"],
-            defaults={
-                "plan": plan,
-                "billing_cycle": billing_cycle,
-                "start_date": billing_start,
-                "end_date": billing_end,
-                "status": status,
-                "trial_start_date": None,
-                "is_recurring": True,
-            },
-        )
+        try:
+            with transaction.atomic():
+                subscription, created = Subscription.objects.get_or_create(
+                    user=user,
+                    stripe_subscription_id=stripe_subscription.id,
+                    defaults={
+                        "plan": plan,
+                        "billing_cycle": billing_cycle,
+                        "start_date": billing_start,
+                        "end_date": billing_end,
+                        "status": status,
+                        "trial_start_date": None,
+                        "is_recurring": True,
+                    },
+                )
+        except IntegrityError:
+            subscription = Subscription.objects.get(stripe_invoice_id=stripe_subscription.id)
 
-        if created:
-            return True
+        return subscription
 
-    def get_subscription_status(self):
-        data_status = self.data["status"]
-        if data_status == "incomplete":
-            return SubscriptionStatusChoices.INACTIVE.value
-        elif data_status == "active":
-            return SubscriptionStatusChoices.ACTIVE.value
-
-    def get_billing_cycle(self):
-        billing_cycle = self.data["items"]["data"][0]["plan"]["interval"]
-        if billing_cycle in SubscriptionBillingCycleChoices.values:
-            return SubscriptionBillingCycleChoices(billing_cycle).value
+    @staticmethod
+    def get_user(stripe_customer_id):
+        """Retrieve the user associated with a Stripe customer ID."""
+        try:
+            return Profile.objects.get(stripe_customer_id=stripe_customer_id).user
+        except Profile.DoesNotExist:
+            logger.error("No profile found for the given Stripe customer ID.",
+                         extra={"stripe_customer_id": stripe_customer_id})
         return None

@@ -1,5 +1,5 @@
 from datetime import datetime
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 from django.test import TestCase
 
@@ -38,62 +38,73 @@ class SubscriptionUpdatedHandlerTest(TestCase):
         }
         self.handler = SubscriptionUpdateddHandler({"data": {"object": self.data}})
 
-    def test_process_success(self):
+    @patch("stripe.Subscription.retrieve")
+    def test_process_success(self, subscription_mock):
+        subscription_mock.return_value = MagicMock(**self.data)
+
         self.handler.process()
         self.subscription.refresh_from_db()
+
         self.assertEqual(
             self.subscription.status, SubscriptionStatusChoices.INACTIVE.value
         )
 
-    @patch("config.services.stripe_services.stripe_events.customer_event.logger.error")
-    def test_process_subscription_does_not_exist(self, mock_logger):
-        subscription_id = "non_existent_sub"
-        self.handler.data["id"] = subscription_id
-        with self.assertRaises(ValueError) as context:
-            self.handler.process()
+    @patch("stripe.Subscription.retrieve")
+    def test_process_creates_subscription_when_none_exists(self, subscription_mock):
+        user = UserFactory(username="testuser_1234", stripe_customer_id="cust_test1234562345")
+        n_subscriptions = Subscription.objects.filter(user=user).count()
 
-        mock_logger.assert_called_once_with(
-            "Subscription not found: The provided Stripe subscription ID does not exist.",
-            extra={"stripe_subscription_id": self.data.get("id")},
-        )
+        self.handler.data["id"] = "sub_nonexist"
+        data = {
+            "id": "sub_nonexist",
+            "customer": user.profile.stripe_customer_id,
+            "status": "active",
+            "plan": {"id": self.plan.stripe_price_id},
+            "items": {
+                "data": [
+                    {
+                        "current_period_start": 1700000000,
+                        "current_period_end": 1702592000,
+                        "plan": {
+                            "interval": "month"
+                        }
+                    }
+                ]
+            }
+        }
+
+        subscription_mock.return_value = MagicMock(**data)
+        subscription_mock.return_value.get.return_value = data.get("items")
+        self.handler.process()
+
+        self.assertEqual(Subscription.objects.filter(user=user).count(), n_subscriptions + 1)
 
     def test_get_subscription_status_active(self):
-        self.handler.data["status"] = ACTIVE
-        status = self.handler.get_subscription_status()
+        status = self.handler.get_subscription_status(ACTIVE)
         self.assertEqual(status, SubscriptionStatusChoices.ACTIVE.value)
 
     def test_get_subscription_status_incomplete(self):
-        self.handler.data["status"] = INCOMPLETE
-        status = self.handler.get_subscription_status()
+        status = self.handler.get_subscription_status(INCOMPLETE)
         self.assertEqual(status, SubscriptionStatusChoices.INACTIVE.value)
 
     def test_get_subscription_status_past_due(self):
-        self.handler.data["status"] = PAST_DUE
-        status = self.handler.get_subscription_status()
+        status = self.handler.get_subscription_status(PAST_DUE)
         self.assertEqual(status, SubscriptionStatusChoices.INACTIVE.value)
 
     def test_get_subscription_status_invalid(self):
-        self.handler.data["status"] = "unknown_status"
-        status = self.handler.get_subscription_status()
+        status = self.handler.get_subscription_status("unknown_status")
         self.assertIsNone(status)
 
     def test_get_subscription_not_status(self):
-        del self.handler.data["status"]
-        status = self.handler.get_subscription_status()
+        status = self.handler.get_subscription_status(None)
         self.assertIsNone(status)
 
-    @patch("apps.subscriptions.models.Subscription.objects.get")
-    def test_get_subscription_success(self, mock_get):
-        mock_get.return_value = self.subscription
-        subscription = self.handler.get_subscription("sub_test")
+    def test_get_subscription_success(self):
+        subscription = self.handler.get_subscription(self.subscription.stripe_subscription_id)
         self.assertEqual(subscription.id, self.subscription.id)
 
-    @patch("config.services.stripe_services.stripe_events.customer_event.logger.error")
-    @patch(
-        "apps.subscriptions.models.Subscription.objects.get",
-        side_effect=Subscription.DoesNotExist,
-    )
-    def test_get_subscription_not_found(self, mock_get, mock_logger):
+    @patch("config.services.stripe_services.stripe_events.customer_event.logger.warning")
+    def test_get_subscription_not_found(self, mock_logger):
         subscription = self.handler.get_subscription("non_existent_sub")
         self.assertIsNone(subscription)
         mock_logger.assert_called_once_with(

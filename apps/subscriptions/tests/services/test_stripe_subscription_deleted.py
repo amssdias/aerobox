@@ -1,5 +1,5 @@
 from datetime import datetime
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 from django.test import TestCase
 
@@ -31,7 +31,10 @@ class SubscriptionDeletedHandlerTest(TestCase):
         }
         self.handler = SubscriptionDeleteddHandler({"data": {"object": self.data}})
 
-    def test_process_success(self):
+    @patch("stripe.Subscription.retrieve")
+    def test_process_success(self, subscription_mock):
+        subscription_mock.return_value = MagicMock(**self.data)
+
         self.handler.process()
         self.subscription.refresh_from_db()
         self.assertEqual(
@@ -41,8 +44,9 @@ class SubscriptionDeletedHandlerTest(TestCase):
             self.subscription.end_date, datetime.utcfromtimestamp(1702592000).date()
         )
 
-    def test_process_no_ended_at(self):
-        self.handler.data["ended_at"] = None
+    @patch("stripe.Subscription.retrieve")
+    def test_process_no_ended_at(self, subscription_mock):
+        subscription_mock.return_value = MagicMock(**{"ended_at": None})
         self.handler.process()
         self.subscription.refresh_from_db()
         self.assertEqual(
@@ -57,14 +61,6 @@ class SubscriptionDeletedHandlerTest(TestCase):
         mock_logger.called_once_with(
             "Subscription does not exist",
             extra={"stripe_subscription_id": self.subscription.stripe_subscription_id},
-        )
-
-    def test_process_subscription_without_ended_at(self):
-        del self.handler.data["ended_at"]
-        self.handler.process()
-        self.subscription.refresh_from_db()
-        self.assertEqual(
-            self.subscription.status, SubscriptionStatusChoices.CANCELED.value
         )
 
     def test_cancel_pending_payments_updates_only_pending(self):

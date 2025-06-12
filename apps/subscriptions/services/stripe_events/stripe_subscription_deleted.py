@@ -6,27 +6,29 @@ from apps.subscriptions.choices.subscription_choices import (
     SubscriptionStatusChoices,
 )
 from config.services.stripe_services.stripe_events.base_event import StripeEventHandler
-from config.services.stripe_services.stripe_events.customer_event import (
-    StripeCustomerMixin,
-)
-
+from config.services.stripe_services.stripe_events.subscription_mixin import StripeSubscriptionMixin
 
 logger = logging.getLogger("aerobox")
 
 
-class SubscriptionDeleteddHandler(StripeEventHandler, StripeCustomerMixin):
+class SubscriptionDeleteddHandler(StripeEventHandler, StripeSubscriptionMixin):
     """
     Handles `customer.subscription.deleted` event.
     """
 
     def process(self):
         subscription_id = self.data["id"]
-        subscription = self.get_subscription(subscription_id=subscription_id)
+        subscription = self.get_subscription(stripe_subscription_id=subscription_id)
 
         if not subscription:
+            logger.warning(
+                "Received Stripe 'subscription.deleted' event but no matching subscription was found in the database.",
+                extra={"stripe_subscription_id": subscription_id}
+            )
             return
 
-        ended_at = self.data.get("ended_at", None)
+        stripe_subscription = self.get_stripe_subscription(stripe_subscription_id=subscription_id)
+        ended_at = stripe_subscription.ended_at
         self.update_subscription(subscription, ended_at)
         self.cancel_pending_payments(subscription)
 

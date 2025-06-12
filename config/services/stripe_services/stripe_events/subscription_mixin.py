@@ -3,7 +3,6 @@ from datetime import datetime
 
 import stripe
 
-from apps.profiles.models import Profile
 from apps.subscriptions.choices.subscription_choices import SubscriptionStatusChoices, SubscriptionBillingCycleChoices
 from apps.subscriptions.constants.stripe_subscription_status import INCOMPLETE, PAST_DUE, ACTIVE
 from apps.subscriptions.models import Subscription
@@ -15,16 +14,6 @@ class StripeSubscriptionMixin:
     """
     Base class for 'subscription' Stripe events.
     """
-
-    @staticmethod
-    def get_user(stripe_customer_id):
-        """Retrieve the user associated with a Stripe customer ID."""
-        try:
-            return Profile.objects.get(stripe_customer_id=stripe_customer_id).user
-        except Profile.DoesNotExist:
-            logger.error("No profile found for the given Stripe customer ID.",
-                         extra={"stripe_customer_id": stripe_customer_id})
-        return None
 
     @staticmethod
     def get_stripe_subscription(stripe_subscription_id):
@@ -64,23 +53,14 @@ class StripeSubscriptionMixin:
         return None
 
     @staticmethod
-    def get_subscription(subscription_id):
+    def get_subscription(stripe_subscription_id):
         try:
-            return Subscription.objects.get(stripe_subscription_id=subscription_id)
+            return Subscription.objects.get(stripe_subscription_id=stripe_subscription_id)
         except Subscription.DoesNotExist:
             logger.warning(
                 "Subscription not found: The provided Stripe subscription ID does not exist.",
-                extra={"stripe_subscription_id": subscription_id},
+                extra={"stripe_subscription_id": stripe_subscription_id},
             )
-
-    def get_subscription_id(self):
-        subscription_id = self.data.get("parent", {}).get("subscription_details", {}).get("subscription")
-        if not subscription_id:
-            logger.error(
-                "Missing 'subscription' key in Stripe event data.",
-                extra={"stripe_data": self.data}
-            )
-        return subscription_id
 
     @staticmethod
     def get_subscription_status(status):
