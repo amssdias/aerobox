@@ -18,11 +18,11 @@ class InvoicePaymentFailedHandler(StripeEventHandler, StripeInvoiceMixin):
 
     def process(self):
         invoice_id = self.get_invoice_id()
-        payment = self.get_payment(invoice_id)
-
-        billing_reason = self.get_billing_reason()
+        stripe_invoice = self.get_stripe_invoice(stripe_invoice_id=invoice_id)
+        billing_reason = stripe_invoice.billing_reason
 
         if self.is_subscription_cycle(billing_reason):
+            payment = self.get_payment(invoice_id)
             self.update_payment(payment)
             self.send_invoice_payment_failed_email(payment)
 

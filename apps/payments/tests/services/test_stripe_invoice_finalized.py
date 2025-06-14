@@ -1,5 +1,6 @@
+from unittest.mock import patch, MagicMock
+
 from django.test import TestCase
-from unittest.mock import patch
 
 from apps.payments.factories.payment import PaymentFactory
 from apps.payments.services.stripe_events.invoice_finalized import InvoiceFinalizedHandler
@@ -8,6 +9,11 @@ from apps.payments.services.stripe_events.invoice_finalized import InvoiceFinali
 class InvoiceFinalizedHandlerTest(TestCase):
 
     def setUp(self):
+        # Patch stripe.Invoice.retrieve globally for this class
+        patcher = patch("stripe.Invoice.retrieve")
+        self.mock_retrieve_invoice = patcher.start()
+        self.addCleanup(patcher.stop)  # Ensures patch is removed after each test
+
         self.data = {
             "data": {
                 "object": {
@@ -18,6 +24,8 @@ class InvoiceFinalizedHandlerTest(TestCase):
                 }
             }
         }
+        self.stripe_invoice_mock = MagicMock(**self.data["data"]["object"])
+        self.mock_retrieve_invoice.return_value = self.stripe_invoice_mock
 
         self.payment = PaymentFactory(
             stripe_invoice_id="invoice_123",
@@ -49,20 +57,19 @@ class InvoiceFinalizedHandlerTest(TestCase):
 
     @patch("apps.payments.services.stripe_events.invoice_finalized.logger.error")
     def test_process_missing_amount_due(self, mock_logger):
-        self.handler.data.pop("amount_due")
+        self.stripe_invoice_mock.amount_due = None
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(ValueError):
             self.handler.process()
 
         mock_logger.assert_called()
 
     @patch("apps.payments.services.stripe_events.invoice_finalized.logger.error")
     def test_process_missing_invoice_urls(self, mock_logger):
-        self.handler.data.pop("hosted_invoice_url")
-        self.handler.data.pop("invoice_pdf")
+        self.stripe_invoice_mock.hosted_invoice_url = None
+        self.stripe_invoice_mock.invoice_pdf = None
 
-        with self.assertRaises(RuntimeError):
-            self.handler.process()
+        self.assertFalse(self.handler.process())
 
         mock_logger.assert_called()
 
@@ -90,15 +97,15 @@ class InvoiceFinalizedHandlerTest(TestCase):
         self.assertEqual(self.payment.invoice_url, "https://stripe.com/invoice_123")
         self.assertEqual(self.payment.invoice_pdf_url, "https://stripe.com/invoice_123.pdf")
 
-    def test_can_update_raises_error_on_missing_fields(self):
-        with self.assertRaises(RuntimeError):
-            self.handler.can_update(
+    def test_can_update_returns_false_on_missing_fields(self):
+        self.assertFalse(
+            self.handler.validate_fields(
                 invoice_id="invoice_123",
-                payment=None,
                 amount=None,
                 hosted_invoice_url=None,
                 invoice_pdf_url=None
             )
+        )
 
     @patch("apps.payments.services.stripe_events.invoice_finalized.logger.critical")
     def test_logger_called_on_missing_invoice_id(self, mock_logger):

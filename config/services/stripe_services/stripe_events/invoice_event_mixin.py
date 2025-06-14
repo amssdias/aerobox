@@ -1,6 +1,8 @@
 import logging
 from datetime import datetime, timezone
 
+import stripe
+
 from apps.payments.choices.payment_choices import PaymentStatusChoices
 from apps.payments.constants.stripe_invoice import OPEN, DRAFT, PAID
 from apps.payments.models import Payment
@@ -26,48 +28,73 @@ class StripeInvoiceMixin:
                 "Invoice ID is missing in event data. Stripe should retry later."
             )
 
-    def get_invoice_status(self):
-        data_status = self.data.get("status")
-        if not data_status:
+    @staticmethod
+    def get_stripe_invoice(stripe_invoice_id):
+        try:
+            return stripe.Invoice.retrieve(stripe_invoice_id, expand=["payments"])
+
+        except stripe.error.InvalidRequestError as e:
             logger.error(
-                "Missing 'status' key in Stripe event data.",
-                extra={"stripe_data": self.data},
+                "Invalid Stripe invoice ID or invoice not found.",
+                extra={"stripe_invoice_id": stripe_invoice_id, "error": str(e)}
             )
+
+        except stripe.error.AuthenticationError as e:
+            logger.critical(
+                "Stripe authentication failed — check your API key.",
+                extra={"error": str(e)}
+            )
+
+        except stripe.error.APIConnectionError as e:
+            logger.error(
+                "Network communication with Stripe failed.",
+                extra={"error": str(e)}
+            )
+
+        except stripe.error.StripeError as e:
+            logger.exception(
+                "Stripe API error occurred.",
+                extra={"error": str(e)}
+            )
+
+        except Exception as e:
+            logger.exception(
+                "Unexpected error while retrieving Stripe invoice.",
+                extra={"stripe_invoice_id": stripe_invoice_id, "error": str(e)}
+            )
+
+        return None
+
+    @staticmethod
+    def get_invoice_subscription_id(invoice: stripe.Invoice):
+        return
+
+    @staticmethod
+    def get_invoice_status(status):
+        if not status:
+            logger.error("Missing 'status' key in Stripe Invoice object.")
             return None
 
-        if data_status in [OPEN, DRAFT]:
+        if status in [OPEN, DRAFT]:
             return PaymentStatusChoices.PENDING.value
-        elif data_status == PAID:
+        elif status == PAID:
             return PaymentStatusChoices.PAID.value
         else:
             return None
 
-    def get_hosted_invoice_url(self):
-        hosted_invoice_url = self.data.get("hosted_invoice_url")
-        if not hosted_invoice_url:
-            logger.error(
-                "Missing 'hosted_invoice_url' key in Stripe event data.",
-                extra={"stripe_data": self.data},
-            )
-        return hosted_invoice_url
+    @staticmethod
+    def convert_cents_to_euros(cents: int) -> float:
+        if cents is None:
+            logger.error("convert_cents_to_euros received None")
+            raise ValueError("Cents value cannot be None")
+        if cents < 0:
+            logger.error(f"convert_cents_to_euros received negative value: {cents}")
+            raise ValueError("Cents value cannot be negative")
+        return int(cents) / 100
 
-    def get_invoice_pdf_url(self):
-        invoice_pdf_url = self.data.get("invoice_pdf")
-        if not invoice_pdf_url:
-            logger.error(
-                "Missing 'invoice_pdf' key in Stripe event data.",
-                extra={"stripe_data": self.data},
-            )
-        return invoice_pdf_url
-
-    def get_payment_method(self):
-        payment_intent_id = self.data.get("payment_intent")
-        if not payment_intent_id:
-            logger.error(
-                "Missing 'payment_intent' in event data.",
-                extra={"stripe_data": self.data},
-            )
-            return None
+    @staticmethod
+    def get_payment_method(stripe_invoice):
+        payment_intent_id = stripe_invoice.payments.get("data")[0].get("payment").get("payment_intent")
 
         payment_intent = get_payment_intent(payment_intent_id)
         if not payment_intent:
@@ -92,69 +119,18 @@ class StripeInvoiceMixin:
 
         return payment_method["type"]
 
-    def extract_amount_due(self):
-        try:
-            return self.data["amount_due"] / 100  # Convert cents to euros
-        except KeyError:
-            logger.error(
-                "Missing 'amount_paid' key in Stripe event data.",
-                extra={"stripe_data": self.data},
+    @staticmethod
+    def get_invoice_paid_date(stripe_invoice):
+        paid_timestamp = stripe_invoice.status_transitions.get("paid_at")
+        if not paid_timestamp:
+            paid_timestamp = int(datetime.now(tz=timezone.utc).timestamp())
+            logger.warning(
+                f"No 'paid_at' timestamp found in invoice status_transitions. Using current time. Invoice ID: {stripe_invoice.id}"
             )
-            return None
-        except TypeError:
-            logger.error(
-                "Invalid type for 'amount_paid' in Stripe event data. Expected an integer value in cents, "
-                f"but got {type(self.data.get('amount_paid'))} instead.",
-                extra={"stripe_data": self.data},
-            )
-            return None
 
-    def extract_amount_paid(self):
-        try:
-            return self.data["amount_paid"] / 100  # Convert cents to euros
-        except KeyError:
-            logger.error(
-                "Missing 'amount_paid' key in Stripe event data.",
-                extra={"stripe_data": self.data},
-            )
-            return None
-        except TypeError:
-            logger.error(
-                "Invalid type for 'amount_paid' in Stripe event data. Expected an integer value in cents, "
-                f"but got {type(self.data.get('amount_paid'))} instead.",
-                extra={"stripe_data": self.data},
-            )
-            return None
-
-    def extract_payment_date(self):
-        try:
-            paid_timestamp = self.data["status_transitions"]["paid_at"]
-            return datetime.utcfromtimestamp(paid_timestamp).replace(
-                tzinfo=timezone.utc
-            )
-        except KeyError:
-            logger.error(
-                "Missing 'status_transitions.paid_at' in Stripe event data.",
-                extra={"stripe_data": self.data},
-            )
-            return None
-        except TypeError:
-            logger.error(
-                "Invalid type for 'status_transitions.paid_at' in Stripe event data. Expected an integer timestamp, "
-                f"but got {type(self.data['status_transitions'].get('paid_at'))} instead.",
-                extra={"stripe_data": self.data},
-            )
-            return None
-
-    def get_billing_reason(self):
-        try:
-            return self.data["billing_reason"]
-        except KeyError:
-            logger.error(
-                "Missing 'billing_reason' key in Stripe event data.",
-                extra={"stripe_data": self.data},
-            )
-            return None
+        return datetime.utcfromtimestamp(paid_timestamp).replace(
+            tzinfo=timezone.utc
+        )
 
     @staticmethod
     def get_payment(invoice_id):

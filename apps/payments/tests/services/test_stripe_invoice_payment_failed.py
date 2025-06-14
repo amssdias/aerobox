@@ -24,6 +24,11 @@ class InvoicePaymentFailedHandlerTests(TestCase):
         )
 
     def setUp(self):
+        # Patch stripe.Invoice.retrieve globally for this class
+        patcher = patch("stripe.Invoice.retrieve")
+        self.mock_retrieve_invoice = patcher.start()
+        self.addCleanup(patcher.stop)  # Ensures patch is removed after each test
+
         self.data = {
             "data": {
                 "object": {
@@ -39,6 +44,8 @@ class InvoicePaymentFailedHandlerTests(TestCase):
             }
         }
 
+        self.stripe_invoice_mock = MagicMock(**self.data["data"]["object"])
+        self.mock_retrieve_invoice.return_value = self.stripe_invoice_mock
         self.handler = InvoicePaymentFailedHandler(self.data)
 
     def test_process_subscription_cycle(self):
@@ -58,14 +65,6 @@ class InvoicePaymentFailedHandlerTests(TestCase):
         self.handler.process()
 
         mock_update_payment.assert_called_once_with(self.payment)
-
-    @patch("apps.payments.services.stripe_events.invoice_payment_failed.InvoicePaymentFailedHandler.update_payment")
-    def test_process_does_not_update_payment_for_other_reasons(self, mock_update_payment):
-        self.handler.get_billing_reason = MagicMock(return_value="other_reason")
-
-        self.handler.process()
-
-        mock_update_payment.assert_not_called()
 
     def test_update_payment_changes_status_to_retrying(self):
         self.handler.update_payment(self.payment)

@@ -3,7 +3,9 @@ from datetime import timedelta
 
 from django.utils import timezone
 
+from apps.payments.services.stripe_events.invoice_created import InvoiceCreatedHandler
 from apps.payments.tasks.send_invoice_paid_email import send_invoice_payment_success_email
+from apps.subscriptions.choices.subscription_choices import SubscriptionStatusChoices
 from config.services.stripe_services.stripe_events.base_event import StripeEventHandler
 from config.services.stripe_services.stripe_events.invoice_event_mixin import StripeInvoiceMixin
 
@@ -16,57 +18,51 @@ class InvoicePaidHandler(StripeEventHandler, StripeInvoiceMixin):
     """
 
     def process(self):
-        invoice_id = self.get_invoice_id()
-        payment = self.get_payment(invoice_id)
-        payment_method = self.get_payment_method()
-        amount = self.extract_amount_paid()
-        payment_date = self.extract_payment_date()
-        status = self.get_invoice_status()
+        stripe_invoice_id = self.get_invoice_id()
+        stripe_invoice = self.get_stripe_invoice(stripe_invoice_id=stripe_invoice_id)
 
-        if self.can_update(
-            invoice_id, payment, payment_method, amount, payment_date, status
-        ):
+        payment_method = self.get_payment_method(stripe_invoice)
+        amount = self.convert_cents_to_euros(stripe_invoice.amount_paid)
+        payment_date = self.get_invoice_paid_date(stripe_invoice)
+        status = self.get_invoice_status(stripe_invoice.status)
+
+        payment = self.get_or_create_payment(stripe_invoice.id)
+        if self.can_update(stripe_invoice_id, payment, payment_method, amount, status, ):
             self.update_payment(payment, payment_method, payment_date, status)
             self.update_subscription(payment.subscription)
             self.send_invoice_paid_email(payment=payment)
 
+    def get_or_create_payment(self, stripe_invoice_id):
+        payment = self.get_payment(stripe_invoice_id)
+        return payment or InvoiceCreatedHandler(event=self.event).handle_payment_creation()
+
     @staticmethod
-    def can_update(invoice_id, payment, payment_method, amount, payment_date, status):
+    def can_update(invoice_id, payment, payment_method, amount, status):
         missing_fields = [
             field_name for field_name, value in [
                 ("payment", payment),
                 ("payment_method", payment_method),
-                ("amount", amount),
-                ("payment_date", payment_date),
                 ("status", status),
-            ] if value is None
+            ] if not value
         ]
 
-        if missing_fields:
+        if amount == "" or amount is None:
+            missing_fields.append("amount")
+
+        if missing_fields or float(payment.amount) != amount:
             error_msg = (
                 f"Invoice ID: {invoice_id} - Payment update failed due to missing fields: {', '.join(missing_fields)}. "
                 "Stripe should retry."
-            )
-            logger.error(error_msg, extra={
-                "payment": payment,
-                "method": payment_method,
-                "amount": amount,
-                "date": payment_date,
-                "missing_fields": missing_fields,
-            })
-            raise RuntimeError(error_msg)
-
-        if float(payment.amount) != amount:
-            error_msg = (
+            ) if missing_fields else (
                 f"Invoice ID: {invoice_id} - Payment amount mismatch. Expected: {payment.amount}, Received: {amount}. "
                 "Possible double charge or incorrect Stripe data."
             )
+
             logger.error(error_msg, extra={
                 "payment": payment,
                 "method": payment_method,
-                "expected_amount": payment.amount,
+                "expected_amount": payment.amount if payment else 0,
                 "received_amount": amount,
-                "date": payment_date,
             })
             raise RuntimeError(error_msg)
 
@@ -83,12 +79,18 @@ class InvoicePaidHandler(StripeEventHandler, StripeInvoiceMixin):
     def update_subscription(subscription):
         today = timezone.now().date()
 
+        update_fields = []
+        if subscription.status != SubscriptionStatusChoices.ACTIVE:
+            subscription.status = SubscriptionStatusChoices.ACTIVE.value
+            update_fields.append("status")
+
         if subscription.end_date and subscription.end_date <= today:
             subscription.end_date = today + timedelta(days=30)
-            subscription.save(update_fields=["end_date"])
+            update_fields.append("end_date")
+            subscription.save(update_fields=update_fields)
             logger.info(f"Subscription {subscription.id} extended to {subscription.end_date}.")
         else:
-            logger.info(f"Subscription {subscription.id} not updated. Current end date is {subscription.end_date}.")
+            logger.warning(f"Subscription {subscription.id} not updated. Current end date is {subscription.end_date}.")
 
     @staticmethod
     def send_invoice_paid_email(payment):

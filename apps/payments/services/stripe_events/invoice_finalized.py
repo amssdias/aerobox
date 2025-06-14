@@ -16,21 +16,31 @@ class InvoiceFinalizedHandler(StripeEventHandler, StripeInvoiceMixin):
     """
 
     def process(self):
-        invoice_id = self.get_invoice_id()
-        payment = self.get_payment(invoice_id)
-        amount = self.extract_amount_due()
+        stripe_invoice_id = self.get_invoice_id()
+        stripe_invoice = self.get_stripe_invoice(stripe_invoice_id=stripe_invoice_id)
 
-        hosted_invoice_url = self.get_hosted_invoice_url()
-        invoice_pdf_url = self.get_invoice_pdf_url()
+        amount_due = self.convert_cents_to_euros(stripe_invoice.amount_due)
+        hosted_invoice_url = stripe_invoice.hosted_invoice_url
+        invoice_pdf_url = stripe_invoice.invoice_pdf
 
-        if self.can_update(invoice_id, payment, amount, hosted_invoice_url, invoice_pdf_url):
-            self.update_payment(payment, amount, hosted_invoice_url, invoice_pdf_url)
+        if not self.validate_fields(stripe_invoice.id, amount_due, hosted_invoice_url, invoice_pdf_url):
+            logger.warning(f"Skipping payment update for invoice {stripe_invoice.id} due to missing data.")
+            return
+
+        payment = self.get_payment(stripe_invoice.id)
+        self.update_payment(payment, amount_due, hosted_invoice_url, invoice_pdf_url)
+
+    def get_payment(self, stripe_invoice_id):
+        payment = super().get_payment(stripe_invoice_id)
+        if payment is None:
+            raise RuntimeError(f"No Payment found for invoice ID: {stripe_invoice_id}")
+        return payment
+
 
     @staticmethod
-    def can_update(invoice_id, payment, amount, hosted_invoice_url, invoice_pdf_url):
+    def validate_fields(invoice_id, amount, hosted_invoice_url, invoice_pdf_url):
         missing_fields = [
-            field_name for field_name, value in [
-                ("payment", payment),
+            name for name, value in [
                 ("amount", amount),
                 ("hosted_invoice_url", hosted_invoice_url),
                 ("invoice_pdf_url", invoice_pdf_url),
@@ -38,18 +48,17 @@ class InvoiceFinalizedHandler(StripeEventHandler, StripeInvoiceMixin):
         ]
 
         if missing_fields:
-            error_msg = (
-                f"Invoice ID: {invoice_id} - Payment update failed due to missing fields: {', '.join(missing_fields)}. "
-                "Stripe should retry."
+            logger.error(
+                f"Invoice ID: {invoice_id} - Missing fields during finalize: {', '.join(missing_fields)}",
+                extra={
+                    "invoice_id": invoice_id,
+                    "amount": amount,
+                    "hosted_invoice_url": hosted_invoice_url,
+                    "invoice_pdf_url": invoice_pdf_url,
+                    "missing_fields": missing_fields,
+                }
             )
-            logger.error(error_msg, extra={
-                "payment": payment,
-                "amount": amount,
-                "hosted_invoice_url": hosted_invoice_url,
-                "invoice_pdf_url": invoice_pdf_url,
-                "missing_fields": missing_fields,
-            })
-            raise RuntimeError(error_msg)
+            return False
 
         return True
 
