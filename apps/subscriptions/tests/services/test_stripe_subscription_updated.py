@@ -103,7 +103,7 @@ class SubscriptionUpdatedHandlerTest(TestCase):
         subscription = self.handler.get_subscription(self.subscription.stripe_subscription_id)
         self.assertEqual(subscription.id, self.subscription.id)
 
-    @patch("config.services.stripe_services.stripe_events.customer_event.logger.warning")
+    @patch("config.services.stripe_services.stripe_events.subscription_mixin.logger.warning")
     def test_get_subscription_not_found(self, mock_logger):
         subscription = self.handler.get_subscription("non_existent_sub")
         self.assertIsNone(subscription)
