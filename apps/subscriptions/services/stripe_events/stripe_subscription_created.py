@@ -20,7 +20,7 @@ class SubscriptionCreateddHandler(StripeEventHandler, StripeSubscriptionMixin):
 
     def get_plan(self, plan_stripe_price_id):
         try:
-            return Plan.objects.get(stripe_price_id=plan_stripe_price_id)
+            return Plan.objects.get(stripe_price_id=plan_stripe_price_id, is_free=False)
 
         except Plan.DoesNotExist:
             logger.error(
