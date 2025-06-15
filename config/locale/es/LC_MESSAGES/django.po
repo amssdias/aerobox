@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-04-12 15:40+0000\n"
+"POT-Creation-Date: 2025-06-15 13:30+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -24,108 +24,99 @@ msgstr ""
 "Ocurrió un error al procesar tu archivo. Por favor, inténtalo de nuevo más "
 "tarde."
 
-#: apps/cloud_storage/models/cloud_files.py:13
+#: apps/cloud_storage/models/cloud_files.py:14
 #: apps/payments/choices/payment_choices.py:14
 msgid "Pending"
 msgstr "Pendiente"
 
-#: apps/cloud_storage/models/cloud_files.py:14
+#: apps/cloud_storage/models/cloud_files.py:15
 msgid "Success"
 msgstr "Éxito"
 
-#: apps/cloud_storage/models/cloud_files.py:15
+#: apps/cloud_storage/models/cloud_files.py:16
 msgid "Failed"
 msgstr "Fallido"
 
-#: apps/cloud_storage/models/cloud_files.py:28
+#: apps/cloud_storage/models/cloud_files.py:29
 msgid "The intended name of the file to be stored in S3."
 msgstr "El nombre deseado del archivo que se almacenará en S3."
 
-#: apps/cloud_storage/models/cloud_files.py:33
+#: apps/cloud_storage/models/cloud_files.py:34
 msgid "The S3 path where the file is stored."
 msgstr "La ruta S3 donde se almacena el archivo."
 
-#: apps/cloud_storage/models/cloud_files.py:36
+#: apps/cloud_storage/models/cloud_files.py:38
 msgid ""
 "The size of the file in bytes. This can be updated after the file is "
 "uploaded."
 msgstr "El tamaño del archivo en bytes. Puede actualizarse después de subirlo."
 
-#: apps/cloud_storage/models/cloud_files.py:40
+#: apps/cloud_storage/models/cloud_files.py:42
 msgid "The MIME type of the file (e.g., 'image/jpeg', 'application/pdf')."
 msgstr ""
 "El tipo MIME del archivo (por ejemplo, 'image/jpeg', 'application/pdf')."
 
-#: apps/cloud_storage/models/cloud_files.py:47
+#: apps/cloud_storage/models/cloud_files.py:49
 msgid "The user who uploaded the file (owner)."
 msgstr "El usuario que subió el archivo (propietario)."
 
-#: apps/cloud_storage/models/cloud_files.py:53
+#: apps/cloud_storage/models/cloud_files.py:55
 msgid "The current status of the file upload process."
 msgstr "El estado actual del proceso de carga del archivo."
 
-#: apps/cloud_storage/models/cloud_files.py:58
+#: apps/cloud_storage/models/cloud_files.py:60
 msgid "Any error message encountered during the file upload process."
 msgstr "Cualquier mensaje de error durante el proceso de carga del archivo."
 
-#: apps/cloud_storage/models/cloud_files.py:63
+#: apps/cloud_storage/models/cloud_files.py:65
 msgid "Additional metadata related to the file, stored as a JSON object."
 msgstr "Metadatos adicionales del archivo, almacenados como un objeto JSON."
 
-#: apps/cloud_storage/models/cloud_files.py:75
+#: apps/cloud_storage/models/cloud_files.py:77
 msgid "Cloud File"
 msgstr "Archivo en la Nube"
 
-#: apps/cloud_storage/models/cloud_files.py:76
+#: apps/cloud_storage/models/cloud_files.py:78
 msgid "Cloud Files"
 msgstr "Archivos en la Nube"
 
-#: apps/cloud_storage/serializers/cloud_files.py:48
-#: apps/cloud_storage/serializers/cloud_files.py:183
+#: apps/cloud_storage/serializers/cloud_files.py:52
+#: apps/cloud_storage/serializers/cloud_files.py:158
 msgid "The file name cannot contain '/' or '\\'."
 msgstr "El nombre del archivo no puede contener '/' ni '\\'."
 
-#: apps/cloud_storage/serializers/cloud_files.py:52
-#: apps/cloud_storage/serializers/cloud_files.py:197
+#: apps/cloud_storage/serializers/cloud_files.py:56
+#: apps/cloud_storage/serializers/cloud_files.py:168
 msgid "The file name cannot be empty or consist only of whitespace."
 msgstr ""
 "El nombre del archivo no puede estar vacío ni contener solo espacios en "
 "blanco."
 
-#: apps/cloud_storage/serializers/cloud_files.py:77
-msgid "The file path must use '/' instead of '\\'."
-msgstr "La ruta del archivo debe usar '/' en lugar de '\\'."
-
-#: apps/cloud_storage/serializers/cloud_files.py:83
-msgid "The file path cannot start or end with '/'."
+#: apps/cloud_storage/serializers/cloud_files.py:61
+#: apps/cloud_storage/serializers/cloud_files.py:163
+msgid "The file name cannot start or end with a '.'."
 msgstr "La ruta del archivo no puede comenzar ni terminar con '/'."
 
-#: apps/cloud_storage/serializers/cloud_files.py:89
-msgid "The file path cannot contain consecutive slashes."
-msgstr "La ruta del archivo no puede contener barras diagonales consecutivas."
-
-#: apps/cloud_storage/serializers/cloud_files.py:96
+#: apps/cloud_storage/serializers/cloud_files.py:68
 msgid ""
-"The file path cannot contain dots (`.`). Dots are only allowed in file names "
-"for extensions."
-msgstr ""
-"La ruta del archivo no puede contener puntos (`.`). Solo se permiten en "
-"nombres de archivo para extensiones."
+"You don’t have permission to upload files to this folder. Please select one "
+"of your own folders."
+msgstr "No tienes permiso para subir archivos a esta carpeta. Por favor, selecciona una de tus propias carpetas."
 
-#: apps/cloud_storage/serializers/cloud_files.py:111
+#: apps/cloud_storage/serializers/cloud_files.py:75
 msgid "User is not authenticated."
 msgstr "El usuario no está autenticado."
 
-#: apps/cloud_storage/serializers/cloud_files.py:116
+#: apps/cloud_storage/serializers/cloud_files.py:80
 msgid "Content type sent is not correct."
 msgstr "El tipo de contenido enviado no es correcto."
 
-#: apps/cloud_storage/serializers/cloud_files.py:148
+#: apps/cloud_storage/serializers/cloud_files.py:114
 msgid "Failed to retrieve file. Please try again later."
 msgstr ""
 "No se pudo recuperar el archivo. Por favor, inténtalo de nuevo más tarde."
 
-#: apps/cloud_storage/serializers/cloud_files.py:154
+#: apps/cloud_storage/serializers/cloud_files.py:120
 msgid ""
 "Unable to generate download URL. The file may not exist or there was an "
 "error with the storage service."
@@ -133,48 +124,50 @@ msgstr ""
 "No se pudo generar la URL de descarga. El archivo puede no existir o hubo un "
 "error con el servicio de almacenamiento."
 
-#: apps/cloud_storage/serializers/cloud_files.py:187
-msgid "The file name cannot contain '.' or extensions."
-msgstr "El nombre del archivo no puede contener '.' ni extensiones."
+#: apps/cloud_storage/serializers/folder_serializer.py:43
+msgid "The file path must use '/' instead of '\\'."
+msgstr "La ruta del archivo debe usar '/' en lugar de '\\'."
 
-#: apps/cloud_storage/serializers/cloud_files.py:192
-msgid "The new file name cannot be the same as the current file name."
-msgstr "El nuevo nombre de archivo no puede ser igual al nombre actual."
+#: apps/cloud_storage/serializers/folder_serializer.py:49
+msgid "The file path cannot start or end with '/'."
+msgstr "La ruta del archivo no puede comenzar ni terminar con '/'."
 
-#: apps/cloud_storage/serializers/folder_serializer.py:37
+#: apps/cloud_storage/serializers/folder_serializer.py:55
+msgid "The file path cannot contain consecutive slashes."
+msgstr "La ruta del archivo no puede contener barras diagonales consecutivas."
+
+#: apps/cloud_storage/serializers/folder_serializer.py:68
 msgid "A folder with this name already exists in the same parent folder."
 msgstr "Ya existe una carpeta con este nombre en la misma carpeta principal."
 
-#: apps/cloud_storage/serializers/folder_serializer.py:48
+#: apps/cloud_storage/serializers/folder_serializer.py:79
 msgid ""
 "You need an active subscription to use this feature. Please check your "
 "billing or subscribe to a plan."
 msgstr ""
-"Necesitas una suscripción activa para usar esta funcionalidad. Por favor, revisa tu facturación o suscríbete a un plan."
+"Necesitas una suscripción activa para usar esta funcionalidad. Por favor, "
+"revisa tu facturación o suscríbete a un plan."
 
-#: apps/cloud_storage/serializers/folder_serializer.py:53
+#: apps/cloud_storage/serializers/folder_serializer.py:84
 msgid ""
 "Your current subscription plan does not include the folder creation feature. "
 "Please upgrade your plan to access this functionality."
 msgstr ""
-"Tu plan de suscripción actual no incluye la funcionalidad de creación de carpetas. Por favor, actualiza tu plan para acceder a esta característica."
+"Tu plan de suscripción actual no incluye la funcionalidad de creación de "
+"carpetas. Por favor, actualiza tu plan para acceder a esta característica."
 
-#: apps/cloud_storage/views/cloud_storage.py:60
-#, fuzzy
-#| msgid ""
-#| "An error occurred while processing your file. Please try again later."
+#: apps/cloud_storage/views/cloud_storage.py:66
 msgid ""
 "Something went wrong while preparing your file upload. Please try again."
 msgstr ""
 "Ocurrió un error al procesar tu archivo. Por favor, inténtalo de nuevo más "
 "tarde."
 
-#: apps/cloud_storage/views/cloud_storage.py:93
-#, python-format
-msgid "File successfully renamed to %(filename)s."
-msgstr "Archivo renombrado correctamente a %(filename)s."
+#: apps/cloud_storage/views/cloud_storage.py:101
+msgid "File successfully updated."
+msgstr "Archivo actualizado correctamente."
 
-#: apps/cloud_storage/views/folder.py:55
+#: apps/cloud_storage/views/folder.py:53
 msgid "Cannot delete a folder that contains files or subfolders."
 msgstr "No se puede eliminar una carpeta que contiene archivos o subcarpetas."
 
@@ -252,8 +245,6 @@ msgid "Payment Failed – Update Your Payment Method"
 msgstr "Pago Fallido – Actualiza Tu Método de Pago"
 
 #: apps/payments/templates/emails/email_invoice_paid.html:7
-#, fuzzy
-#| msgid "Payment Successful!"
 msgid "Payment Successful"
 msgstr "¡Pago realizado con éxito!"
 
@@ -265,36 +256,44 @@ msgstr "¡Pago realizado con éxito!"
 msgid "Dear user,"
 msgstr "Estimado usuario,"
 
-#: apps/payments/templates/emails/email_invoice_paid.html:83
+#: apps/payments/templates/emails/email_invoice_paid.html:78
+msgid ""
+"We are pleased to inform you that your payment has been processed "
+"successfully. To check your invoice, please click the link below:"
+msgstr ""
+"Nos complace informarte que tu pago se ha procesado correctamente."
+"Para ver tu factura, haz clic en el siguiente enlace:"
+
+#: apps/payments/templates/emails/email_invoice_paid.html:82
 msgid "View Invoice"
 msgstr "Ver Factura"
 
-#: apps/payments/templates/emails/email_invoice_paid.html:86
+#: apps/payments/templates/emails/email_invoice_paid.html:85
 msgid "You can also return to the homepage by clicking the button below:"
 msgstr ""
 "También puedes volver a la página de inicio haciendo clic en el botón de "
 "abajo:"
 
-#: apps/payments/templates/emails/email_invoice_paid.html:89
+#: apps/payments/templates/emails/email_invoice_paid.html:88
 msgid "Go to Homepage"
 msgstr "Ir a la Página de Inicio"
 
-#: apps/payments/templates/emails/email_invoice_paid.html:92
+#: apps/payments/templates/emails/email_invoice_paid.html:91
 msgid "Thank you for trusting us."
 msgstr "Gracias por confiar en nosotros."
 
-#: apps/payments/templates/emails/email_invoice_paid.html:93
-#: apps/payments/templates/emails/email_payment_failed.html:97
+#: apps/payments/templates/emails/email_invoice_paid.html:92
+#: apps/payments/templates/emails/email_payment_failed.html:95
 msgid "Best regards,"
 msgstr "Saludos cordiales,"
 
-#: apps/payments/templates/emails/email_invoice_paid.html:93
-#: apps/payments/templates/emails/email_payment_failed.html:97
+#: apps/payments/templates/emails/email_invoice_paid.html:92
+#: apps/payments/templates/emails/email_payment_failed.html:95
 msgid "The Aerobox Team"
 msgstr "El Equipo de Aerobox"
 
-#: apps/payments/templates/emails/email_invoice_paid.html:99
-#: apps/payments/templates/emails/email_payment_failed.html:102
+#: apps/payments/templates/emails/email_invoice_paid.html:98
+#: apps/payments/templates/emails/email_payment_failed.html:100
 msgid "All rights reserved."
 msgstr "Todos los derechos reservados."
 
@@ -302,24 +301,38 @@ msgstr "Todos los derechos reservados."
 msgid "Hello, "
 msgstr "Hola, "
 
-#: apps/payments/templates/emails/email_payment_failed.html:80
+#: apps/payments/templates/emails/email_payment_failed.html:78
+msgid ""
+"Attention! We’ve detected a problem with the payment for your subscription "
+"renewal."
+msgstr ""
+"¡Atención! Hemos detectado un problema con el pago de la renovación de tu "
+"suscripción."
+
+#: apps/payments/templates/emails/email_payment_failed.html:79
 msgid ""
 "We regret to inform you that the payment for renewing your subscription has "
 "failed."
 msgstr ""
 "Lamentamos informarte que el pago para renovar tu suscripción ha fallado."
 
-#: apps/payments/templates/emails/email_payment_failed.html:82
+#: apps/payments/templates/emails/email_payment_failed.html:81
 #, python-format
 msgid ""
 "We’ve attempted to process your payment %(attempts)s times without success."
 msgstr "Hemos intentado procesar tu pago %(attempts)s veces sin éxito."
 
-#: apps/payments/templates/emails/email_payment_failed.html:89
+#: apps/payments/templates/emails/email_payment_failed.html:85
+msgid ""
+"To avoid cancellation of your subscription, please update your payment "
+"method by clicking the button below:"
+msgstr ""
+
+#: apps/payments/templates/emails/email_payment_failed.html:87
 msgid "Update Payment Method"
 msgstr "Actualizar Método de Pago"
 
-#: apps/payments/templates/emails/email_payment_failed.html:92
+#: apps/payments/templates/emails/email_payment_failed.html:90
 #, python-format
 msgid ""
 "If you don’t update your payment method before %(deadline_date)s, your "
@@ -328,7 +341,7 @@ msgstr ""
 "Si no actualizas tu método de pago antes del %(deadline_date)s, tu "
 "suscripción será cancelada."
 
-#: apps/payments/templates/emails/email_payment_failed.html:96
+#: apps/payments/templates/emails/email_payment_failed.html:94
 msgid "Thank you for your attention."
 msgstr "Gracias por tu atención."
 
@@ -422,16 +435,16 @@ msgstr "Solicitud de Restablecimiento de Contraseña"
 msgid "Use this link to reset your password: {link}"
 msgstr "Usa este enlace para restablecer tu contraseña: {link}"
 
-#: apps/users/templates/emails/password_reset_email.html:85
+#: apps/users/templates/emails/password_reset_email.html:83
 msgid "Reset your password"
 msgstr "Restablece tu contraseña"
 
-#: apps/users/templates/emails/password_reset_email.html:87
+#: apps/users/templates/emails/password_reset_email.html:84
 #, python-format
 msgid "Hello %(user.username)s,"
 msgstr "Hola %(user.username)s,"
 
-#: apps/users/templates/emails/password_reset_email.html:88
+#: apps/users/templates/emails/password_reset_email.html:85
 msgid ""
 "You requested to reset your password for your Aerobox account. Click the "
 "button below to create a new password:"
@@ -439,11 +452,11 @@ msgstr ""
 "Solicitaste restablecer la contraseña de tu cuenta de Aerobox. Haz clic en "
 "el botón de abajo para crear una nueva contraseña:"
 
-#: apps/users/templates/emails/password_reset_email.html:91
+#: apps/users/templates/emails/password_reset_email.html:87
 msgid "Reset Password"
 msgstr "Restablecer Contraseña"
 
-#: apps/users/templates/emails/password_reset_email.html:94
+#: apps/users/templates/emails/password_reset_email.html:89
 msgid ""
 "If you didn't request to reset your password, you can ignore this email. "
 "Your account remains secure."
@@ -451,7 +464,7 @@ msgstr ""
 "Si no solicitaste restablecer tu contraseña, puedes ignorar este correo. Tu "
 "cuenta sigue segura."
 
-#: apps/users/templates/emails/password_reset_email.html:95
+#: apps/users/templates/emails/password_reset_email.html:90
 msgid ""
 "If you're having trouble clicking the 'Reset Password' button, copy and "
 "paste the following link into your browser:"
@@ -459,7 +472,7 @@ msgstr ""
 "Si tienes problemas al hacer clic en el botón 'Restablecer Contraseña', "
 "copia y pega el siguiente enlace en tu navegador:"
 
-#: apps/users/templates/emails/password_reset_email.html:104
+#: apps/users/templates/emails/password_reset_email.html:96
 msgid "© 2023 Aerobox. All rights reserved."
 msgstr "© 2023 Aerobox. Todos los derechos reservados."
 
@@ -470,27 +483,3 @@ msgstr "Enlace para restablecer la contraseña enviado."
 #: apps/users/views/password_reset.py:58
 msgid "Password has been reset successfully."
 msgstr "La contraseña se ha restablecido correctamente."
-
-#~ msgid "Received empty presigned URL"
-#~ msgstr "Se recibió una URL prefirmada vacía"
-
-#~ msgid ""
-#~ "We are pleased to inform you that your payment has been processed "
-#~ "successfully. To check your invoice, please click the link below:"
-#~ msgstr ""
-#~ "Nos complace informarte que tu pago ha sido procesado con éxito. Para ver "
-#~ "tu factura, haz clic en el enlace a continuación:"
-
-#~ msgid ""
-#~ "Attention! We’ve detected a problem with the payment for your "
-#~ "subscription renewal."
-#~ msgstr ""
-#~ "¡Atención! Hemos detectado un problema con el pago de la renovación de tu "
-#~ "suscripción."
-
-#~ msgid ""
-#~ "To avoid cancellation of your subscription, please update your payment "
-#~ "method by clicking the button below:"
-#~ msgstr ""
-#~ "Para evitar la cancelación de tu suscripción, actualiza tu método de pago "
-#~ "haciendo clic en el botón de abajo:"

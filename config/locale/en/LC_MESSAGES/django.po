@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-04-12 15:40+0000\n"
+"POT-Creation-Date: 2025-06-15 13:30+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -22,28 +22,28 @@ msgstr ""
 msgid "An error occurred while processing your file. Please try again later."
 msgstr "An error occurred while processing your file. Please try again later."
 
-#: apps/cloud_storage/models/cloud_files.py:13
+#: apps/cloud_storage/models/cloud_files.py:14
 #: apps/payments/choices/payment_choices.py:14
 msgid "Pending"
 msgstr "Pending"
 
-#: apps/cloud_storage/models/cloud_files.py:14
+#: apps/cloud_storage/models/cloud_files.py:15
 msgid "Success"
 msgstr "Success"
 
-#: apps/cloud_storage/models/cloud_files.py:15
+#: apps/cloud_storage/models/cloud_files.py:16
 msgid "Failed"
 msgstr "Failed"
 
-#: apps/cloud_storage/models/cloud_files.py:28
+#: apps/cloud_storage/models/cloud_files.py:29
 msgid "The intended name of the file to be stored in S3."
 msgstr "The intended name of the file to be stored in S3."
 
-#: apps/cloud_storage/models/cloud_files.py:33
+#: apps/cloud_storage/models/cloud_files.py:34
 msgid "The S3 path where the file is stored."
 msgstr "The S3 path where the file is stored."
 
-#: apps/cloud_storage/models/cloud_files.py:36
+#: apps/cloud_storage/models/cloud_files.py:38
 msgid ""
 "The size of the file in bytes. This can be updated after the file is "
 "uploaded."
@@ -51,77 +51,68 @@ msgstr ""
 "The size of the file in bytes. This can be updated after the file is "
 "uploaded."
 
-#: apps/cloud_storage/models/cloud_files.py:40
+#: apps/cloud_storage/models/cloud_files.py:42
 msgid "The MIME type of the file (e.g., 'image/jpeg', 'application/pdf')."
 msgstr "The MIME type of the file (e.g., 'image/jpeg', 'application/pdf')."
 
-#: apps/cloud_storage/models/cloud_files.py:47
+#: apps/cloud_storage/models/cloud_files.py:49
 msgid "The user who uploaded the file (owner)."
 msgstr "The user who uploaded the file (owner)."
 
-#: apps/cloud_storage/models/cloud_files.py:53
+#: apps/cloud_storage/models/cloud_files.py:55
 msgid "The current status of the file upload process."
 msgstr "The current status of the file upload process."
 
-#: apps/cloud_storage/models/cloud_files.py:58
+#: apps/cloud_storage/models/cloud_files.py:60
 msgid "Any error message encountered during the file upload process."
 msgstr "Any error message encountered during the file upload process."
 
-#: apps/cloud_storage/models/cloud_files.py:63
+#: apps/cloud_storage/models/cloud_files.py:65
 msgid "Additional metadata related to the file, stored as a JSON object."
 msgstr "Additional metadata related to the file, stored as a JSON object."
 
-#: apps/cloud_storage/models/cloud_files.py:75
+#: apps/cloud_storage/models/cloud_files.py:77
 msgid "Cloud File"
 msgstr "Cloud File"
 
-#: apps/cloud_storage/models/cloud_files.py:76
+#: apps/cloud_storage/models/cloud_files.py:78
 msgid "Cloud Files"
 msgstr "Cloud Files"
 
-#: apps/cloud_storage/serializers/cloud_files.py:48
-#: apps/cloud_storage/serializers/cloud_files.py:183
+#: apps/cloud_storage/serializers/cloud_files.py:52
+#: apps/cloud_storage/serializers/cloud_files.py:158
 msgid "The file name cannot contain '/' or '\\'."
 msgstr "The file name cannot contain '/' or '\\'."
 
-#: apps/cloud_storage/serializers/cloud_files.py:52
-#: apps/cloud_storage/serializers/cloud_files.py:197
+#: apps/cloud_storage/serializers/cloud_files.py:56
+#: apps/cloud_storage/serializers/cloud_files.py:168
 msgid "The file name cannot be empty or consist only of whitespace."
 msgstr "The file name cannot be empty or consist only of whitespace."
 
-#: apps/cloud_storage/serializers/cloud_files.py:77
-msgid "The file path must use '/' instead of '\\'."
-msgstr "The file path must use '/' instead of '\\'."
-
-#: apps/cloud_storage/serializers/cloud_files.py:83
-msgid "The file path cannot start or end with '/'."
+#: apps/cloud_storage/serializers/cloud_files.py:61
+#: apps/cloud_storage/serializers/cloud_files.py:163
+msgid "The file name cannot start or end with a '.'."
 msgstr "The file path cannot start or end with '/'."
 
-#: apps/cloud_storage/serializers/cloud_files.py:89
-msgid "The file path cannot contain consecutive slashes."
-msgstr "The file path cannot contain consecutive slashes."
-
-#: apps/cloud_storage/serializers/cloud_files.py:96
+#: apps/cloud_storage/serializers/cloud_files.py:68
 msgid ""
-"The file path cannot contain dots (`.`). Dots are only allowed in file names "
-"for extensions."
+"You don’t have permission to upload files to this folder. Please select one "
+"of your own folders."
 msgstr ""
-"The file path cannot contain dots (`.`). Dots are only allowed in file names "
-"for extensions."
 
-#: apps/cloud_storage/serializers/cloud_files.py:111
+#: apps/cloud_storage/serializers/cloud_files.py:75
 msgid "User is not authenticated."
 msgstr "User is not authenticated."
 
-#: apps/cloud_storage/serializers/cloud_files.py:116
+#: apps/cloud_storage/serializers/cloud_files.py:80
 msgid "Content type sent is not correct."
 msgstr "Content type sent is not correct."
 
-#: apps/cloud_storage/serializers/cloud_files.py:148
+#: apps/cloud_storage/serializers/cloud_files.py:114
 msgid "Failed to retrieve file. Please try again later."
 msgstr "Failed to retrieve file. Please try again later."
 
-#: apps/cloud_storage/serializers/cloud_files.py:154
+#: apps/cloud_storage/serializers/cloud_files.py:120
 msgid ""
 "Unable to generate download URL. The file may not exist or there was an "
 "error with the storage service."
@@ -129,46 +120,46 @@ msgstr ""
 "Unable to generate download URL. The file may not exist or there was an "
 "error with the storage service."
 
-#: apps/cloud_storage/serializers/cloud_files.py:187
-msgid "The file name cannot contain '.' or extensions."
-msgstr "The file name cannot contain '.' or extensions."
+#: apps/cloud_storage/serializers/folder_serializer.py:43
+msgid "The file path must use '/' instead of '\\'."
+msgstr "The file path must use '/' instead of '\\'."
 
-#: apps/cloud_storage/serializers/cloud_files.py:192
-msgid "The new file name cannot be the same as the current file name."
-msgstr "The new file name cannot be the same as the current file name."
+#: apps/cloud_storage/serializers/folder_serializer.py:49
+msgid "The file path cannot start or end with '/'."
+msgstr "The file path cannot start or end with '/'."
 
-#: apps/cloud_storage/serializers/folder_serializer.py:37
+#: apps/cloud_storage/serializers/folder_serializer.py:55
+msgid "The file path cannot contain consecutive slashes."
+msgstr "The file path cannot contain consecutive slashes."
+
+#: apps/cloud_storage/serializers/folder_serializer.py:68
 msgid "A folder with this name already exists in the same parent folder."
 msgstr "A folder with this name already exists in the same parent folder."
 
-#: apps/cloud_storage/serializers/folder_serializer.py:48
+#: apps/cloud_storage/serializers/folder_serializer.py:79
 msgid ""
 "You need an active subscription to use this feature. Please check your "
 "billing or subscribe to a plan."
 msgstr ""
 
-#: apps/cloud_storage/serializers/folder_serializer.py:53
+#: apps/cloud_storage/serializers/folder_serializer.py:84
 msgid ""
 "Your current subscription plan does not include the folder creation feature. "
 "Please upgrade your plan to access this functionality."
 msgstr ""
 
-#: apps/cloud_storage/views/cloud_storage.py:60
-#, fuzzy
-#| msgid ""
-#| "An error occurred while processing your file. Please try again later."
+#: apps/cloud_storage/views/cloud_storage.py:66
 msgid ""
 "Something went wrong while preparing your file upload. Please try again."
 msgstr "An error occurred while processing your file. Please try again later."
 
-#: apps/cloud_storage/views/cloud_storage.py:93
-#, python-format
-msgid "File successfully renamed to %(filename)s."
-msgstr ""
+#: apps/cloud_storage/views/cloud_storage.py:101
+msgid "File successfully updated."
+msgstr "File successfully updated."
 
-#: apps/cloud_storage/views/folder.py:55
+#: apps/cloud_storage/views/folder.py:53
 msgid "Cannot delete a folder that contains files or subfolders."
-msgstr ""
+msgstr "Cannot delete a folder that contains files or subfolders."
 
 #: apps/features/choices/feature_code_choices.py:6
 msgid "Cloud Storage"
@@ -244,8 +235,6 @@ msgid "Payment Failed – Update Your Payment Method"
 msgstr "Payment Failed – Update Your Payment Method"
 
 #: apps/payments/templates/emails/email_invoice_paid.html:7
-#, fuzzy
-#| msgid "Payment Successful!"
 msgid "Payment Successful"
 msgstr "Payment Successful!"
 
@@ -257,34 +246,42 @@ msgstr "Payment Successful!"
 msgid "Dear user,"
 msgstr "Dear user,"
 
-#: apps/payments/templates/emails/email_invoice_paid.html:83
+#: apps/payments/templates/emails/email_invoice_paid.html:78
+msgid ""
+"We are pleased to inform you that your payment has been processed "
+"successfully. To check your invoice, please click the link below:"
+msgstr ""
+"We are pleased to inform you that your payment has been processed "
+"successfully. To check your invoice, please click the link below:"
+
+#: apps/payments/templates/emails/email_invoice_paid.html:82
 msgid "View Invoice"
 msgstr "View Invoice"
 
-#: apps/payments/templates/emails/email_invoice_paid.html:86
+#: apps/payments/templates/emails/email_invoice_paid.html:85
 msgid "You can also return to the homepage by clicking the button below:"
 msgstr "You can also return to the homepage by clicking the button below:"
 
-#: apps/payments/templates/emails/email_invoice_paid.html:89
+#: apps/payments/templates/emails/email_invoice_paid.html:88
 msgid "Go to Homepage"
 msgstr "Go to Homepage"
 
-#: apps/payments/templates/emails/email_invoice_paid.html:92
+#: apps/payments/templates/emails/email_invoice_paid.html:91
 msgid "Thank you for trusting us."
 msgstr "Thank you for trusting us."
 
-#: apps/payments/templates/emails/email_invoice_paid.html:93
-#: apps/payments/templates/emails/email_payment_failed.html:97
+#: apps/payments/templates/emails/email_invoice_paid.html:92
+#: apps/payments/templates/emails/email_payment_failed.html:95
 msgid "Best regards,"
 msgstr "Best regards,"
 
-#: apps/payments/templates/emails/email_invoice_paid.html:93
-#: apps/payments/templates/emails/email_payment_failed.html:97
+#: apps/payments/templates/emails/email_invoice_paid.html:92
+#: apps/payments/templates/emails/email_payment_failed.html:95
 msgid "The Aerobox Team"
 msgstr "The Aerobox Team"
 
-#: apps/payments/templates/emails/email_invoice_paid.html:99
-#: apps/payments/templates/emails/email_payment_failed.html:102
+#: apps/payments/templates/emails/email_invoice_paid.html:98
+#: apps/payments/templates/emails/email_payment_failed.html:100
 msgid "All rights reserved."
 msgstr "All rights reserved."
 
@@ -292,7 +289,15 @@ msgstr "All rights reserved."
 msgid "Hello, "
 msgstr "Hello, "
 
-#: apps/payments/templates/emails/email_payment_failed.html:80
+#: apps/payments/templates/emails/email_payment_failed.html:78
+msgid ""
+"Attention! We’ve detected a problem with the payment for your subscription "
+"renewal."
+msgstr ""
+"Attention! We’ve detected a problem with the payment for your subscription "
+"renewal."
+
+#: apps/payments/templates/emails/email_payment_failed.html:79
 msgid ""
 "We regret to inform you that the payment for renewing your subscription has "
 "failed."
@@ -300,18 +305,26 @@ msgstr ""
 "We regret to inform you that the payment for renewing your subscription has "
 "failed."
 
-#: apps/payments/templates/emails/email_payment_failed.html:82
+#: apps/payments/templates/emails/email_payment_failed.html:81
 #, python-format
 msgid ""
 "We’ve attempted to process your payment %(attempts)s times without success."
 msgstr ""
 "We’ve attempted to process your payment %(attempts)s times without success."
 
-#: apps/payments/templates/emails/email_payment_failed.html:89
+#: apps/payments/templates/emails/email_payment_failed.html:85
+msgid ""
+"To avoid cancellation of your subscription, please update your payment "
+"method by clicking the button below:"
+msgstr ""
+"To avoid cancellation of your subscription, please update your payment "
+"method by clicking the button below:"
+
+#: apps/payments/templates/emails/email_payment_failed.html:87
 msgid "Update Payment Method"
 msgstr "Update Payment Method"
 
-#: apps/payments/templates/emails/email_payment_failed.html:92
+#: apps/payments/templates/emails/email_payment_failed.html:90
 #, python-format
 msgid ""
 "If you don’t update your payment method before %(deadline_date)s, your "
@@ -320,7 +333,7 @@ msgstr ""
 "If you don’t update your payment method before %(deadline_date)s, your "
 "subscription will be canceled."
 
-#: apps/payments/templates/emails/email_payment_failed.html:96
+#: apps/payments/templates/emails/email_payment_failed.html:94
 msgid "Thank you for your attention."
 msgstr "Thank you for your attention."
 
@@ -411,16 +424,16 @@ msgstr "Password Reset Request"
 msgid "Use this link to reset your password: {link}"
 msgstr "Use this link to reset your password: {link}"
 
-#: apps/users/templates/emails/password_reset_email.html:85
+#: apps/users/templates/emails/password_reset_email.html:83
 msgid "Reset your password"
 msgstr "Reset your password"
 
-#: apps/users/templates/emails/password_reset_email.html:87
+#: apps/users/templates/emails/password_reset_email.html:84
 #, python-format
 msgid "Hello %(user.username)s,"
 msgstr "Hello %(user.username)s,"
 
-#: apps/users/templates/emails/password_reset_email.html:88
+#: apps/users/templates/emails/password_reset_email.html:85
 msgid ""
 "You requested to reset your password for your Aerobox account. Click the "
 "button below to create a new password:"
@@ -428,11 +441,11 @@ msgstr ""
 "You requested to reset your password for your Aerobox account. Click the "
 "button below to create a new password:"
 
-#: apps/users/templates/emails/password_reset_email.html:91
+#: apps/users/templates/emails/password_reset_email.html:87
 msgid "Reset Password"
 msgstr "Reset Password"
 
-#: apps/users/templates/emails/password_reset_email.html:94
+#: apps/users/templates/emails/password_reset_email.html:89
 msgid ""
 "If you didn't request to reset your password, you can ignore this email. "
 "Your account remains secure."
@@ -440,7 +453,7 @@ msgstr ""
 "If you didn't request to reset your password, you can ignore this email. "
 "Your account remains secure."
 
-#: apps/users/templates/emails/password_reset_email.html:95
+#: apps/users/templates/emails/password_reset_email.html:90
 msgid ""
 "If you're having trouble clicking the 'Reset Password' button, copy and "
 "paste the following link into your browser:"
@@ -448,7 +461,7 @@ msgstr ""
 "If you're having trouble clicking the 'Reset Password' button, copy and "
 "paste the following link into your browser:"
 
-#: apps/users/templates/emails/password_reset_email.html:104
+#: apps/users/templates/emails/password_reset_email.html:96
 msgid "© 2023 Aerobox. All rights reserved."
 msgstr "© 2023 Aerobox. All rights reserved."
 
@@ -459,30 +472,3 @@ msgstr "Password reset link sent."
 #: apps/users/views/password_reset.py:58
 msgid "Password has been reset successfully."
 msgstr "Password has been reset successfully."
-
-#~ msgid "Received empty presigned URL"
-#~ msgstr "Received empty presigned URL"
-
-#~ msgid "Payment Failed"
-#~ msgstr "Payment Failed"
-
-#~ msgid ""
-#~ "We are pleased to inform you that your payment has been processed "
-#~ "successfully. To check your invoice, please click the link below:"
-#~ msgstr ""
-#~ "We are pleased to inform you that your payment has been processed "
-#~ "successfully. To check your invoice, please click the link below:"
-
-#~ msgid ""
-#~ "Attention! We’ve detected a problem with the payment for your "
-#~ "subscription renewal."
-#~ msgstr ""
-#~ "Attention! We’ve detected a problem with the payment for your "
-#~ "subscription renewal."
-
-#~ msgid ""
-#~ "To avoid cancellation of your subscription, please update your payment "
-#~ "method by clicking the button below:"
-#~ msgstr ""
-#~ "To avoid cancellation of your subscription, please update your payment "
-#~ "method by clicking the button below:"

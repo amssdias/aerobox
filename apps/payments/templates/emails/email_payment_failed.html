@@ -75,16 +75,14 @@
 		<td class="content">
 			<h2>{% trans "Payment Failed – Update Your Payment Method" %}</h2>
 			<p>{% trans "Hello, " %} {{ user.username }}</p>
-			<p class="error">{% trans "Attention! We’ve detected a problem with the payment for your subscription
-				renewal." %}</p>
+			<p class="error">{% trans "Attention! We’ve detected a problem with the payment for your subscription renewal." %}</p>
 			<p>{% trans "We regret to inform you that the payment for renewing your subscription has failed." %}</p>
 			<p>
 				{% blocktrans trimmed with attempts=attempts %}
 				We’ve attempted to process your payment {{ attempts }} times without success.
 				{% endblocktrans %}
 			</p>
-			<p>{% trans "To avoid cancellation of your subscription, please update your payment method by clicking the
-				button below:" %}</p>
+			<p>{% trans "To avoid cancellation of your subscription, please update your payment method by clicking the button below:" %}</p>
 			<p style="text-align: center">
 				<a href="https://www.aerobox.com/update-payment" class="button">{% trans "Update Payment Method" %}</a>
 			</p>
