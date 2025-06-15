@@ -92,7 +92,7 @@ class SubscriptionCreateddHandlerTest(TestCase):
         self.assertFalse(Subscription.objects.filter(stripe_subscription_id=subscription_id).exists())
 
         subscription_mock.return_value = self.subscription_mock
-        subscription = self.handler.create_subscription()
+        subscription = self.handler.create_subscription("sub_123")
 
         self.assertTrue(subscription)
         items = self.data["data"]["object"]["items"]
@@ -112,7 +112,7 @@ class SubscriptionCreateddHandlerTest(TestCase):
         self.handler.get_user = MagicMock(return_value=None)
 
         with patch("apps.subscriptions.models.Subscription.objects.get_or_create") as mock_get_or_create:
-            self.handler.create_subscription()
+            self.handler.create_subscription("sub_123")
             mock_get_or_create.assert_not_called()
 
     @patch("stripe.Subscription.retrieve")
@@ -120,7 +120,7 @@ class SubscriptionCreateddHandlerTest(TestCase):
         self.handler.get_plan = MagicMock(return_value=None)
 
         with patch("apps.subscriptions.models.Subscription.objects.get_or_create") as mock_get_or_create:
-            self.handler.create_subscription()
+            self.handler.create_subscription("sub_123")
             mock_get_or_create.assert_not_called()
 
     def test_get_subscription_status_active(self):
@@ -154,7 +154,7 @@ class SubscriptionCreateddHandlerTest(TestCase):
         SubscriptionFactory(stripe_subscription_id="sub_123", user=self.user, plan=self.plan)
         n_subscriptions = Subscription.objects.all().count()
         subscription_mock.return_value = self.subscription_mock
-        self.handler.create_subscription()
+        self.handler.create_subscription("sub_123")
 
         self.assertEqual(Subscription.objects.all().count(), n_subscriptions)
 
@@ -174,3 +174,6 @@ class SubscriptionCreateddHandlerTest(TestCase):
         self.assertEqual(response.status_code, 200)
         mock_construct_event.assert_called_once()
         mock_process.assert_called_once()
+
+    def test_get_stripe_subscription_id(self):
+        pass

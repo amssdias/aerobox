@@ -6,6 +6,7 @@ from apps.payments.choices.payment_choices import PaymentStatusChoices
 from apps.payments.constants.stripe_invoice import DRAFT, OPEN
 from apps.payments.models import Payment
 from apps.payments.services.stripe_events.invoice_created import InvoiceCreatedHandler
+from apps.subscriptions.factories.plan_factory import PlanFactory
 from apps.subscriptions.factories.subscription import SubscriptionFactory
 
 
@@ -74,6 +75,38 @@ class InvoiceCreatedHandlerTest(TestCase):
 
         self.assertIsNone(result)
         mock_logger.assert_called_once()
+
+    @patch("stripe.Subscription.retrieve")
+    @patch.object(InvoiceCreatedHandler, "get_subscription")
+    def test_create_subscription_for_already_created_subscription(self, mock_get_subscription, subscription_mock):
+        mock_get_subscription.return_value = None
+        plan = PlanFactory(name="Test Plan", stripe_price_id="price_test")
+        data = {
+            "id": self.subscription.stripe_subscription_id,
+            "customer": self.user.profile.stripe_customer_id,
+            "status": "incomplete",
+            "plan": {"id": plan.stripe_price_id},
+            "items": {
+                "data": [
+                    {
+                        "current_period_start": 1700000000,
+                        "current_period_end": 1702592000,
+                        "plan": {
+                            "interval": "month"
+                        }
+                    }
+                ]
+            }
+        }
+        subscription_mock_object = MagicMock(**data)
+        subscription_mock_object.get.return_value = data["items"]
+        subscription_mock.return_value = subscription_mock_object
+
+        subscription = self.handler.get_or_create_subscription(
+            stripe_subscription_id=self.subscription.stripe_subscription_id)
+
+        self.assertTrue(subscription)
+        self.assertEqual(subscription.stripe_subscription_id, self.subscription.stripe_subscription_id)
 
     def test_get_invoice_status_returns_pending_for_open(self):
         self.assertEqual(
@@ -168,17 +201,15 @@ class InvoiceCreatedHandlerTest(TestCase):
 
         mock_logger.assert_called_once()
 
-    def test_invoice_creation_with_missing_subscription(self):
-        self.stripe_invoice_mock.parent = {
-            "subscription_details": {
-                "subscription": None
-            }
-        }
+    @patch("apps.payments.services.stripe_events.invoice_created.SubscriptionCreateddHandler")
+    def test_invoice_creation_with_missing_subscription(self, mock_handler_class):
+        mock_handler_instance = MagicMock()
+        mock_handler_class.return_value = mock_handler_instance
+        mock_handler_instance.create_subscription.return_value = 'mocked-subscription'
 
-        with self.assertRaises(RuntimeError) as context:
-            self.handler.process()
+        self.handler.get_or_create_subscription(stripe_subscription_id=None)
 
-        self.assertFalse(Payment.objects.exists())
+        mock_handler_instance.create_subscription.assert_called_once_with(None)
 
     @patch("apps.payments.services.stripe_events.invoice_created.logger.critical")
     def test_invoice_creation_logs_error_for_missing_fields(self, mock_logger):
@@ -194,3 +225,4 @@ class InvoiceCreatedHandlerTest(TestCase):
             self.handler.process()
 
         self.assertFalse(Payment.objects.exists())
+

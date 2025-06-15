@@ -21,5 +21,6 @@ class SubscriptionUpdateddHandler(StripeEventHandler, StripeSubscriptionMixin):
             subscription.save()
 
     def get_or_create_subscription(self):
-        subscription = self.get_subscription(self.data["id"])
-        return subscription or SubscriptionCreateddHandler(event=self.event).create_subscription()
+        stripe_subscription_id = self.data["id"]
+        subscription = self.get_subscription(stripe_subscription_id)
+        return subscription or SubscriptionCreateddHandler(event=self.event).create_subscription(stripe_subscription_id)

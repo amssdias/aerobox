@@ -16,7 +16,7 @@ class SubscriptionCreateddHandler(StripeEventHandler, StripeSubscriptionMixin):
     """
 
     def process(self):
-        self.create_subscription()
+        self.create_subscription(self.data.get("id"))
 
     def get_plan(self, plan_stripe_price_id):
         try:
@@ -29,8 +29,8 @@ class SubscriptionCreateddHandler(StripeEventHandler, StripeSubscriptionMixin):
 
         return None
 
-    def create_subscription(self):
-        stripe_subscription = self.get_stripe_subscription(stripe_subscription_id=self.data.get("id"))
+    def create_subscription(self, stripe_subscription_id):
+        stripe_subscription = self.get_stripe_subscription(stripe_subscription_id=stripe_subscription_id)
         user = self.get_user(stripe_customer_id=stripe_subscription.customer)
         plan = self.get_plan(plan_stripe_price_id=stripe_subscription.plan.get("id"))
         status = self.get_subscription_status(status=stripe_subscription.status)
