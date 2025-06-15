@@ -5,6 +5,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from apps.subscriptions.factories.plan_factory import PlanFactory
 from apps.users.factories.user_factory import UserFactory
 
 User = get_user_model()
@@ -14,6 +15,7 @@ class UserCreateViewTestCase(APITestCase):
 
     @classmethod
     def setUpTestData(cls):
+        PlanFactory(name={"en": "Free"}, is_free=True)
         cls.url = reverse("users:user")
         cls.valid_user_data = {
             "username": "testuser",
@@ -46,6 +48,13 @@ class UserCreateViewTestCase(APITestCase):
         self.assertTrue(user.profile)
         self.assertTrue(user.profile.stripe_customer_id)
         mock_create_customer.assert_called_once()
+
+    def _test_create_subscription_successfully(self):
+        response = self.client.post(self.url, self.valid_user_data)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        user = User.objects.get(username=self.valid_user_data["username"])
+        self.assertTrue()
 
     def test_user_create_get_not_allowed(self):
         response = self.client.get(self.url)

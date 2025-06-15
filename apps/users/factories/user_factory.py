@@ -5,6 +5,7 @@ from faker import Faker
 
 from apps.profiles.models import Profile
 from apps.profiles.signals import create_stripe_customer
+from apps.users.signals import create_basic_subscription
 
 User = get_user_model()
 fake = Faker()
@@ -26,6 +27,7 @@ class UserFactory(factory.django.DjangoModelFactory):
         stripe_customer_id = kwargs.pop("stripe_customer_id", "cus_test")
         if disable_signals:
             post_save.disconnect(create_stripe_customer, sender=Profile)
+            post_save.disconnect(create_basic_subscription, sender=User)
 
         user = super()._create(model_class, *args, **kwargs)
         user.profile.stripe_customer_id = stripe_customer_id
@@ -33,5 +35,6 @@ class UserFactory(factory.django.DjangoModelFactory):
 
         if disable_signals:
             post_save.connect(create_stripe_customer, sender=Profile)
+            post_save.connect(create_basic_subscription, sender=User)
 
         return user
