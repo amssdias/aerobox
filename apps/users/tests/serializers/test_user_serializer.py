@@ -2,7 +2,6 @@ from unittest.mock import patch, Mock
 
 from django.test import TestCase
 
-from apps.subscriptions.factories.plan_factory import PlanFactory
 from apps.users.factories.user_factory import UserFactory
 from apps.users.serializers import UserSerializer
 
@@ -11,7 +10,6 @@ class UserSerializerTest(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        PlanFactory(name={"en": "Free"}, is_free=True)
         cls.serializer = UserSerializer
 
     def setUp(self):

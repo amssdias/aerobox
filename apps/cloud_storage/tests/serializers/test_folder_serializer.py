@@ -8,10 +8,9 @@ from rest_framework.exceptions import ValidationError
 from apps.cloud_storage.factories.folder_factory import FolderFactory
 from apps.cloud_storage.serializers import FolderParentSerializer
 from apps.cloud_storage.serializers import FolderSerializer
-from apps.features.choices.feature_code_choices import FeatureCodeChoices
-from apps.features.factories.feature import FeatureFactory
 from apps.subscriptions.factories.plan_factory import PlanFactory
 from apps.subscriptions.factories.subscription import SubscriptionFactory
+from apps.subscriptions.models import Plan
 from apps.users.factories.user_factory import UserFactory
 
 
@@ -48,7 +47,7 @@ class FolderSerializerTests(TestCase):
         cls.user = UserFactory(email="test@example.com", password="pass123")
         cls.parent_folder = FolderFactory(name="Parent", user=cls.user)
 
-        cls.plan = PlanFactory(name={"en": "Basic Plan"})
+        cls.plan = Plan.objects.get(is_free=True)
         cls.subscription = SubscriptionFactory(
             user=cls.user,
             plan=cls.plan,
@@ -56,8 +55,6 @@ class FolderSerializerTests(TestCase):
             end_date=timezone.now().date() + timedelta(days=30)
         )
 
-        cls.feature = FeatureFactory(code=FeatureCodeChoices.FOLDER_CREATION, name="Folder Creation")
-        cls.plan.features.add(cls.feature)
         cls.serializer = FolderSerializer
 
     def get_context(self):
@@ -126,7 +123,7 @@ class FolderSerializerTests(TestCase):
 
     def test_missing_folder_creation_feature_raises_error(self):
         user = UserFactory(email="test@example.com", password="pass123")
-        plan = PlanFactory(name="Free")
+        plan = PlanFactory(name="Free", is_free=True)
         SubscriptionFactory(
             user=user,
             plan=plan,

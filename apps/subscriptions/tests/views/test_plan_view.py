@@ -5,9 +5,12 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from apps.features.choices.feature_code_choices import FeatureCodeChoices
 from apps.features.factories.feature import FeatureFactory
+from apps.features.models import Feature
 from apps.subscriptions.factories.plan_factory import PlanFactory
 from apps.subscriptions.factories.plan_feature import PlanFeatureFactory
+from apps.subscriptions.models import Plan
 
 
 class PlanListAPIViewTests(TestCase):
@@ -23,7 +26,7 @@ class PlanListAPIViewTests(TestCase):
         cls.plan3 = PlanFactory(is_active=False)
 
         # Create test features
-        cls.feature = FeatureFactory(name="Cloud Storage", description="Store files securely")
+        cls.feature = Feature.objects.get(code=FeatureCodeChoices.FOLDER_CREATION)
 
         # Link features to the plan with metadata
         cls.plan_feature1 = PlanFeatureFactory(plan=cls.plan1, feature=cls.feature, metadata={"storage_limit_gb": 100})
@@ -34,9 +37,10 @@ class PlanListAPIViewTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_list_active_plans_only(self):
+        list_plans = Plan.objects.filter(is_active=True).count()
         response = self.client.get(self.list_url)
 
-        self.assertEqual(len(response.data), 2)
+        self.assertEqual(len(response.data), list_plans)
 
         active_plans = [plan["name"] for plan in response.data]
         self.assertIn(self.plan1.name, active_plans)
@@ -55,8 +59,9 @@ class PlanListAPIViewTests(TestCase):
 
     def test_plan_with_no_description(self):
         plan = PlanFactory(description={}, is_active=True)
+        list_plans = Plan.objects.filter(is_active=True).count()
         response = self.client.get(self.list_url)
-        self.assertEqual(len(response.data), 3)
+        self.assertEqual(len(response.data), list_plans)
 
         for p in response.data:
             if p["name"] == plan.name:

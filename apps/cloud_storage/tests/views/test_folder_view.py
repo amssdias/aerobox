@@ -8,10 +8,9 @@ from rest_framework.test import APITestCase
 from apps.cloud_storage.factories.cloud_file_factory import CloudFileFactory
 from apps.cloud_storage.factories.folder_factory import FolderFactory
 from apps.cloud_storage.models import Folder
-from apps.features.choices.feature_code_choices import FeatureCodeChoices
-from apps.features.factories.feature import FeatureFactory
 from apps.subscriptions.factories.plan_factory import PlanFactory
 from apps.subscriptions.factories.subscription import SubscriptionFactory
+from apps.subscriptions.models import Plan
 from apps.users.factories.user_factory import UserFactory
 
 
@@ -26,15 +25,12 @@ class FolderViewSetTests(APITestCase):
         cls.subfolder = FolderFactory(name="Sub", parent=cls.root_folder, user=cls.user)
         cls.other_user_folder = FolderFactory(name="OtherUserFolder", user=cls.other_user)
 
-        cls.plan = PlanFactory(name={"en": "Basic Plan"})
+        cls.plan = Plan.objects.get(is_free=True)
         cls.subscription = SubscriptionFactory(
             user=cls.user,
             plan=cls.plan,
             end_date=timezone.now().date() + timedelta(days=30)
         )
-
-        cls.feature = FeatureFactory(code=FeatureCodeChoices.FOLDER_CREATION, name="Folder Creation")
-        cls.plan.features.add(cls.feature)
 
     def setUp(self):
         self.client.force_authenticate(user=self.user)
