@@ -42,7 +42,7 @@ class CloudStorageViewSetListTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("count", response.data)
 
-        count_user_files = CloudFile.active.filter(user=self.user).count()
+        count_user_files = CloudFile.not_deleted.filter(user=self.user).count()
         self.assertEqual(response.data.get("count"), count_user_files)
         self.assertEqual(len(response.data.get("results")), count_user_files)
 
@@ -89,7 +89,7 @@ class CloudStorageViewSetListTests(APITestCase):
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        count_user_files = CloudFile.active.filter(user=self.user).count()
+        count_user_files = CloudFile.not_deleted.filter(user=self.user).count()
         self.assertEqual(response.data.get("count"), count_user_files)
         self.assertTrue("results" in response.data)
         self.assertEqual(len(response.data.get("results")), count_user_files)

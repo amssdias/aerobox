@@ -66,7 +66,7 @@ class CloudFile(Timestampable, SoftDeleteModel):
     )
 
     objects = models.Manager()
-    active = CloudFileManager()
+    not_deleted = CloudFileManager()
 
     # upload_attempts = models.PositiveIntegerField(
     #     default=0,

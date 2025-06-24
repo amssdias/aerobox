@@ -26,7 +26,7 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
     serializer_class = CloudFilesSerializer
-    queryset = CloudFile.active.all().order_by("id")
+    queryset = CloudFile.not_deleted.all().order_by("id")
 
     def get_queryset(self):
         queryset = self.queryset.filter(user=self.request.user)

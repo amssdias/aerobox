@@ -37,7 +37,7 @@ class CloudStorageViewSetTests(APITestCase):
     def test_soft_deleted_file_not_in_active_queryset(self):
         self.file.deleted_at = timezone.now()
         self.file.save()
-        active_files = CloudFile.active.all()
+        active_files = CloudFile.not_deleted.all()
 
         self.assertNotIn(self.file, active_files)
 
