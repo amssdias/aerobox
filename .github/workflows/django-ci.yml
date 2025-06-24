@@ -19,7 +19,7 @@ jobs:
 
       - name: 🧪 Run tests
         run: |
-          pipenv run python3 manage.py test apps.cloud_storage config apps.features apps.payments apps.profiles apps.subscriptions apps.users --settings=config.settings.settings_tests
+          pipenv run python3 manage.py test --parallel auto config apps.cloud_storage apps.features apps.payments apps.profiles apps.subscriptions apps.users --settings=config.settings.settings_tests
 
   coverage:
     name: 📊 Coverage
