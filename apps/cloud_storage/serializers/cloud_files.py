@@ -33,6 +33,7 @@ class CloudFilesSerializer(serializers.ModelSerializer):
             "path",
             "url",
             "created_at",
+            "deleted_at",
         )
 
     def to_representation(self, instance):

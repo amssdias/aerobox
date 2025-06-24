@@ -5,10 +5,10 @@ from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import extend_schema
 from rest_framework import viewsets, status
 from rest_framework.authentication import TokenAuthentication
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from apps.cloud_storage.constants.cloud_files import SUCCESS
 from apps.cloud_storage.exceptions import FileUploadError
 from apps.cloud_storage.models import CloudFile
 from apps.cloud_storage.serializers import CloudFilesSerializer
@@ -29,11 +29,15 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
     queryset = CloudFile.not_deleted.all().order_by("id")
 
     def get_queryset(self):
-        queryset = self.queryset.filter(user=self.request.user)
+        user = self.request.user
+
+        if self.action == "deleted_files":
+            return CloudFile.deleted.filter(user=user).order_by("id")
 
         if self.action == "update":
-            queryset = queryset.filter(status=SUCCESS)
-        return queryset
+            return CloudFile.not_deleted.user_success_files(user).order_by("id")
+
+        return CloudFile.not_deleted.filter(user=user).order_by("id")
 
     def get_serializer_class(self):
         if self.action == "partial_update":
@@ -115,3 +119,9 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
         # Differentiate list vs. detail views
         context["is_detail"] = self.action == "retrieve"
         return context
+
+    @action(detail=False, methods=["get"], url_path="deleted")
+    def deleted_files(self, request):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
