@@ -22,5 +22,6 @@ def create_basic_subscription(sender, instance, created, *args, **kwargs):
             user=instance,
             plan=plan,
             billing_cycle=SubscriptionBillingCycleChoices.MONTH,
-            status=SubscriptionStatusChoices.ACTIVE
+            status=SubscriptionStatusChoices.ACTIVE,
+            is_recurring=True,
         )
