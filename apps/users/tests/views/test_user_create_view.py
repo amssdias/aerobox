@@ -5,6 +5,8 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from apps.subscriptions.choices.subscription_choices import SubscriptionStatusChoices
+from apps.subscriptions.models import Subscription
 from apps.users.factories.user_factory import UserFactory
 
 User = get_user_model()
@@ -47,12 +49,18 @@ class UserCreateViewTestCase(APITestCase):
         self.assertTrue(user.profile.stripe_customer_id)
         mock_create_customer.assert_called_once()
 
-    def _test_create_subscription_successfully(self):
+    @patch("stripe.Customer.create", return_value=Mock(id="cus_mocked_123456"))
+    def test_create_subscription_successfully(self, mock_create_customer):
         response = self.client.post(self.url, self.valid_user_data)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         user = User.objects.get(username=self.valid_user_data["username"])
-        self.assertTrue()
+        subscription = Subscription.objects.filter(user=user).first()
+
+        self.assertTrue(subscription)
+        self.assertTrue(subscription.is_recurring)
+        self.assertTrue(subscription.plan.is_free)
+        self.assertEqual(subscription.status, SubscriptionStatusChoices.ACTIVE.value)
 
     def test_user_create_get_not_allowed(self):
         response = self.client.get(self.url)
