@@ -84,13 +84,5 @@ class CloudFile(Timestampable, SoftDeleteModel):
     def __str__(self):
         return f"{self.file_name} ({self.user})"
 
-    # def get_relative_path(self):
-    #     """Returns only the part of the path that should be exposed to the user."""
-    #     return "/".join(self.path.split("/")[2:])  # Removes 'user/user_id/'
-
-    @property
-    def file_url(self):
-        return f"{settings.AWS_S3_BASE_URL}/{self.path}"
-
     def rebuild_path(self):
         self.path = build_object_path(self.file_name, self.folder)
