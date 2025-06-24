@@ -122,6 +122,8 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["get"], url_path="deleted")
     def deleted_files(self, request):
+        """Get deleted files from a user"""
+
         queryset = self.get_queryset()
 
         page = self.paginate_queryset(queryset)
