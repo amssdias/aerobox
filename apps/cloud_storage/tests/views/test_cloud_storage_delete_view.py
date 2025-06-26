@@ -5,6 +5,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from apps.cloud_storage.factories.cloud_file_factory import CloudFileFactory
+from apps.cloud_storage.factories.folder_factory import FolderFactory
 from apps.cloud_storage.models import CloudFile
 from apps.cloud_storage.utils.path_utils import build_s3_path
 from apps.users.factories.user_factory import UserFactory
@@ -49,3 +50,12 @@ class CloudStorageViewSetTests(APITestCase):
     def test_deleted_file_remains_in_database(self):
         self.client.delete(self.url)
         self.assertTrue(CloudFile.objects.filter(id=self.file.id).exists())
+
+    def test_soft_deleted_file_has_no_folder_association(self):
+        folder = FolderFactory(user=self.user)
+        self.file.folder = folder
+        self.file.save()
+
+        self.client.delete(self.url)
+        self.assertTrue(CloudFile.objects.filter(id=self.file.id).exists())
+        self.assertFalse(CloudFile.objects.get(id=self.file.id).folder)

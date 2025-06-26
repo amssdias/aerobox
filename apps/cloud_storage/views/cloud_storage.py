@@ -110,7 +110,8 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
         """Soft delete the file by setting 'deleted_at' instead of deleting it."""
         instance = self.get_object()
         instance.deleted_at = timezone.now()
-        instance.save(update_fields=["deleted_at"])
+        instance.folder = None
+        instance.save(update_fields=["deleted_at", "folder"])
         return Response({}, status=status.HTTP_204_NO_CONTENT)
 
     def get_serializer_context(self):
