@@ -47,7 +47,7 @@ class InvoicePaymentFailedHandler(StripeEventHandler, StripeInvoiceMixin):
 
     @staticmethod
     def update_subscription(subscription):
-        subscription.status = SubscriptionStatusChoices.INACTIVE.value
+        subscription.status = SubscriptionStatusChoices.PAST_DUE.value
         subscription.save(update_fields=["status"])
 
     @staticmethod
