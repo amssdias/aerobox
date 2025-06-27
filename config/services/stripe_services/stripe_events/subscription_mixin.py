@@ -3,8 +3,7 @@ from datetime import datetime
 
 import stripe
 
-from apps.subscriptions.choices.subscription_choices import SubscriptionStatusChoices, SubscriptionBillingCycleChoices
-from apps.subscriptions.constants.stripe_subscription_status import INCOMPLETE, PAST_DUE, ACTIVE
+from apps.subscriptions.choices.subscription_choices import SubscriptionBillingCycleChoices
 from apps.subscriptions.models import Subscription
 
 logger = logging.getLogger("aerobox")
@@ -62,16 +61,20 @@ class StripeSubscriptionMixin:
                 extra={"stripe_subscription_id": stripe_subscription_id},
             )
 
-    @staticmethod
-    def get_subscription_status(status):
-        if not status:
-            return None
-
-        # PAST_DUE: When a user's payment fails, the subscription is marked as inactive.
-        if status in [INCOMPLETE, PAST_DUE]:
-            return SubscriptionStatusChoices.INACTIVE.value
-        elif status == ACTIVE:
-            return SubscriptionStatusChoices.ACTIVE.value
+    # @staticmethod
+    # def get_subscription_status(status):
+    #     """
+    #     Maps a Stripe subscription status to an internal status,
+    #     excluding 'active', which should only be set manually after payment is confirmed
+    #     (via the 'invoice.paid' event).
+    #     """
+    #
+    #     if not status:
+    #         return None
+    #
+    #     # PAST_DUE: When a user's payment fails, the subscription is marked as inactive.
+    #     if status in [INCOMPLETE, PAST_DUE]:
+    #         return SubscriptionStatusChoices.INACTIVE.value
 
     @staticmethod
     def get_subscription_billing_cycle_start(stripe_subscription):
