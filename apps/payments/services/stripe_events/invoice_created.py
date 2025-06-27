@@ -2,6 +2,7 @@ import logging
 
 from django.db import transaction, IntegrityError
 
+from apps.payments.choices.payment_choices import PaymentStatusChoices
 from apps.payments.models import Payment
 from apps.subscriptions.services.stripe_events.stripe_subscription_created import SubscriptionCreateddHandler
 from config.services.stripe_services.stripe_events.base_event import StripeEventHandler
@@ -31,18 +32,17 @@ class InvoiceCreatedHandler(
             stripe_subscription_id=self.get_subscription_id_from_invoice(stripe_invoice)
         )
         user = subscription.user if subscription else None
-        status = self.get_invoice_status(stripe_invoice.status)
         hosted_invoice_url = stripe_invoice.hosted_invoice_url
         invoice_pdf_url = stripe_invoice.invoice_pdf
         amount = self.convert_cents_to_euros(stripe_invoice.amount_paid or stripe_invoice.amount_due)
 
-        if not self.is_valid_payment(user, subscription, sripe_invoice_id, status, amount):
+        if not self.is_valid_payment(user, subscription, sripe_invoice_id, amount):
             return
 
         return self.create_payment(
             user=user,
             subscription=subscription,
-            status=status,
+            status=PaymentStatusChoices.PENDING.value,
             stripe_invoice_id=sripe_invoice_id,
             invoice_url=hosted_invoice_url,
             invoice_pdf_url=invoice_pdf_url,
@@ -57,14 +57,12 @@ class InvoiceCreatedHandler(
         subscription = self.get_subscription(stripe_subscription_id)
         return subscription or SubscriptionCreateddHandler(event=self.event).create_subscription(stripe_subscription_id)
 
-    def is_valid_payment(self, user, subscription, stripe_invoice_id, status, amount_due):
+    def is_valid_payment(self, user, subscription, stripe_invoice_id, amount_due):
         missing_fields = []
         if not user:
             missing_fields.append("user")
         if not subscription:
             missing_fields.append("subscription")
-        if not status:
-            missing_fields.append("status")
         if not amount_due:
             missing_fields.append("amount_due")
 
