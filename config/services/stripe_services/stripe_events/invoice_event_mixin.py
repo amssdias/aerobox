@@ -3,8 +3,6 @@ from datetime import datetime, timezone
 
 import stripe
 
-from apps.payments.choices.payment_choices import PaymentStatusChoices
-from apps.payments.constants.stripe_invoice import OPEN, DRAFT, PAID
 from apps.payments.models import Payment
 from apps.payments.services.stripe_api import get_payment_intent, get_payment_method
 
@@ -68,19 +66,6 @@ class StripeInvoiceMixin:
     @staticmethod
     def get_invoice_subscription_id(invoice: stripe.Invoice):
         return
-
-    @staticmethod
-    def get_invoice_status(status):
-        if not status:
-            logger.error("Missing 'status' key in Stripe Invoice object.")
-            return None
-
-        if status in [OPEN, DRAFT]:
-            return PaymentStatusChoices.PENDING.value
-        elif status == PAID:
-            return PaymentStatusChoices.PAID.value
-        else:
-            return None
 
     @staticmethod
     def convert_cents_to_euros(cents: int) -> float:
