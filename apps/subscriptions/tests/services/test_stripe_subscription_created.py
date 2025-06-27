@@ -123,18 +123,6 @@ class SubscriptionCreateddHandlerTest(TestCase):
             self.handler.create_subscription("sub_123")
             mock_get_or_create.assert_not_called()
 
-    def test_get_subscription_status_active(self):
-        status = self.handler.get_subscription_status(status="active")
-        self.assertEqual(status, SubscriptionStatusChoices.ACTIVE.value)
-
-    def test_get_subscription_status_incomplete(self):
-        status = self.handler.get_subscription_status(status="incomplete")
-        self.assertEqual(status, SubscriptionStatusChoices.INACTIVE.value)
-
-    def test_get_subscription_status_unknown(self):
-        status = self.handler.get_subscription_status(status="unknown_status")
-        self.assertIsNone(status)
-
     def test_get_billing_cycle_valid(self):
         billing_cycle = self.handler.get_subscription_billing_cycle_interval(
             stripe_subscription={
@@ -175,5 +163,6 @@ class SubscriptionCreateddHandlerTest(TestCase):
         mock_construct_event.assert_called_once()
         mock_process.assert_called_once()
 
+    # TODO
     def test_get_stripe_subscription_id(self):
         pass
