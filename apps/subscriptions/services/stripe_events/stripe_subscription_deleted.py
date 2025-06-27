@@ -30,6 +30,7 @@ class SubscriptionDeleteddHandler(StripeEventHandler, StripeSubscriptionMixin):
         stripe_subscription = self.get_stripe_subscription(stripe_subscription_id=subscription_id)
         ended_at = stripe_subscription.ended_at
         self.update_subscription(subscription, ended_at)
+        self.reactivate_free_subscription_if_exists(subscription)
         self.cancel_pending_payments(subscription)
 
     @staticmethod
@@ -41,6 +42,21 @@ class SubscriptionDeleteddHandler(StripeEventHandler, StripeSubscriptionMixin):
             else subscription.end_date
         )
         subscription.save()
+
+    def reactivate_free_subscription_if_exists(self, subscription):
+        free_sub = self.get_free_subscription(subscription)
+        if free_sub:
+            self.activate_free_subscription(free_sub)
+
+    @staticmethod
+    def activate_free_subscription(free_sub):
+        if free_sub.status != SubscriptionStatusChoices.ACTIVE.value:
+            free_sub.status = SubscriptionStatusChoices.ACTIVE.value
+            free_sub.save(update_fields=["status"])
+
+    @staticmethod
+    def get_free_subscription(subscription):
+        return subscription.user.subscriptions.filter(plan__is_free=True).first()
 
     @staticmethod
     def cancel_pending_payments(subscription):
