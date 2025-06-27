@@ -19,17 +19,6 @@ class SubscriptionCreateddHandler(StripeEventHandler, StripeSubscriptionMixin):
     def process(self):
         self.create_subscription(self.data.get("id"))
 
-    def get_plan(self, plan_stripe_price_id):
-        try:
-            return Plan.objects.get(stripe_price_id=plan_stripe_price_id, is_free=False)
-
-        except Plan.DoesNotExist:
-            logger.error(
-                "No plan found for the given Stripe price ID.", extra={"stripe_price_id": plan_stripe_price_id}
-            )
-
-        return None
-
     def create_subscription(self, stripe_subscription_id):
         stripe_subscription = self.get_stripe_subscription(stripe_subscription_id=stripe_subscription_id)
         user = self.get_user(stripe_customer_id=stripe_subscription.customer)
@@ -61,6 +50,18 @@ class SubscriptionCreateddHandler(StripeEventHandler, StripeSubscriptionMixin):
             subscription = Subscription.objects.get(stripe_invoice_id=stripe_subscription.id)
 
         return subscription
+
+    @staticmethod
+    def get_plan(plan_stripe_price_id):
+        try:
+            return Plan.objects.get(stripe_price_id=plan_stripe_price_id, is_free=False)
+
+        except Plan.DoesNotExist:
+            logger.error(
+                "No plan found for the given Stripe price ID.", extra={"stripe_price_id": plan_stripe_price_id}
+            )
+
+        return None
 
     @staticmethod
     def get_user(stripe_customer_id):
