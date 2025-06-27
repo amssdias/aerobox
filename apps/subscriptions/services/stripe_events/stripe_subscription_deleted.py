@@ -41,7 +41,7 @@ class SubscriptionDeleteddHandler(StripeEventHandler, StripeSubscriptionMixin):
             if ended_at
             else subscription.end_date
         )
-        subscription.save()
+        subscription.save(update_fields=["status", "end_date"])
 
     def reactivate_free_subscription_if_exists(self, subscription):
         free_sub = self.get_free_subscription(subscription)
