@@ -3,7 +3,6 @@ from unittest.mock import patch, MagicMock
 from django.test import TestCase
 
 from apps.payments.choices.payment_choices import PaymentStatusChoices
-from apps.payments.constants.stripe_invoice import DRAFT, OPEN
 from apps.payments.models import Payment
 from apps.payments.services.stripe_events.invoice_created import InvoiceCreatedHandler
 from apps.subscriptions.factories.plan_factory import PlanFactory
@@ -53,6 +52,9 @@ class InvoiceCreatedHandlerTest(TestCase):
 
         invoice_id = self.data.get("data", {}).get("object", {}).get("id")
         self.assertTrue(Payment.objects.filter(stripe_invoice_id=invoice_id).exists())
+
+        payment = Payment.objects.get(stripe_invoice_id=invoice_id)
+        self.assertEqual(payment.status, PaymentStatusChoices.PENDING.value)
 
     def test_get_invoice_id(self):
         self.assertEqual(self.handler.get_invoice_id(), "invoice_123")
@@ -108,34 +110,11 @@ class InvoiceCreatedHandlerTest(TestCase):
         self.assertTrue(subscription)
         self.assertEqual(subscription.stripe_subscription_id, self.subscription.stripe_subscription_id)
 
-    def test_get_invoice_status_returns_pending_for_open(self):
-        self.assertEqual(
-            self.handler.get_invoice_status(OPEN), PaymentStatusChoices.PENDING.value
-        )
-
-    def test_get_invoice_status_returns_pending_for_draft(self):
-        self.assertEqual(
-            self.handler.get_invoice_status(DRAFT), PaymentStatusChoices.PENDING.value
-        )
-
-    def test_get_invoice_status_handles_unexpected_status(self):
-        result = self.handler.get_invoice_status("random_status")
-        self.assertIsNone(result)
-
-    def test_get_invoice_status_returns_none_for_none_status(self):
-        self.assertIsNone(self.handler.get_invoice_status(None))
-
-    @patch("apps.payments.services.stripe_events.invoice_created.logger.error")
-    def test_get_invoice_status_returns_pending_for_empty_status(self, mock_logger):
-        self.assertIsNone(self.handler.get_invoice_status(""))
-        mock_logger.assert_called_once()
-
     def test_is_valid_payment_returns_true_for_valid_data(self):
         result = self.handler.is_valid_payment(
             self.user,
             self.subscription,
             "invoice_123",
-            PaymentStatusChoices.PENDING.value,
             5,
         )
 
@@ -144,25 +123,19 @@ class InvoiceCreatedHandlerTest(TestCase):
     def test_is_valid_payment_returns_false_if_user_missing(self):
         with self.assertRaises(RuntimeError) as context:
             self.handler.is_valid_payment(
-                None, self.subscription, "invoice_123", PaymentStatusChoices.PENDING.value, 4.99
+                None, self.subscription, "invoice_123", 4.99
             )
 
     def test_is_valid_payment_returns_false_if_subscription_missing(self):
         with self.assertRaises(RuntimeError) as context:
             self.handler.is_valid_payment(
-                self.user, None, "invoice_123", PaymentStatusChoices.PENDING.value, 4.99
-            )
-
-    def test_is_valid_payment_returns_false_if_status_missing(self):
-        with self.assertRaises(RuntimeError) as context:
-            self.handler.is_valid_payment(
-                self.user, self.subscription, "invoice_123", None, 4.99
+                self.user, None, "invoice_123", 4.99
             )
 
     def test_is_valid_payment_returns_false_if_amount_due_missing(self):
         with self.assertRaises(RuntimeError) as context:
             self.handler.is_valid_payment(
-                self.user, self.subscription, "invoice_123", PaymentStatusChoices.PENDING.value, None
+                self.user, self.subscription, "invoice_123", None
             )
 
     def test_create_payment_creates_payment_successfully(self):
@@ -183,7 +156,7 @@ class InvoiceCreatedHandlerTest(TestCase):
     @patch("apps.payments.services.stripe_events.invoice_created.logger.critical")
     def test_is_valid_payment_logs_critical_error_if_missing_fields(self, mock_logger):
         with self.assertRaises(RuntimeError) as context:
-            self.handler.is_valid_payment(None, None, None, None, None)
+            self.handler.is_valid_payment(None, None, None, None)
 
         mock_logger.assert_called_once()
 
@@ -210,19 +183,3 @@ class InvoiceCreatedHandlerTest(TestCase):
         self.handler.get_or_create_subscription(stripe_subscription_id=None)
 
         mock_handler_instance.create_subscription.assert_called_once_with(None)
-
-    @patch("apps.payments.services.stripe_events.invoice_created.logger.critical")
-    def test_invoice_creation_logs_error_for_missing_fields(self, mock_logger):
-        self.stripe_invoice_mock.status = None
-        with self.assertRaises(RuntimeError) as context:
-            self.handler.process()
-
-        mock_logger.assert_called()
-
-    def test_invoice_with_invalid_status_does_not_create_payment(self):
-        self.stripe_invoice_mock.status = "invalid_status"
-        with self.assertRaises(RuntimeError) as context:
-            self.handler.process()
-
-        self.assertFalse(Payment.objects.exists())
-

@@ -192,24 +192,12 @@ class InvoicePaidHandlerTest(TestCase):
         with self.assertRaises(ValueError):
             self.handler.convert_cents_to_euros(-1)
 
-    def test_get_status_success(self):
-        result = self.handler.get_invoice_status(PAID)
-        self.assertEqual(result, PaymentStatusChoices.PAID)
-
-    @patch("config.services.stripe_services.stripe_events.invoice_event_mixin.logger.error")
-    def test_get_status_missing_key(self, mock_logger):
-        result = self.handler.get_invoice_status(None)
-
-        self.assertIsNone(result)
-        mock_logger.assert_called_once()
-
     def test_can_update_success(self):
         result = self.handler.can_update(
             invoice_id=self.payment.stripe_invoice_id,
             payment=self.payment,
             payment_method="card",
             amount=self.payment.amount,
-            status=PAID,
         )
 
         self.assertTrue(result)
@@ -223,7 +211,6 @@ class InvoicePaidHandlerTest(TestCase):
                 payment_method="card",
                 amount=10.00,
                 invoice_id=self.payment.stripe_invoice_id,
-                status="paid",
             )
 
         mock_logger.assert_called_once()
@@ -237,7 +224,6 @@ class InvoicePaidHandlerTest(TestCase):
                 payment_method=None,
                 amount=10.00,
                 invoice_id=self.payment.stripe_invoice_id,
-                status="paid",
             )
 
         mock_logger.assert_called_once()
@@ -251,7 +237,6 @@ class InvoicePaidHandlerTest(TestCase):
                 payment_method="card",
                 amount=None,
                 invoice_id=self.payment.stripe_invoice_id,
-                status="paid",
             )
 
         mock_logger.assert_called_once()
@@ -264,7 +249,6 @@ class InvoicePaidHandlerTest(TestCase):
                 payment_method="card",
                 amount=self.payment.amount + 2,
                 invoice_id=self.payment.stripe_invoice_id,
-                status="paid",
             )
 
         mock_logger.assert_called_once()
@@ -284,6 +268,7 @@ class InvoicePaidHandlerTest(TestCase):
             tzinfo=timezone.utc
         )
         self.assertEqual(self.payment.payment_date, expected_datetime)
+        self.assertEqual(self.payment.status, PaymentStatusChoices.PAID.value)
 
     @patch(
         "apps.payments.services.stripe_events.invoice_paid.InvoicePaidHandler.get_payment_method"
