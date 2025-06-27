@@ -6,7 +6,6 @@ from django.test import TestCase
 from django.utils import timezone
 
 from apps.payments.choices.payment_choices import PaymentStatusChoices
-from apps.payments.constants.stripe_invoice import PAID
 from apps.payments.factories.payment import PaymentFactory
 from apps.payments.services.stripe_events.invoice_paid import InvoicePaidHandler
 from apps.subscriptions.choices.subscription_choices import SubscriptionStatusChoices
