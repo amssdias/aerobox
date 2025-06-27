@@ -7,6 +7,7 @@ class SubscriptionStatusChoices(models.TextChoices):
     INACTIVE = "inactive", _("Inactive")
     CANCELED = "canceled", _("Canceled")
     EXPIRED = "expired", _("Expired")
+    PAST_DUE = "past_due", _("Past Due")
 
 
 class SubscriptionBillingCycleChoices(models.TextChoices):
