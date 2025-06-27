@@ -3,6 +3,7 @@ import logging
 from django.db import transaction, IntegrityError
 
 from apps.profiles.models import Profile
+from apps.subscriptions.choices.subscription_choices import SubscriptionStatusChoices
 from apps.subscriptions.models import Plan, Subscription
 from config.services.stripe_services.stripe_events.base_event import StripeEventHandler
 from config.services.stripe_services.stripe_events.subscription_mixin import StripeSubscriptionMixin
@@ -33,13 +34,12 @@ class SubscriptionCreateddHandler(StripeEventHandler, StripeSubscriptionMixin):
         stripe_subscription = self.get_stripe_subscription(stripe_subscription_id=stripe_subscription_id)
         user = self.get_user(stripe_customer_id=stripe_subscription.customer)
         plan = self.get_plan(plan_stripe_price_id=stripe_subscription.plan.get("id"))
-        status = self.get_subscription_status(status=stripe_subscription.status)
 
         billing_start = self.get_subscription_billing_cycle_start(stripe_subscription)
         billing_end = self.get_subscription_billing_cycle_end(stripe_subscription)
         billing_cycle = self.get_subscription_billing_cycle_interval(stripe_subscription)
 
-        if not user or not plan or not status or not billing_start or not billing_end or not billing_cycle:
+        if not user or not plan or not billing_start or not billing_end or not billing_cycle:
             return False
 
         try:
@@ -52,7 +52,7 @@ class SubscriptionCreateddHandler(StripeEventHandler, StripeSubscriptionMixin):
                         "billing_cycle": billing_cycle,
                         "start_date": billing_start,
                         "end_date": billing_end,
-                        "status": status,
+                        "status": SubscriptionStatusChoices.INACTIVE.value,
                         "trial_start_date": None,
                         "is_recurring": True,
                     },
