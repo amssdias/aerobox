@@ -74,8 +74,7 @@ class InvoicePaidHandler(StripeEventHandler, StripeInvoiceMixin):
         payment.status = PaymentStatusChoices.PAID.value
         payment.save(update_fields=["payment_method", "payment_date", "status"])
 
-    @staticmethod
-    def update_subscription(subscription):
+    def update_subscription(self, subscription):
         today = timezone.now().date()
 
         update_fields = []
@@ -86,10 +85,21 @@ class InvoicePaidHandler(StripeEventHandler, StripeInvoiceMixin):
         if subscription.end_date and subscription.end_date <= today:
             subscription.end_date = today + timedelta(days=30)
             update_fields.append("end_date")
-            subscription.save(update_fields=update_fields)
             logger.info(f"Subscription {subscription.id} extended to {subscription.end_date}.")
+
         else:
             logger.warning(f"Subscription {subscription.id} not updated. Current end date is {subscription.end_date}.")
+
+        subscription.save(update_fields=update_fields)
+
+        self.deactivate_existing_free_subscription(subscription)
+
+    @staticmethod
+    def deactivate_existing_free_subscription(subscription):
+        free_sub = subscription.user.subscriptions.filter(plan__is_free=True).first()
+        if free_sub and free_sub.status != SubscriptionStatusChoices.INACTIVE:
+            free_sub.status = SubscriptionStatusChoices.INACTIVE.value
+            free_sub.save(update_fields=["status"])
 
     @staticmethod
     def send_invoice_paid_email(payment):
