@@ -61,21 +61,6 @@ class StripeSubscriptionMixin:
                 extra={"stripe_subscription_id": stripe_subscription_id},
             )
 
-    # @staticmethod
-    # def get_subscription_status(status):
-    #     """
-    #     Maps a Stripe subscription status to an internal status,
-    #     excluding 'active', which should only be set manually after payment is confirmed
-    #     (via the 'invoice.paid' event).
-    #     """
-    #
-    #     if not status:
-    #         return None
-    #
-    #     # PAST_DUE: When a user's payment fails, the subscription is marked as inactive.
-    #     if status in [INCOMPLETE, PAST_DUE]:
-    #         return SubscriptionStatusChoices.INACTIVE.value
-
     @staticmethod
     def get_subscription_billing_cycle_start(stripe_subscription):
         return datetime.utcfromtimestamp(
