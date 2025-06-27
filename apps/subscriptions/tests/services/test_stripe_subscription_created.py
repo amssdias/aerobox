@@ -1,6 +1,7 @@
 from datetime import datetime
 from unittest.mock import patch, MagicMock
 
+import stripe
 from django.test import TestCase
 from django.urls import reverse
 
@@ -163,6 +164,69 @@ class SubscriptionCreateddHandlerTest(TestCase):
         mock_construct_event.assert_called_once()
         mock_process.assert_called_once()
 
-    # TODO
-    def test_get_stripe_subscription_id(self):
-        pass
+    @patch("stripe.Subscription.retrieve")
+    def test_get_stripe_subscription_success(self, mock_retrieve):
+        mock_subscription = {"id": "sub_123"}
+        mock_retrieve.return_value = mock_subscription
+
+        result = self.handler.get_stripe_subscription("sub_123")
+
+        self.assertEqual(result, mock_subscription)
+        mock_retrieve.assert_called_once_with("sub_123")
+
+    @patch("config.services.stripe_services.stripe_events.subscription_mixin.logger")
+    @patch("stripe.Subscription.retrieve")
+    def test_invalid_request_error(self, mock_retrieve, mock_logger):
+        mock_retrieve.side_effect = stripe.error.InvalidRequestError(
+            message="Invalid ID", param="subscription"
+        )
+
+        result = self.handler.get_stripe_subscription("bad_id")
+
+        self.assertIsNone(result)
+        mock_logger.error.assert_called_once()
+        self.assertIn("Invalid Stripe subscription ID", mock_logger.error.call_args[0][0])
+
+    @patch("config.services.stripe_services.stripe_events.subscription_mixin.logger")
+    @patch("stripe.Subscription.retrieve")
+    def test_authentication_error(self, mock_retrieve, mock_logger):
+        mock_retrieve.side_effect = stripe.error.AuthenticationError("Invalid API Key")
+
+        result = self.handler.get_stripe_subscription("sub_123")
+
+        self.assertIsNone(result)
+        mock_logger.critical.assert_called_once()
+        self.assertIn("Stripe authentication failed", mock_logger.critical.call_args[0][0])
+
+    @patch("config.services.stripe_services.stripe_events.subscription_mixin.logger")
+    @patch("stripe.Subscription.retrieve")
+    def test_api_connection_error(self, mock_retrieve, mock_logger):
+        mock_retrieve.side_effect = stripe.error.APIConnectionError("Network error")
+
+        result = self.handler.get_stripe_subscription("sub_123")
+
+        self.assertIsNone(result)
+        mock_logger.error.assert_called_once()
+        self.assertIn("Network communication with Stripe failed", mock_logger.error.call_args[0][0])
+
+    @patch("config.services.stripe_services.stripe_events.subscription_mixin.logger")
+    @patch("stripe.Subscription.retrieve")
+    def test_generic_stripe_error(self, mock_retrieve, mock_logger):
+        mock_retrieve.side_effect = stripe.error.StripeError("Generic Stripe error")
+
+        result = self.handler.get_stripe_subscription("sub_123")
+
+        self.assertIsNone(result)
+        mock_logger.exception.assert_called_once()
+        self.assertIn("Stripe API error occurred", mock_logger.exception.call_args[0][0])
+
+    @patch("config.services.stripe_services.stripe_events.subscription_mixin.logger")
+    @patch("stripe.Subscription.retrieve")
+    def test_unexpected_exception(self, mock_retrieve, mock_logger):
+        mock_retrieve.side_effect = Exception("Unexpected!")
+
+        result = self.handler.get_stripe_subscription("sub_123")
+
+        self.assertIsNone(result)
+        mock_logger.exception.assert_called_once()
+        self.assertIn("Unexpected error while retrieving Stripe subscription", mock_logger.exception.call_args[0][0])
