@@ -9,7 +9,8 @@ from apps.payments.choices.payment_choices import PaymentStatusChoices
 from apps.payments.factories.payment import PaymentFactory
 from apps.payments.services.stripe_events.invoice_paid import InvoicePaidHandler
 from apps.subscriptions.choices.subscription_choices import SubscriptionStatusChoices
-from apps.subscriptions.factories.subscription import SubscriptionFactory
+from apps.subscriptions.factories.subscription import SubscriptionFactory, SubscriptionFreePlanFactory
+from apps.users.factories.user_factory import UserFactory
 
 
 class InvoicePaidHandlerTest(TestCase):
@@ -27,6 +28,9 @@ class InvoicePaidHandlerTest(TestCase):
         self.addCleanup(patcher.stop)  # Ensures patch is removed after each test
 
         self.timestamp = int(datetime.now(tz=timezone.utc).timestamp())
+        today = datetime.now()
+        self.period_end = today + timedelta(days=30)
+        d_period_end = datetime.combine(self.period_end, datetime.min.time(), tzinfo=timezone.utc)
         self.data = {
             "data": {
                 "object": {
@@ -48,6 +52,15 @@ class InvoicePaidHandlerTest(TestCase):
                                 }
                             }
                         ]
+                    },
+                    "lines": {
+                        "data": [
+                            {
+                                "period": {
+                                    "end": int(d_period_end.timestamp())
+                                }
+                            }
+                        ]
                     }
                 }
             }
@@ -60,6 +73,12 @@ class InvoicePaidHandlerTest(TestCase):
         self.mock_retrieve_invoice.return_value = self.stripe_invoice_mock
 
         self.handler = InvoicePaidHandler(self.data)
+
+        # Create free subscription
+        self.user = self.payment.user
+        self.free_sub = SubscriptionFreePlanFactory(
+            user=self.user
+        )
 
     def test_get_invoice_id_success(self):
         self.assertEqual(self.handler.get_invoice_id(), self.payment.stripe_invoice_id)
@@ -311,36 +330,63 @@ class InvoicePaidHandlerTest(TestCase):
 
     def test_updates_subscription_when_end_date_is_today(self):
         subscription = SubscriptionFactory(end_date=timezone.now().date())
-        self.handler.update_subscription(subscription)
+        self.handler.update_subscription(subscription, self.stripe_invoice_mock)
         subscription.refresh_from_db()
 
         self.assertEqual(subscription.end_date, timezone.now().date() + timedelta(days=30))
 
     def test_updates_subscription_when_end_date_is_in_the_past(self):
         subscription = SubscriptionFactory(end_date=timezone.now().date() - timedelta(days=1))
-        self.handler.update_subscription(subscription)
+        self.handler.update_subscription(subscription, self.stripe_invoice_mock)
         subscription.refresh_from_db()
 
         self.assertEqual(subscription.end_date, timezone.now().date() + timedelta(days=30))
 
-    def test_does_not_update_subscription_when_end_date_is_in_the_future(self):
+    def test_does_update_subscription_when_end_date_is_in_the_future(self):
         future_date = timezone.now().date() + timedelta(days=10)
         subscription = SubscriptionFactory(end_date=future_date)
-        self.handler.update_subscription(subscription)
+        self.handler.update_subscription(subscription, self.stripe_invoice_mock)
         subscription.refresh_from_db()
 
-        self.assertEqual(subscription.end_date, future_date)
+        self.assertEqual(subscription.end_date, self.period_end.date())
 
-    def test_does_not_update_subscription_when_end_date_is_none(self):
+    def test_update_subscription_when_end_date_is_none(self):
         subscription = SubscriptionFactory(end_date=None)
-        self.handler.update_subscription(subscription)
+        self.handler.update_subscription(subscription, self.stripe_invoice_mock)
         subscription.refresh_from_db()
 
-        self.assertIsNone(subscription.end_date)
+        self.assertEqual(subscription.end_date, self.period_end.date())
 
     def test_update_subscription_status(self):
         subscription = SubscriptionFactory(status=SubscriptionStatusChoices.INACTIVE, end_date=timezone.now().date())
-        self.handler.update_subscription(subscription)
+        self.handler.update_subscription(subscription, self.stripe_invoice_mock)
         subscription.refresh_from_db()
 
         self.assertEqual(subscription.status, SubscriptionStatusChoices.ACTIVE)
+
+    def test_deactivates_free_subscription_when_active(self):
+        self.handler.deactivate_existing_free_subscription(self.payment.subscription)
+
+        self.free_sub.refresh_from_db()
+        self.assertEqual(self.free_sub.status, SubscriptionStatusChoices.INACTIVE.value)
+
+    def test_does_not_deactivate_if_free_subscription_already_inactive(self):
+        self.handler.deactivate_existing_free_subscription(self.payment.subscription)
+
+        self.free_sub.refresh_from_db()
+        self.assertEqual(self.free_sub.status, SubscriptionStatusChoices.INACTIVE.value)
+
+    def test_deactivates_free_subscription_from_current_user_only(self):
+        user_1 = UserFactory()
+        user_2 = UserFactory()
+        free_sub_user2 = SubscriptionFreePlanFactory(user=user_2)
+        free_sub_user1 = SubscriptionFreePlanFactory(user=user_1)
+        paid_sub_user1 = SubscriptionFactory(user=user_1, plan__is_free=False)
+
+        self.handler.deactivate_existing_free_subscription(paid_sub_user1)
+
+        free_sub_user1.refresh_from_db()
+        free_sub_user2.refresh_from_db()
+
+        self.assertEqual(free_sub_user1.status, SubscriptionStatusChoices.INACTIVE.value)
+        self.assertEqual(free_sub_user2.status, SubscriptionStatusChoices.ACTIVE.value)
