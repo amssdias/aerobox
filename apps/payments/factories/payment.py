@@ -11,8 +11,11 @@ class PaymentFactory(factory.django.DjangoModelFactory):
         model = Payment
 
     user = factory.SubFactory(UserFactory)
-    subscription = factory.SubFactory(SubscriptionFactory)
     status = PaymentStatusChoices.PENDING.value
     stripe_invoice_id = factory.Faker("uuid4")
     invoice_url = factory.Faker("url")
     invoice_pdf_url = factory.Faker("url")
+
+    @factory.lazy_attribute
+    def subscription(self):
+        return SubscriptionFactory(user=self.user)
