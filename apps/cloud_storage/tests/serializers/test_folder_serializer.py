@@ -8,7 +8,7 @@ from rest_framework.exceptions import ValidationError
 from apps.cloud_storage.factories.folder_factory import FolderFactory
 from apps.cloud_storage.serializers import FolderParentSerializer
 from apps.cloud_storage.serializers import FolderSerializer
-from apps.subscriptions.factories.plan_factory import PlanFactory
+from apps.subscriptions.factories.plan_factory import PlanFreeFactory
 from apps.subscriptions.factories.subscription import SubscriptionFactory
 from apps.subscriptions.models import Plan
 from apps.users.factories.user_factory import UserFactory
@@ -123,7 +123,7 @@ class FolderSerializerTests(TestCase):
 
     def test_missing_folder_creation_feature_raises_error(self):
         user = UserFactory(email="test@example.com", password="pass123")
-        plan = PlanFactory(name="Free", is_free=True)
+        plan = PlanFreeFactory()
         SubscriptionFactory(
             user=user,
             plan=plan,
