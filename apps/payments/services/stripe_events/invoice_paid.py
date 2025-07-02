@@ -1,7 +1,4 @@
 import logging
-from datetime import timedelta
-
-from django.utils import timezone
 
 from apps.payments.choices.payment_choices import PaymentStatusChoices
 from apps.payments.services.stripe_events.invoice_created import InvoiceCreatedHandler
@@ -29,7 +26,7 @@ class InvoicePaidHandler(StripeEventHandler, StripeInvoiceMixin):
         payment = self.get_or_create_payment(stripe_invoice.id)
         if self.can_update(stripe_invoice_id, payment, payment_method, amount):
             self.update_payment(payment, payment_method, payment_date)
-            self.update_subscription(payment.subscription)
+            self.update_subscription(payment.subscription, stripe_invoice)
             self.send_invoice_paid_email(payment=payment)
 
     def get_or_create_payment(self, stripe_invoice_id):
@@ -74,30 +71,30 @@ class InvoicePaidHandler(StripeEventHandler, StripeInvoiceMixin):
         payment.status = PaymentStatusChoices.PAID.value
         payment.save(update_fields=["payment_method", "payment_date", "status"])
 
-    def update_subscription(self, subscription):
-        today = timezone.now().date()
-
+    def update_subscription(self, subscription, stripe_invoice):
         update_fields = []
-        if subscription.status != SubscriptionStatusChoices.ACTIVE:
+
+        if subscription.status != SubscriptionStatusChoices.ACTIVE.value:
             subscription.status = SubscriptionStatusChoices.ACTIVE.value
             update_fields.append("status")
 
-        if subscription.end_date and subscription.end_date <= today:
-            subscription.end_date = today + timedelta(days=30)
+        new_end_date = self.get_subscription_period_end_date(stripe_invoice)
+        if subscription.end_date != new_end_date:
+            subscription.end_date = new_end_date
             update_fields.append("end_date")
             logger.info(f"Subscription {subscription.id} extended to {subscription.end_date}.")
-
         else:
-            logger.warning(f"Subscription {subscription.id} not updated. Current end date is {subscription.end_date}.")
+            logger.info(f"Subscription {subscription.id} already up to date (end date: {subscription.end_date}).")
 
-        subscription.save(update_fields=update_fields)
+        if update_fields:
+            subscription.save(update_fields=update_fields)
 
         self.deactivate_existing_free_subscription(subscription)
 
     @staticmethod
     def deactivate_existing_free_subscription(subscription):
         free_sub = subscription.user.subscriptions.filter(plan__is_free=True).first()
-        if free_sub and free_sub.status != SubscriptionStatusChoices.INACTIVE:
+        if free_sub and free_sub.status != SubscriptionStatusChoices.INACTIVE.value:
             free_sub.status = SubscriptionStatusChoices.INACTIVE.value
             free_sub.save(update_fields=["status"])
 
