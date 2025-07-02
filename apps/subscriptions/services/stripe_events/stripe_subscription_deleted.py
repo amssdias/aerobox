@@ -47,6 +47,11 @@ class SubscriptionDeleteddHandler(StripeEventHandler, StripeSubscriptionMixin):
         free_sub = self.get_free_subscription(subscription)
         if free_sub:
             self.activate_free_subscription(free_sub)
+        else:
+            logger.warning(
+                "No free subscription found to reactivate for user %s.",
+                subscription.user_id
+            )
 
     @staticmethod
     def activate_free_subscription(free_sub):
@@ -71,7 +76,8 @@ class SubscriptionDeleteddHandler(StripeEventHandler, StripeSubscriptionMixin):
         )
 
         if pending_payments.exists():
+            pending_payments_counter = pending_payments.count()
             pending_payments.update(status=PaymentStatusChoices.CANCELED.value)
             logger.info(
-                f"Canceled {pending_payments.count()} pending payments for subscription ID: {subscription.id}"
+                f"Canceled {pending_payments_counter} pending payments for subscription ID: {subscription.id}"
             )
