@@ -1,15 +1,11 @@
-import unittest
-
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
 from apps.features.choices.feature_code_choices import FeatureCodeChoices
-from apps.features.factories.feature import FeatureFactory
 from apps.features.models import Feature
 from apps.subscriptions.factories.plan_factory import PlanFactory
-from apps.subscriptions.factories.plan_feature import PlanFeatureFactory
 from apps.subscriptions.models import Plan
 
 
@@ -21,16 +17,11 @@ class PlanListAPIViewTests(TestCase):
         cls.list_url = reverse("plan-list")
 
         # Create test plans using PlanFactory
+        cls.free_plan = Plan.objects.get(is_free=True)
         cls.plan1 = PlanFactory(is_active=True)
         cls.plan2 = PlanFactory(is_active=True)
         cls.plan3 = PlanFactory(is_active=False)
 
-        # Create test features
-        cls.feature = Feature.objects.get(code=FeatureCodeChoices.FOLDER_CREATION)
-
-        # Link features to the plan with metadata
-        cls.plan_feature1 = PlanFeatureFactory(plan=cls.plan1, feature=cls.feature, metadata={"storage_limit_gb": 100})
-        cls.plan_feature2 = PlanFeatureFactory(plan=cls.plan2, feature=cls.feature, metadata={"priority": True})
 
     def test_plan_list_endpoint_success(self):
         response = self.client.get(self.list_url)
@@ -43,6 +34,7 @@ class PlanListAPIViewTests(TestCase):
         self.assertEqual(len(response.data), list_plans)
 
         active_plans = [plan["name"] for plan in response.data]
+        self.assertIn(self.free_plan.name, active_plans)
         self.assertIn(self.plan1.name, active_plans)
         self.assertIn(self.plan2.name, active_plans)
         self.assertNotIn(self.plan3.name, active_plans)
@@ -82,6 +74,9 @@ class PlanListAPIViewTests(TestCase):
             elif plan["name"] == self.plan2.name:
                 self.assertEqual(plan["monthly_price"], str(self.plan2.monthly_price))
                 self.assertEqual(plan["yearly_price"], str(self.plan2.yearly_price))
+            elif plan["name"] == self.free_plan.name:
+                self.assertEqual(plan["monthly_price"], str(self.free_plan.monthly_price))
+                self.assertEqual(plan["yearly_price"], str(self.free_plan.yearly_price))
 
     def test_only_get_method_allowed(self):
         post_response = self.client.post(self.list_url, {})
@@ -94,10 +89,17 @@ class PlanListAPIViewTests(TestCase):
         self.assertEqual(delete_response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
     def test_plan_contains_features(self):
+        features = Feature.objects.filter(code__in=[
+            FeatureCodeChoices.CLOUD_STORAGE.value,
+            FeatureCodeChoices.FILE_PREVIEW.value,
+            FeatureCodeChoices.FILE_SHARING.value,
+            FeatureCodeChoices.FOLDER_CREATION.value,
+            FeatureCodeChoices.BASIC_SUPPORT.value,
+        ]).count()
         response = self.client.get(self.list_url)
         for plan in response.data:
-            if plan["name"] == self.plan1.name:
-                self.assertEqual(len(plan["features"]), 1)
+            if plan["name"] == self.free_plan.name:
+                self.assertEqual(len(plan["features"]), features)
 
     def test_feature_fields_in_response(self):
         response = self.client.get(self.list_url)
@@ -109,20 +111,26 @@ class PlanListAPIViewTests(TestCase):
 
     def test_feature_values_are_correct(self):
         response = self.client.get(self.list_url)
-        for plan in response.data:
-            feature_names = [feature["name"] for feature in plan["features"]]
-            self.assertIn(self.feature.name, feature_names)
+        feature_codes = Feature.objects.all().values_list("code", flat=True)
 
-    @unittest.skip("Skipping: Metadata not defined yet.")
-    def test_feature_metadata_is_correct(self):
+        for plan in response.data:
+            if plan["name"] == self.free_plan.name:
+                response_feature_codes = [feature["code"] for feature in plan["features"]]
+                for code in response_feature_codes:
+                    self.assertIn(code, feature_codes)
+
+    def test_feature_default_metadata_is_correct(self):
         response = self.client.get(self.list_url)
         for plan in response.data:
-            if plan["name"] == self.plan.name:
+            if plan["name"] == self.free_plan.name:
                 for feature in plan["features"]:
-                    if feature["name"] == self.feature.name:
-                        self.assertEqual(feature["metadata"]["storage_limit_gb"], 100)
-                    elif feature["name"] == self.feature.name:
-                        self.assertEqual(feature["metadata"]["priority"], True)
+                    if feature["code"] == FeatureCodeChoices.CLOUD_STORAGE.value:
+                        self.assertIn("max_storage_mb", feature["default_metadata"])
+                        self.assertIn("max_file_size_mb", feature["default_metadata"])
+                        self.assertIn("blocked_file_types", feature["default_metadata"])
+                    elif feature["code"] == FeatureCodeChoices.FOLDER_CREATION.value:
+                        self.assertFalse(feature["default_metadata"])
+                        self.assertFalse(feature["metadata"])
 
     def test_plan_with_no_features(self):
         plan_no_features = PlanFactory(name="No Features", is_active=True)
@@ -130,14 +138,3 @@ class PlanListAPIViewTests(TestCase):
         for plan in response.data:
             if plan["name"] == plan_no_features.name:
                 self.assertEqual(plan["features"], [])
-
-    @unittest.skip("Skipping: Metadata not defined yet.")
-    def test_plan_with_feature_but_no_metadata(self):
-        feature_no_metadata = FeatureFactory(name="Basic Feature")
-        PlanFeatureFactory(plan=self.plan1, feature=feature_no_metadata, metadata={})  # Empty metadata
-        response = self.client.get(self.list_url)
-        for plan in response.data:
-            if plan["name"] == self.plan1.name:
-                for feature in plan["features"]:
-                    if feature["name"] == feature_no_metadata.name:
-                        self.assertEqual(feature["metadata"], {})
