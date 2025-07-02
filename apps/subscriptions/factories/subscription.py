@@ -8,7 +8,7 @@ from apps.subscriptions.choices.subscription_choices import (
     SubscriptionStatusChoices,
 )
 from apps.subscriptions.factories.plan_factory import PlanFactory
-from apps.subscriptions.models import Subscription
+from apps.subscriptions.models import Subscription, Plan
 from apps.users.factories.user_factory import UserFactory
 
 
@@ -24,3 +24,18 @@ class SubscriptionFactory(factory.django.DjangoModelFactory):
     end_date = factory.LazyAttribute(lambda obj: obj.start_date + timedelta(days=31))
     status = SubscriptionStatusChoices.ACTIVE.value
     is_recurring = True
+
+
+class SubscriptionFreePlanFactory(SubscriptionFactory):
+    plan = factory.LazyFunction(lambda: Plan.objects.get_or_create(
+        is_free=True,
+        defaults={
+            "name": {"en": "Free Plan"},
+            "description": {"en": "Free plan description"},
+            "monthly_price": 0,
+            "yearly_price": 0,
+            "stripe_price_id": None,
+            "is_active": True,
+        }
+    )[0])
+    stripe_subscription_id = None
