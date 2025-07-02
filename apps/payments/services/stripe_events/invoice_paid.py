@@ -25,7 +25,7 @@ class InvoicePaidHandler(StripeEventHandler, StripeInvoiceMixin):
 
         payment = self.get_or_create_payment(stripe_invoice.id)
         if self.can_update(stripe_invoice_id, payment, payment_method, amount):
-            self.update_payment(payment, payment_method, payment_date)
+            self.update_payment(stripe_invoice, payment, payment_method, payment_date, amount)
             self.update_subscription(payment.subscription, stripe_invoice)
             self.send_invoice_paid_email(payment=payment)
 
@@ -60,16 +60,33 @@ class InvoicePaidHandler(StripeEventHandler, StripeInvoiceMixin):
                 "expected_amount": payment.amount if payment else 0,
                 "received_amount": amount,
             })
-            raise RuntimeError(error_msg)
+            raise ValueError(error_msg)
 
         return True
 
     @staticmethod
-    def update_payment(payment, payment_method, payment_date):
+    def update_payment(stripe_invoice, payment, payment_method, payment_date, amount_due):
         payment.payment_method = payment_method
         payment.payment_date = payment_date
         payment.status = PaymentStatusChoices.PAID.value
-        payment.save(update_fields=["payment_method", "payment_date", "status"])
+        update_fields = ["payment_method", "payment_date", "status"]
+
+        hosted_invoice_url = stripe_invoice.hosted_invoice_url
+        invoice_pdf_url = stripe_invoice.invoice_pdf
+
+        if payment.amount != amount_due:
+            payment.amount = amount_due
+            update_fields.append("amount")
+
+        if payment.invoice_url != hosted_invoice_url:
+            payment.invoice_url = hosted_invoice_url
+            update_fields.append("invoice_url")
+
+        if payment.invoice_pdf_url != invoice_pdf_url:
+            payment.invoice_pdf_url = invoice_pdf_url
+            update_fields.append("invoice_pdf_url")
+
+        payment.save(update_fields=update_fields)
 
     def update_subscription(self, subscription, stripe_invoice):
         update_fields = []

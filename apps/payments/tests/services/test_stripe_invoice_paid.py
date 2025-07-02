@@ -39,6 +39,8 @@ class InvoicePaidHandlerTest(TestCase):
                     "status_transitions": {"paid_at": self.timestamp},
                     "amount_paid": 1500,
                     "status": "paid",
+                    "hosted_invoice_url": "https://stripe.com/invoice_123",
+                    "invoice_pdf": "https://stripe.com/invoice_123.pdf",
                     "parent": {
                         "subscription_details": {
                             "subscription": self.payment.subscription.stripe_subscription_id
@@ -222,8 +224,7 @@ class InvoicePaidHandlerTest(TestCase):
 
     @patch("apps.payments.services.stripe_events.invoice_paid.logger.error")
     def test_can_update_missing_payment(self, mock_logger):
-
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(ValueError) as context:
             self.handler.can_update(
                 payment=None,
                 payment_method="card",
@@ -235,8 +236,7 @@ class InvoicePaidHandlerTest(TestCase):
 
     @patch("apps.payments.services.stripe_events.invoice_paid.logger.error")
     def test_can_update_missing_payment_method(self, mock_logger):
-
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(ValueError) as context:
             self.handler.can_update(
                 payment=self.payment,
                 payment_method=None,
@@ -248,8 +248,7 @@ class InvoicePaidHandlerTest(TestCase):
 
     @patch("apps.payments.services.stripe_events.invoice_paid.logger.error")
     def test_can_update_missing_amount(self, mock_logger):
-
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(ValueError) as context:
             self.handler.can_update(
                 payment=self.payment,
                 payment_method="card",
@@ -261,7 +260,7 @@ class InvoicePaidHandlerTest(TestCase):
 
     @patch("apps.payments.services.stripe_events.invoice_paid.logger.error")
     def test_can_update_amount_distinct(self, mock_logger):
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(ValueError) as context:
             self.handler.can_update(
                 payment=self.payment,
                 payment_method="card",
@@ -287,6 +286,33 @@ class InvoicePaidHandlerTest(TestCase):
         )
         self.assertEqual(self.payment.payment_date, expected_datetime)
         self.assertEqual(self.payment.status, PaymentStatusChoices.PAID.value)
+        self.assertEqual(self.payment.invoice_url, self.data["data"]["object"]["hosted_invoice_url"])
+        self.assertEqual(self.payment.invoice_pdf_url, self.data["data"]["object"]["invoice_pdf"])
+
+    @patch(
+        "apps.payments.services.stripe_events.invoice_paid.InvoicePaidHandler.get_payment_method"
+    )
+    def test_update_payment_success_missing_invoices_urls(self, mock_get_payment_method):
+        mock_get_payment_method.return_value = "card"
+        self.stripe_invoice_mock.hosted_invoice_url = ""
+        self.stripe_invoice_mock.invoice_pdf = ""
+
+        self.payment.invoice_url = ""
+        self.payment.invoice_pdf_url = ""
+        self.payment.save()
+
+        self.handler.process()
+
+        self.payment.refresh_from_db()
+        self.assertEqual(self.payment.payment_method, "card")
+        self.assertEqual(str(self.payment.amount), "15.00")
+        expected_datetime = datetime.utcfromtimestamp(self.timestamp).replace(
+            tzinfo=timezone.utc
+        )
+        self.assertEqual(self.payment.payment_date, expected_datetime)
+        self.assertEqual(self.payment.status, PaymentStatusChoices.PAID.value)
+        self.assertEqual(self.payment.invoice_url, "")
+        self.assertEqual(self.payment.invoice_pdf_url, "")
 
     @patch(
         "apps.payments.services.stripe_events.invoice_paid.InvoicePaidHandler.get_payment_method"
@@ -295,7 +321,7 @@ class InvoicePaidHandlerTest(TestCase):
         mock_get_payment_method.return_value = ""
         self.handler.data["id"] = "in_5423345"
 
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(ValueError) as context:
             self.handler.process()
 
     @patch(
@@ -304,7 +330,7 @@ class InvoicePaidHandlerTest(TestCase):
     def test_update_payment_missing_payment_method(self, mock_get_payment_method):
         mock_get_payment_method.return_value = None
 
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(ValueError) as context:
             self.handler.process()
 
     @patch(
