@@ -64,10 +64,6 @@ class StripeInvoiceMixin:
         return None
 
     @staticmethod
-    def get_invoice_subscription_id(invoice: stripe.Invoice):
-        return
-
-    @staticmethod
     def convert_cents_to_euros(cents: int) -> float:
         if cents is None:
             logger.error("convert_cents_to_euros received None")
@@ -126,3 +122,8 @@ class StripeInvoiceMixin:
                 f"Payment record not found for Stripe Invoice ID: {invoice_id}"
             )
             return None
+
+    @staticmethod
+    def get_subscription_period_end_date(stripe_invoice):
+        unix_timestamp = stripe_invoice.lines.get("data", [{}])[0].get("period", {}).get("end")
+        return datetime.utcfromtimestamp(unix_timestamp).date()
