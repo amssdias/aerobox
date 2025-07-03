@@ -10,12 +10,12 @@ def create_free_plan(apps, schema_editor):
         if not plan:
             Plan.objects.create(
                 name={
-                    "en": "Starter (Free)",
-                    "es": "Inicial (Gratis)",
+                    "en": "Basic",
+                    "es": "Básico",
                 },
                 description={
-                    "en": "Get started with all the basics — no credit card needed.",
-                    "es": "Comienza con lo esencial, sin necesidad de tarjeta de crédito.",
+                    "en": "Ideal for individuals who want to get started with essential features — free forever.",
+                    "es": "Ideal para personas que quieren comenzar con las funciones esenciales — gratis para siempre.",
                 },
                 monthly_price=0,
                 yearly_price=0,
