@@ -1,11 +1,10 @@
-import logging
 from unittest.mock import patch
 
-from rest_framework import status
-from rest_framework.test import APITestCase
-from rest_framework.authtoken.models import Token
 from django.urls import reverse
 from django.utils import timezone
+from rest_framework import status
+from rest_framework.authtoken.models import Token
+from rest_framework.test import APITestCase
 
 from apps.cloud_storage.factories.cloud_file_factory import CloudFileFactory
 from apps.cloud_storage.services import S3Service
