@@ -25,12 +25,12 @@ def send_invoice_payment_failed_email(user_id: str) -> Optional[bool]:
             subject = _("Payment Failed – Update Your Payment Method")
             to_email = [user.email]
 
-            subscription = user.subscriptions.filter(status=SubscriptionStatusChoices.INACTIVE.value).first()
+            subscription = user.subscriptions.filter(status=SubscriptionStatusChoices.PAST_DUE.value).first()
             if not subscription:
                 logger.info(f"No active subscription found for user {user.email}. Email not sent.")
                 return
 
-            deadline = subscription.end_date + timedelta(days=14)
+            deadline = subscription.end_date + timedelta(days=7)
             context = {
                 "user": user,
                 "attempts": 2,

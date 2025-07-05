@@ -22,10 +22,10 @@ class SendInvoicePaymentFailedEmailTests(TestCase):
         self.user.profile.save()
 
     @patch("apps.payments.tasks.send_payment_failed_email.EmailMultiAlternatives.send")
-    def test_sends_email_when_user_has_inactive_subscription(self, mock_send):
+    def test_sends_email_when_user_has_past_due_subscription(self, mock_send):
         SubscriptionFactory(
             user=self.user,
-            status=SubscriptionStatusChoices.INACTIVE.value,
+            status=SubscriptionStatusChoices.PAST_DUE.value,
             end_date=timezone.now().date()
         )
 
@@ -66,7 +66,7 @@ class SendInvoicePaymentFailedEmailTests(TestCase):
     def test_logs_error_when_email_send_fails(self, mock_logger, mock_send):
         SubscriptionFactory(
             user=self.user,
-            status=SubscriptionStatusChoices.INACTIVE.value,
+            status=SubscriptionStatusChoices.PAST_DUE.value,
             end_date=timezone.now().date()
         )
 
@@ -83,7 +83,7 @@ class SendInvoicePaymentFailedEmailTests(TestCase):
 
         SubscriptionFactory(
             user=self.user,
-            status=SubscriptionStatusChoices.INACTIVE.value,
+            status=SubscriptionStatusChoices.PAST_DUE.value,
             end_date=timezone.now().date()
         )
 
