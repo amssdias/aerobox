@@ -31,7 +31,7 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
 
-        if self.action == "deleted_files":
+        if self.action in ["deleted_files", "restore_deleted_file"]:
             return CloudFile.deleted.filter(user=user).order_by("id")
 
         if self.action == "update":
@@ -134,3 +134,18 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+    @extend_schema(request=None)
+    @action(detail=True, methods=["patch"], url_path="restore")
+    def restore_deleted_file(self, request, pk=None):
+        """
+        Restore a deleted file (sets is_deleted=False)
+        """
+        file = self.get_object()
+
+        if not file.deleted_at:
+            return Response({"detail": _("File is not deleted.")}, status=status.HTTP_400_BAD_REQUEST)
+
+        file.deleted_at = None
+        file.save(update_fields=["deleted_at"])
+        return Response({"id": file.id, "restored": True})
