@@ -83,3 +83,18 @@ class S3Service:
         except NoCredentialsError:
             logger.critical("AWS credentials not found.")
             return None
+
+    def delete_file_from_s3(self, object_name, bucket_name=settings.AWS_STORAGE_BUCKET_NAME):
+        try:
+            self.s3_client.delete_object(Bucket=bucket_name, Key=object_name)
+        except Exception as e:
+            logger.error(
+                "Failed to delete file from S3.",
+                extra={
+                    "bucket_name": bucket_name,
+                    "object_key": object_name,
+                    "error": str(e),
+                }
+            )
+
+            raise Exception("Failed to permanently delete file.")
