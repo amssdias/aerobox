@@ -31,7 +31,7 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
 
-        if self.action in ["deleted_files", "restore_deleted_file"]:
+        if self.action in ["deleted_files", "restore_deleted_file", "permanent_delete_file"]:
             return CloudFile.deleted.filter(user=user).order_by("id")
 
         if self.action == "update":
@@ -149,3 +149,18 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
         file.deleted_at = None
         file.save(update_fields=["deleted_at"])
         return Response({"id": file.id, "restored": True})
+
+    @extend_schema(request=None)
+    @action(detail=True, methods=["delete"], url_path="permanent-delete")
+    def permanent_delete_file(self, request, pk=None):
+        """
+        Permanent delete a file in BD and AWS S3
+        """
+        file = self.get_object()
+
+        s3_service = S3Service()
+        s3_service.delete_file_from_s3(object_name=file.s3_key)
+
+        file.permanent_delete()
+
+        return Response({"message": _("File permanently deleted.")}, status=status.HTTP_204_NO_CONTENT)
