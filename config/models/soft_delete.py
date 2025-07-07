@@ -11,7 +11,10 @@ class SoftDeleteModel(models.Model):
     def delete(self, *args, **kwargs):
         """Override delete() to perform a soft delete."""
         self.deleted_at = now()
-        self.save()
+        self.save(update_fields=["deleted_at"])
+
+    def permanent_delete(self, *args, **kwargs):
+        super(SoftDeleteModel, self).delete(*args, **kwargs)
 
     def restore(self):
         """Restore a soft-deleted instance."""
