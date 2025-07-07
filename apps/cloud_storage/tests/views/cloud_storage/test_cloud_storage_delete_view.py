@@ -13,7 +13,7 @@ from apps.users.factories.user_factory import UserFactory
 User = get_user_model()
 
 
-class CloudStorageViewSetTests(APITestCase):
+class CloudStorageDeleteViewSetTests(APITestCase):
 
     @classmethod
     def setUpTestData(cls):
