@@ -14,6 +14,7 @@ from apps.cloud_storage.models import CloudFile
 from apps.cloud_storage.serializers import CloudFilesSerializer
 from apps.cloud_storage.serializers.cloud_files import CloudFileMetaPatchSerializer, CloudFileUpdateSerializer
 from apps.cloud_storage.services import S3Service
+from apps.cloud_storage.tasks.delete_all_files import delete_all_files_from_user
 from apps.cloud_storage.utils.hash_utils import generate_unique_hash
 from apps.cloud_storage.utils.path_utils import build_s3_path
 from config.api_docs.openapi_schemas import RESPONSE_SCHEMA_GET_PRESIGNED_URL
@@ -31,7 +32,12 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
 
-        if self.action in ["deleted_files", "restore_deleted_file", "permanent_delete_file"]:
+        if self.action in [
+            "deleted_files",
+            "restore_deleted_file",
+            "permanent_delete_file",
+            "permanent_delete_all_files",
+        ]:
             return CloudFile.deleted.filter(user=user).order_by("id")
 
         if self.action == "update":
@@ -164,3 +170,28 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
         file.permanent_delete()
 
         return Response({"message": _("File permanently deleted.")}, status=status.HTTP_204_NO_CONTENT)
+
+    @extend_schema(request=None)
+    @action(detail=False, methods=["delete"], url_path="permanent-delete-files")
+    def permanent_delete_all_files(self, request, pk=None):
+        """
+        Permanent delete all files in BD and AWS S3
+        """
+
+        all_deleted_files = self.get_queryset()
+        if not all_deleted_files:
+            return Response(
+                {"message": _("No files found in the recycle bin to delete.")},
+                status=status.HTTP_200_OK
+            )
+
+        all_deleted_files_count = all_deleted_files.count()
+        delete_all_files_from_user(self.request.user.id)
+
+        return Response(
+            {
+                "message": _("All files in the recycle bin have been permanently deleted."),
+                "deleted_count": all_deleted_files_count,
+            },
+            status=status.HTTP_204_NO_CONTENT
+        )
