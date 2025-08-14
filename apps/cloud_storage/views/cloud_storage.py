@@ -14,7 +14,7 @@ from apps.cloud_storage.models import CloudFile
 from apps.cloud_storage.serializers import CloudFilesSerializer
 from apps.cloud_storage.serializers.cloud_files import CloudFileMetaPatchSerializer, CloudFileUpdateSerializer
 from apps.cloud_storage.services import S3Service
-from apps.cloud_storage.tasks.delete_all_files import delete_all_files_from_user
+from apps.cloud_storage.tasks.delete_files import clear_all_deleted_files_from_user
 from apps.cloud_storage.utils.hash_utils import generate_unique_hash
 from apps.cloud_storage.utils.path_utils import build_s3_path
 from config.api_docs.openapi_schemas import RESPONSE_SCHEMA_GET_PRESIGNED_URL
@@ -186,7 +186,7 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
             )
 
         all_deleted_files_count = all_deleted_files.count()
-        delete_all_files_from_user(self.request.user.id)
+        clear_all_deleted_files_from_user.delay(self.request.user.id)
 
         return Response(
             {

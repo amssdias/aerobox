@@ -10,12 +10,11 @@ logger = logging.getLogger("aerobox")
 
 
 @shared_task
-def delete_all_files_from_user(user_id):
+def clear_all_deleted_files_from_user(user_id):
     deleted_files = CloudFile.deleted.filter(user_id=user_id)
 
     s3_service = S3Service()
 
-    deleted_count = 0
     failed_s3_keys = []
 
     for deleted_file in deleted_files:

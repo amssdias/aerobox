@@ -67,7 +67,7 @@ class CloudStoragePermanentDeleteAllFilesViewSetTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    @patch("apps.cloud_storage.views.cloud_storage.delete_all_files_from_user")
+    @patch("apps.cloud_storage.views.cloud_storage.clear_all_deleted_files_from_user.delay")
     def test_delete_files_task_is_called_to_delete_files(self, mock_delete_all_files_from_user):
         self.client.delete(self.url)
 
