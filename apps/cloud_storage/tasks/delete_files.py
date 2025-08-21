@@ -1,20 +1,27 @@
 import logging
+from datetime import timedelta
 
-from celery import shared_task
+from celery import shared_task, group
 from django.db import transaction
+from django.utils.timezone import now
 
 from apps.cloud_storage.models import CloudFile
 from apps.cloud_storage.services import S3Service
+from apps.subscriptions.choices.subscription_choices import SubscriptionStatusChoices
+from apps.subscriptions.models import Subscription
 
 logger = logging.getLogger("aerobox")
 
 
 @shared_task
-def clear_all_deleted_files_from_user(user_id):
+def clear_all_deleted_files_from_user(user_id, older_than_days=None):
     deleted_files = CloudFile.deleted.filter(user_id=user_id)
 
-    s3_service = S3Service()
+    if older_than_days is not None:
+        threshold_date = now() - timedelta(days=older_than_days)
+        deleted_files = deleted_files.filter(deleted_at__lte=threshold_date)
 
+    s3_service = S3Service()
     failed_s3_keys = []
 
     for deleted_file in deleted_files:
@@ -50,3 +57,26 @@ def clear_all_deleted_files_from_user(user_id):
             user_id,
             extra={"failed_keys": failed_s3_keys},
         )
+
+
+@shared_task
+def delete_old_files():
+    """
+    Find all users with a free active subscription and dispatch
+    a parallel task to clean their soft-deleted files older than 30 days.
+    """
+    free_user_ids = (
+        Subscription.objects
+        .filter(plan__is_free=True, status=SubscriptionStatusChoices.ACTIVE.value)
+        .values_list("user_id", flat=True)
+        .distinct()
+    )
+
+    logger.info(
+        "Starting delete_old_files task: %s user(s) with free active subscriptions found.",
+        free_user_ids.count(),
+        extra={"user_ids": list(free_user_ids)},
+    )
+
+    job = group(clear_all_deleted_files_from_user.s(user_id, 30) for user_id in free_user_ids)
+    job.apply_async()

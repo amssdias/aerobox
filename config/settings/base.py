@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 import os
 from pathlib import Path
 
+from celery.schedules import crontab
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -218,6 +219,13 @@ CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 CELERY_TIMEZONE = "UTC"
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
+
+CELERY_BEAT_SCHEDULE = {
+    "delete_old_files": {
+        "task": "apps.cloud_storage.tasks.delete_files.delete_old_files",
+        "schedule": crontab(hour="02", minute="00"),
+    },
+}
 
 FRONTEND_DOMAIN = os.environ.get("FRONTEND_DOMAIN", "")
 
