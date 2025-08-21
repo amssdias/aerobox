@@ -3,6 +3,9 @@
 [![Django](https://img.shields.io/badge/Django-4.2-092E20?style=for-the-badge&logo=django)](https://www.djangoproject.com/)
 [![DRF](https://img.shields.io/badge/DRF-3.15-E83E3E?style=for-the-badge&logo=django)](https://www.django-rest-framework.org/)
 
+[![Celery](https://img.shields.io/badge/Celery-4caf50?logo=celery&logoColor=white)](https://docs.celeryproject.org/)
+![Django Translations](https://img.shields.io/badge/Django--Translations-i18n-important?logo=django&color=092E20)
+
 ![Python Badge](https://img.shields.io/badge/Python-3.9-blue?logo=python)
 [![Docker](https://badgen.net/badge/icon/docker?icon=docker&label)](https://https://docker.com/)
 ![AWS S3](https://img.shields.io/badge/AWS_S3-FF9900?style=flat&logo=amazon-aws&logoColor=white)
