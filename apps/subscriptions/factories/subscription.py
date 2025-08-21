@@ -39,3 +39,19 @@ class SubscriptionFreePlanFactory(SubscriptionFactory):
         }
     )[0])
     stripe_subscription_id = None
+
+
+class SubscriptionProPlanFactory(SubscriptionFactory):
+    plan = factory.LazyFunction(lambda: Plan.objects.get_or_create(
+        is_free=False,
+        name__en="Pro",
+        defaults={
+            "name": {"en": "Pro Plan"},
+            "description": {"en": "Pro plan description"},
+            "monthly_price": 4.99,
+            "yearly_price": 0,
+            "stripe_price_id": None,
+            "is_active": True,
+        }
+    )[0])
+    stripe_subscription_id = None

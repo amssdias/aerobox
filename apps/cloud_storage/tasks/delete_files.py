@@ -78,5 +78,6 @@ def delete_old_files():
         extra={"user_ids": list(free_user_ids)},
     )
 
-    job = group(clear_all_deleted_files_from_user.s(user_id, 30) for user_id in free_user_ids)
+    job_args = [clear_all_deleted_files_from_user.s(user_id, 30) for user_id in free_user_ids]
+    job = group(job_args)
     job.apply_async()
