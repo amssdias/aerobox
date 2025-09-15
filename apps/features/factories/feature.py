@@ -19,3 +19,11 @@ class FeatureFactory(factory.django.DjangoModelFactory):
     }
     metadata = factory.LazyFunction(dict)
     is_active = True
+
+
+class FeatureCloudStorageFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Feature
+        django_get_or_create = ("code",)
+
+    code = FeatureCodeChoices.CLOUD_STORAGE.value

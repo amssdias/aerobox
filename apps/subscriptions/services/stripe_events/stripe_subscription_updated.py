@@ -7,7 +7,7 @@ from config.services.stripe_services.stripe_events.subscription_mixin import Str
 logger = logging.getLogger("aerobox")
 
 
-class SubscriptionUpdateddHandler(StripeEventHandler, StripeSubscriptionMixin):
+class SubscriptionUpdatedHandler(StripeEventHandler, StripeSubscriptionMixin):
     """
     Handles `customer.subscription.updated` event.
     """

@@ -21,3 +21,25 @@ class PlanFreeFactory(PlanFactory):
     monthly_price = 0
     yearly_price = 0
     stripe_price_id = None
+
+
+class PlanProFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Plan
+        django_get_or_create = ("name",)
+
+    name = {
+        "en": "Pro",
+        "es": "Profesional",
+    }
+
+
+class PlaEnterpriseFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Plan
+        django_get_or_create = ("name",)
+
+    name = {
+        "en": "Enterprise",
+        "es": "Empresas",
+    }

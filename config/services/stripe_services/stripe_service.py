@@ -12,7 +12,7 @@ from apps.subscriptions.services.stripe_events.stripe_subscription_created impor
 from apps.subscriptions.services.stripe_events.stripe_subscription_deleted import (
     SubscriptionDeleteddHandler,
 )
-from apps.subscriptions.services.stripe_events.stripe_subscription_updated import SubscriptionUpdateddHandler
+from apps.subscriptions.services.stripe_events.stripe_subscription_updated import SubscriptionUpdatedHandler
 
 logger = logging.getLogger("aerobox")
 
@@ -66,7 +66,7 @@ class StripeService:
         """
         handlers = {
             "customer.subscription.created": SubscriptionCreateddHandler,
-            "customer.subscription.updated": SubscriptionUpdateddHandler,
+            "customer.subscription.updated": SubscriptionUpdatedHandler,
             "customer.subscription.deleted": SubscriptionDeleteddHandler,
             "invoice.created": InvoiceCreatedHandler,
             "invoice.paid": InvoicePaidHandler,
