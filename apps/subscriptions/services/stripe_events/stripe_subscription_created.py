@@ -60,6 +60,11 @@ class SubscriptionCreateddHandler(StripeEventHandler, StripeSubscriptionMixin):
             logger.error(
                 "No plan found for the given Stripe price ID.", extra={"stripe_price_id": plan_stripe_price_id}
             )
+        except Plan.MultipleObjectsReturned:
+            logger.error(
+                "Multiple plans found with the same Stripe price ID. Expected only one.",
+                extra={"stripe_price_id": plan_stripe_price_id}
+            )
 
         return None
 

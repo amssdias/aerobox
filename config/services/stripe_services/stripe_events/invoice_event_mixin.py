@@ -75,12 +75,13 @@ class StripeInvoiceMixin:
 
     @staticmethod
     def get_payment_method(stripe_invoice):
-        payment_intent_id = stripe_invoice.payments.get("data")[0].get("payment").get("payment_intent")
+        payments_data = stripe_invoice.payments.get("data")
+        payment_intent_id = payments_data[0].get("payment", {}).get("payment_intent") if payments_data else None
 
         payment_intent = get_payment_intent(payment_intent_id)
         if not payment_intent:
             logger.error(
-                f"Failed to retrieve PaymentIntent with ID: {payment_intent_id}"
+                f"Failed to retrieve PaymentIntent with ID: {payment_intent_id}. Getting default payment method"
             )
             return None
 

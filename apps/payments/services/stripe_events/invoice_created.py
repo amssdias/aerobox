@@ -63,7 +63,7 @@ class InvoiceCreatedHandler(
             missing_fields.append("user")
         if not subscription:
             missing_fields.append("subscription")
-        if not amount_due:
+        if amount_due is None:
             missing_fields.append("amount_due")
 
         if missing_fields:
