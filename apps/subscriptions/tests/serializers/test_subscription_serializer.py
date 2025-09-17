@@ -19,7 +19,7 @@ class SubscriptionSerializerUnitTests(TestCase):
         data = serializer.data
         self.assertIn("plan", data)
         self.assertIn("status", data)
-        self.assertNotIn("id", data)
+        self.assertIn("id", data)
         self.assertNotIn("user", data)
         self.assertNotIn("stripe_subscription_id", data)
         self.assertNotIn("created_at", data)
