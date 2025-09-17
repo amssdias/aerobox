@@ -24,7 +24,7 @@ class SubscriptionUpdatedHandler(StripeEventHandler, StripeSubscriptionMixin):
         if plan_id:
             subscription = self.get_subscription(stripe_subscription_id=subscription_id)
 
-            if subscription.plan.stripe_price_id == plan_id:
+            if subscription and subscription.plan.stripe_price_id == plan_id:
                 self.change_plan_subscription(subscription)
 
     def change_plan_subscription(self, subscription):
