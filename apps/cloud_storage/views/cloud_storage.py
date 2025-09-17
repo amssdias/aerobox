@@ -3,7 +3,7 @@ import logging
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import extend_schema
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, filters
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -11,6 +11,7 @@ from rest_framework.response import Response
 
 from apps.cloud_storage.exceptions import FileUploadError
 from apps.cloud_storage.models import CloudFile
+from apps.cloud_storage.pagination import CloudFilesPagination
 from apps.cloud_storage.serializers import CloudFilesSerializer
 from apps.cloud_storage.serializers.cloud_files import CloudFileMetaPatchSerializer, CloudFileUpdateSerializer
 from apps.cloud_storage.services import S3Service
@@ -27,7 +28,11 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
     serializer_class = CloudFilesSerializer
-    queryset = CloudFile.not_deleted.all().order_by("id")
+    queryset = CloudFile.not_deleted.all()
+    filter_backends = [filters.OrderingFilter]
+    ordering_fields = ["file_name", "size", "content_type", "created_at"]
+    ordering = ["id"]
+    pagination_class = CloudFilesPagination
 
     def get_queryset(self):
         user = self.request.user
