@@ -1,7 +1,7 @@
 import logging
 
-from rest_framework import serializers
 from django.utils.translation import gettext_lazy as _
+from rest_framework import serializers
 
 from apps.payments.services.stripe_api import create_stripe_checkout_session
 from apps.subscriptions.choices.subscription_choices import SubscriptionBillingCycleChoices
@@ -16,7 +16,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Subscription
-        exclude = ("id", "user", "stripe_subscription_id", "created_at", "updated_at",)
+        exclude = ("user", "stripe_subscription_id", "created_at", "updated_at",)
 
 
 class CheckoutSubscriptionSerializer(serializers.Serializer):
