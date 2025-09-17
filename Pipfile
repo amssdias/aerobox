@@ -16,6 +16,7 @@ celery = "*"
 redis = "*"
 gunicorn = "*"
 stripe = "*"
+django-filter = "*"
 
 [dev-packages]
 black = "*"
