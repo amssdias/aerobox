@@ -9,7 +9,7 @@ from apps.subscriptions.choices.subscription_choices import SubscriptionStatusCh
 from apps.subscriptions.factories.plan_factory import PlanFactory
 from apps.subscriptions.factories.subscription import SubscriptionFactory
 from apps.subscriptions.models import Subscription
-from apps.subscriptions.services.stripe_events.stripe_subscription_created import SubscriptionCreateddHandler
+from apps.subscriptions.services.stripe_events.stripe_subscription_created import SubscriptionCreatedHandler
 from apps.users.factories.user_factory import UserFactory
 
 
@@ -44,7 +44,7 @@ class SubscriptionCreateddHandlerTest(TestCase):
         }
         self.subscription_mock = MagicMock(**self.data["data"]["object"])
         self.subscription_mock.get.return_value = self.data["data"]["object"]["items"]
-        self.handler = SubscriptionCreateddHandler(self.data)
+        self.handler = SubscriptionCreatedHandler(self.data)
 
     def test_get_user_success(self):
         user = self.handler.get_user(stripe_customer_id=self.user.profile.stripe_customer_id)
@@ -148,7 +148,7 @@ class SubscriptionCreateddHandlerTest(TestCase):
         self.assertEqual(Subscription.objects.all().count(), n_subscriptions)
 
     @patch("stripe.Webhook.construct_event")
-    @patch("apps.subscriptions.services.stripe_events.stripe_subscription_created.SubscriptionCreateddHandler.process")
+    @patch("apps.subscriptions.services.stripe_events.stripe_subscription_created.SubscriptionCreatedHandler.process")
     def test_webhook_subscription_created_success(self, mock_process, mock_construct_event):
         mock_construct_event.return_value = {"type": "customer.subscription.created", "data": {"object": self.data}}
         mock_process.return_value = None

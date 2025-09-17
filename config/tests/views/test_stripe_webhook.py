@@ -5,7 +5,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 
-class SubscriptionCreateddHandlerTest(TestCase):
+class SubscriptionCreatedHandlerTest(TestCase):
 
     @classmethod
     def setUpTestData(cls):

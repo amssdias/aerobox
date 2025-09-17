@@ -174,7 +174,7 @@ class InvoiceCreatedHandlerTest(TestCase):
 
         mock_logger.assert_called_once()
 
-    @patch("apps.payments.services.stripe_events.invoice_created.SubscriptionCreateddHandler")
+    @patch("apps.payments.services.stripe_events.invoice_created.SubscriptionCreatedHandler")
     def test_invoice_creation_with_missing_subscription(self, mock_handler_class):
         mock_handler_instance = MagicMock()
         mock_handler_class.return_value = mock_handler_instance

@@ -4,7 +4,7 @@ from django.db import transaction, IntegrityError
 
 from apps.payments.choices.payment_choices import PaymentStatusChoices
 from apps.payments.models import Payment
-from apps.subscriptions.services.stripe_events.stripe_subscription_created import SubscriptionCreateddHandler
+from apps.subscriptions.services.stripe_events.stripe_subscription_created import SubscriptionCreatedHandler
 from config.services.stripe_services.stripe_events.base_event import StripeEventHandler
 from config.services.stripe_services.stripe_events.invoice_event_mixin import StripeInvoiceMixin
 from config.services.stripe_services.stripe_events.subscription_mixin import StripeSubscriptionMixin
@@ -55,7 +55,7 @@ class InvoiceCreatedHandler(
 
     def get_or_create_subscription(self, stripe_subscription_id):
         subscription = self.get_subscription(stripe_subscription_id)
-        return subscription or SubscriptionCreateddHandler(event=self.event).create_subscription(stripe_subscription_id)
+        return subscription or SubscriptionCreatedHandler(event=self.event).create_subscription(stripe_subscription_id)
 
     def is_valid_payment(self, user, subscription, stripe_invoice_id, amount_due):
         missing_fields = []

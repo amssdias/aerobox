@@ -7,7 +7,7 @@ from apps.payments.services.stripe_events.invoice_created import InvoiceCreatedH
 from apps.payments.services.stripe_events.invoice_paid import InvoicePaidHandler
 from apps.payments.services.stripe_events.invoice_payment_failed import InvoicePaymentFailedHandler
 from apps.subscriptions.services.stripe_events.stripe_subscription_created import (
-    SubscriptionCreateddHandler,
+    SubscriptionCreatedHandler,
 )
 from apps.subscriptions.services.stripe_events.stripe_subscription_deleted import (
     SubscriptionDeleteddHandler,
@@ -65,7 +65,7 @@ class StripeService:
         Returns the correct event handler based on the event type.
         """
         handlers = {
-            "customer.subscription.created": SubscriptionCreateddHandler,
+            "customer.subscription.created": SubscriptionCreatedHandler,
             "customer.subscription.updated": SubscriptionUpdatedHandler,
             "customer.subscription.deleted": SubscriptionDeleteddHandler,
             "invoice.created": InvoiceCreatedHandler,

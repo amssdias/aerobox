@@ -1,8 +1,9 @@
-from django.test import SimpleTestCase
 from unittest.mock import patch, MagicMock
 
+from django.test import SimpleTestCase
+
 from apps.subscriptions.services.stripe_events.stripe_subscription_created import (
-    SubscriptionCreateddHandler,
+    SubscriptionCreatedHandler,
 )
 from config.services.stripe_services.stripe_service import StripeService
 
@@ -15,7 +16,7 @@ class StripeServiceTest(SimpleTestCase):
         self.event_customer_subscription_deleted = "customer.subscription.deleted"
 
     @patch(
-        "apps.subscriptions.services.stripe_events.stripe_subscription_created.SubscriptionCreateddHandler.process"
+        "apps.subscriptions.services.stripe_events.stripe_subscription_created.SubscriptionCreatedHandler.process"
     )
     def test_process_webhook_event_subscription_created(self, mock_process):
         event = {
@@ -54,7 +55,7 @@ class StripeServiceTest(SimpleTestCase):
             self.event_customer_subscription_created, event
         )
 
-        self.assertIsInstance(handler, SubscriptionCreateddHandler)
+        self.assertIsInstance(handler, SubscriptionCreatedHandler)
 
     def test_get_handler_invalid_event(self):
         event = {"type": "invalid.event", "data": {"object": {"id": "inv_789"}}}
