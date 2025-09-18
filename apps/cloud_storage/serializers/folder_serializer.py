@@ -25,11 +25,14 @@ class FolderSerializer(serializers.ModelSerializer):
         required=False,
         allow_null=True
     )
+    subfolders_count = serializers.SerializerMethodField()
+    files_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Folder
-        fields = ["id", "name", "parent", "parent_id", "user", "created_at", "updated_at"]
-        read_only_fields = ["id", "user", "parent", "created_at", "updated_at", ]
+        fields = ["id", "name", "parent", "parent_id", "user", "created_at", "updated_at", "subfolders_count",
+                  "files_count"]
+        read_only_fields = ["id", "user", "parent", "created_at", "updated_at", "subfolders_count", "files_count"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -103,6 +106,11 @@ class FolderSerializer(serializers.ModelSerializer):
 
         return updated_folder
 
+    def get_subfolders_count(self, obj):
+        return obj.subfolders.all().count()
+
+    def get_files_count(self, obj):
+        return obj.files.all().count()
 
 class FolderDetailSerializer(serializers.ModelSerializer):
     parent = FolderParentSerializer(read_only=True)

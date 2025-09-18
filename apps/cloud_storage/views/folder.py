@@ -1,9 +1,12 @@
 from django.utils.translation import gettext_lazy as _
+from django_filters import rest_framework
 from drf_spectacular.utils import extend_schema, extend_schema_view
-from rest_framework import viewsets
+from rest_framework import viewsets, filters
+from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from apps.cloud_storage.filters.folder_filter import FolderFilter
 from apps.cloud_storage.models import Folder
 from apps.cloud_storage.serializers import FolderSerializer, FolderDetailSerializer
 
@@ -15,8 +18,13 @@ from apps.cloud_storage.serializers import FolderSerializer, FolderDetailSeriali
 class FolderViewSet(viewsets.ModelViewSet):
     queryset = Folder.objects.all()
     serializer_class = FolderSerializer
+    authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
     pagination_class = None
+    filter_backends = [filters.OrderingFilter, rest_framework.DjangoFilterBackend]
+    filterset_class = FolderFilter
+    ordering_fields = ["name"]
+    ordering = ["name"]
 
     def get_queryset(self):
         queryset = Folder.objects.filter(user=self.request.user)
