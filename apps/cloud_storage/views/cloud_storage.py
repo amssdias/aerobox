@@ -11,7 +11,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from apps.cloud_storage.exceptions import FileUploadError
-from apps.cloud_storage.filters import CloudFileFilter
+from apps.cloud_storage.filters.cloud_file_filter import CloudFileFilter
 from apps.cloud_storage.models import CloudFile
 from apps.cloud_storage.pagination import CloudFilesPagination
 from apps.cloud_storage.serializers import CloudFilesSerializer
