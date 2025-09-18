@@ -5,11 +5,13 @@ from django.test import TestCase, RequestFactory
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
+from apps.cloud_storage.factories.cloud_file_factory import CloudFileFactory
 from apps.cloud_storage.factories.folder_factory import FolderFactory
+from apps.cloud_storage.models import Folder
 from apps.cloud_storage.serializers import FolderParentSerializer
 from apps.cloud_storage.serializers import FolderSerializer
 from apps.subscriptions.factories.plan_factory import PlanFreeFactory
-from apps.subscriptions.factories.subscription import SubscriptionFactory
+from apps.subscriptions.factories.subscription import SubscriptionFactory, SubscriptionFreePlanFactory
 from apps.subscriptions.models import Plan
 from apps.users.factories.user_factory import UserFactory
 
@@ -48,12 +50,7 @@ class FolderSerializerTests(TestCase):
         cls.parent_folder = FolderFactory(name="Parent", user=cls.user)
 
         cls.plan = Plan.objects.get(is_free=True)
-        cls.subscription = SubscriptionFactory(
-            user=cls.user,
-            plan=cls.plan,
-            status="active",
-            end_date=timezone.now().date() + timedelta(days=30)
-        )
+        cls.subscription = SubscriptionFreePlanFactory(user=cls.user)
 
         cls.serializer = FolderSerializer
 
@@ -68,7 +65,9 @@ class FolderSerializerTests(TestCase):
 
         data = serializer.data
 
-        self.assertEqual(set(data.keys()), {"id", "name", "parent", "user", "created_at", "updated_at"})
+        self.assertEqual(set(data.keys()),
+                         {"id", "name", "parent", "user", "created_at", "updated_at", "subfolders_count",
+                          "files_count"})
         self.assertEqual(data["name"], "Child")
         self.assertEqual(data["parent"]["id"], self.parent_folder.id)
 
@@ -197,7 +196,7 @@ class FolderSerializerTests(TestCase):
 
     @patch("apps.cloud_storage.serializers.folder_serializer.update_folder_file_paths_task.delay")
     def test_update_name_triggers_path_update(self, mock_task):
-        serializer = FolderSerializer(
+        serializer = self.serializer(
             instance=self.parent_folder,
             data={"name": "Renamed"},
             context=self.get_context(),
@@ -212,7 +211,7 @@ class FolderSerializerTests(TestCase):
     @patch("apps.cloud_storage.serializers.folder_serializer.update_folder_file_paths_task.delay")
     def test_update_parent_triggers_path_update(self, mock_task):
         new_parent = FolderFactory(name="NewParent", user=self.user)
-        serializer = FolderSerializer(
+        serializer = self.serializer(
             instance=self.parent_folder,
             data={"parent_id": new_parent.id},
             context=self.get_context(),
@@ -228,7 +227,7 @@ class FolderSerializerTests(TestCase):
     def test_update_name_and_parent_triggers_path_update_once(self, mock_task):
         new_parent = FolderFactory(name="NP", user=self.user)
         data = {"name": "Combo", "parent_id": new_parent.id}
-        serializer = FolderSerializer(
+        serializer = self.serializer(
             instance=self.parent_folder,
             data=data,
             context=self.get_context(),
@@ -243,8 +242,28 @@ class FolderSerializerTests(TestCase):
 
     @patch("apps.cloud_storage.serializers.folder_serializer.update_folder_file_paths_task.delay")
     def test_partial_update_without_name_or_parent_does_not_trigger_task(self, mock_task):
-        serializer = FolderSerializer(instance=self.parent_folder, data={}, context=self.get_context(), partial=True)
+        serializer = self.serializer(instance=self.parent_folder, data={}, context=self.get_context(), partial=True)
         self.assertTrue(serializer.is_valid())
         serializer.save()
 
         mock_task.assert_not_called()
+
+    def test_get_subfolders_count(self):
+        FolderFactory(name="child 1", user=self.user, parent=self.parent_folder)
+        FolderFactory(name="child 2", user=self.user, parent=self.parent_folder)
+
+        serializer = self.serializer(Folder.objects.filter(parent__isnull=True, user=self.user), many=True,
+                                     context=self.get_context())
+
+        self.assertEqual(serializer.data[0].get("subfolders_count"), 2)
+        self.assertEqual(serializer.data[0].get("files_count"), 0)
+
+    def test_get_files_count(self):
+        CloudFileFactory(folder=self.parent_folder)
+        CloudFileFactory(folder=self.parent_folder)
+
+        serializer = self.serializer(Folder.objects.filter(parent__isnull=True, user=self.user), many=True,
+                                     context=self.get_context())
+
+        self.assertEqual(serializer.data[0].get("subfolders_count"), 0)
+        self.assertEqual(serializer.data[0].get("files_count"), 2)
