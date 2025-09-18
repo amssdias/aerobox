@@ -19,21 +19,28 @@ class SubscriptionUpdatedHandler(StripeEventHandler, StripeSubscriptionMixin):
         self.update_subscription(subscription_id, previous_attributes)
 
     def update_subscription(self, subscription_id, previous_attributes):
+        subscription = self.get_subscription(stripe_subscription_id=subscription_id)
+        stripe_subscription = self.get_stripe_subscription(
+            stripe_subscription_id=subscription.stripe_subscription_id) if subscription else None
+
         plan_id = previous_attributes and previous_attributes.get("plan", {}).get("id")
+        # Change from one subscription to another one
+        if plan_id and subscription and subscription.plan.stripe_price_id == plan_id:
+            self.change_plan_subscription(subscription, stripe_subscription)
 
-        if plan_id:
-            subscription = self.get_subscription(stripe_subscription_id=subscription_id)
+        if stripe_subscription and stripe_subscription.cancel_at_period_end:
+            self.cancel_subscription(subscription)
 
-            if subscription and subscription.plan.stripe_price_id == plan_id:
-                self.change_plan_subscription(subscription)
-
-    def change_plan_subscription(self, subscription):
-        stripe_subscription = self.get_stripe_subscription(stripe_subscription_id=subscription.stripe_subscription_id)
-
+    def change_plan_subscription(self, subscription, stripe_subscription):
         new_plan = self.get_plan(stripe_subscription.plan.get("id"))
         if new_plan:
             subscription.plan = new_plan
             subscription.save(update_fields=["plan"])
+
+    @staticmethod
+    def cancel_subscription(subscription):
+        subscription.is_recurring = False
+        subscription.save(update_fields=["is_recurring"])
 
     @staticmethod
     def get_plan(plan_stripe_price_id):
