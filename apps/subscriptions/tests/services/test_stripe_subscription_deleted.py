@@ -1,6 +1,7 @@
 from datetime import datetime
 from unittest.mock import patch, MagicMock
 
+from django.core import mail
 from django.test import TestCase
 
 from apps.payments.choices.payment_choices import PaymentStatusChoices
@@ -53,6 +54,7 @@ class SubscriptionDeletedHandlerTest(TestCase):
             self.subscription.end_date, datetime.utcfromtimestamp(1702592000).date()
         )
         self.assertEqual(self.free_subscription.status, SubscriptionStatusChoices.ACTIVE.value)
+        self.assertEqual(len(mail.outbox), 1)
 
     @patch("stripe.Subscription.retrieve")
     def test_process_no_ended_at(self, subscription_mock):

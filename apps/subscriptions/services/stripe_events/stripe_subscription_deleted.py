@@ -5,6 +5,7 @@ from apps.payments.choices.payment_choices import PaymentStatusChoices
 from apps.subscriptions.choices.subscription_choices import (
     SubscriptionStatusChoices,
 )
+from apps.subscriptions.tasks.send_subscription_cancelled_email import send_subscription_cancelled_email
 from config.services.stripe_services.stripe_events.base_event import StripeEventHandler
 from config.services.stripe_services.stripe_events.subscription_mixin import StripeSubscriptionMixin
 
@@ -32,6 +33,7 @@ class SubscriptionDeleteddHandler(StripeEventHandler, StripeSubscriptionMixin):
         self.update_subscription(subscription, ended_at)
         self.reactivate_free_subscription_if_exists(subscription)
         self.cancel_pending_payments(subscription)
+        self.send_subscription_cancelled_email(subscription.user)
 
     @staticmethod
     def update_subscription(subscription, ended_at):
@@ -81,3 +83,7 @@ class SubscriptionDeleteddHandler(StripeEventHandler, StripeSubscriptionMixin):
             logger.info(
                 f"Canceled {pending_payments_counter} pending payments for subscription ID: {subscription.id}"
             )
+
+    @staticmethod
+    def send_subscription_cancelled_email(user):
+        send_subscription_cancelled_email.delay(user.id)

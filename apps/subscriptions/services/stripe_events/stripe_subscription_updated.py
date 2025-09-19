@@ -1,6 +1,7 @@
 import logging
 
 from apps.subscriptions.models import Plan
+from apps.subscriptions.tasks.send_scheduled_cancellation_email import send_scheduled_cancellation_email
 from config.services.stripe_services.stripe_events.base_event import StripeEventHandler
 from config.services.stripe_services.stripe_events.subscription_mixin import StripeSubscriptionMixin
 
@@ -37,10 +38,11 @@ class SubscriptionUpdatedHandler(StripeEventHandler, StripeSubscriptionMixin):
             subscription.plan = new_plan
             subscription.save(update_fields=["plan"])
 
-    @staticmethod
-    def cancel_subscription(subscription):
+    def cancel_subscription(self, subscription):
         subscription.is_recurring = False
         subscription.save(update_fields=["is_recurring"])
+
+        self.send_scheduled_cancellation_email(subscription.user)
 
     @staticmethod
     def get_plan(plan_stripe_price_id):
@@ -58,3 +60,9 @@ class SubscriptionUpdatedHandler(StripeEventHandler, StripeSubscriptionMixin):
             )
 
         return None
+
+    @staticmethod
+    def send_scheduled_cancellation_email(user):
+        send_scheduled_cancellation_email.delay(
+            user_id=user.id,
+        )

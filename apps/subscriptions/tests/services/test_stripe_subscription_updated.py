@@ -1,5 +1,6 @@
 from unittest.mock import patch, MagicMock
 
+from django.core import mail
 from django.test import TestCase
 
 from apps.subscriptions.factories.plan_factory import PlaEnterpriseFactory, PlanProFactory
@@ -44,12 +45,12 @@ class SubscriptionUpdatedHandlerTest(TestCase):
 
     @patch.object(SubscriptionUpdatedHandler, "change_plan_subscription")
     @patch("stripe.Subscription.retrieve")
-    @patch.object(SubscriptionUpdatedHandler, "get_subscription")
-    def test_update_subscription_no_previous_plan_does_nothing(self, mock_get_sub, mock_stripe_sub_retrieve,
+    def test_update_subscription_no_previous_plan_does_nothing(self, mock_stripe_sub_retrieve,
                                                                mock_change):
-        self.handler.update_subscription(subscription_id="sub_123", previous_attributes={})
+        mock_stripe_sub_retrieve.return_value = False
+        self.handler.update_subscription(subscription_id=self.subscription.stripe_subscription_id,
+                                         previous_attributes={})
 
-        mock_get_sub.assert_called_once()
         mock_stripe_sub_retrieve.assert_called_once()
         mock_change.assert_not_called()
 
@@ -140,3 +141,4 @@ class SubscriptionUpdatedHandlerTest(TestCase):
 
         self.subscription.refresh_from_db()
         self.assertFalse(self.subscription.is_recurring)
+        self.assertEqual(len(mail.outbox), 1)
