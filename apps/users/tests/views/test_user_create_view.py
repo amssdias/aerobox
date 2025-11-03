@@ -64,7 +64,7 @@ class UserCreateViewTestCase(APITestCase):
 
     def test_user_create_get_not_allowed(self):
         response = self.client.get(self.url)
-        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_create_user_with_missing_data(self):
         incomplete_data = {"username": "incompleteuser"}
