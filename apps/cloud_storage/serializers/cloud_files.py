@@ -8,6 +8,8 @@ from rest_framework.exceptions import NotFound
 from apps.cloud_storage.models import CloudFile, Folder
 from apps.cloud_storage.services import S3Service
 from apps.cloud_storage.utils.path_utils import build_object_path
+from apps.cloud_storage.utils.size_utils import get_user_used_bytes
+from apps.subscriptions.choices.subscription_choices import SubscriptionStatusChoices
 
 logger = logging.getLogger("aerobox")
 
@@ -69,6 +71,36 @@ class CloudFilesSerializer(serializers.ModelSerializer):
                 _("You don’t have permission to upload files to this folder. Please select one of your own folders.")
             )
         return folder
+
+    def validate_size(self, value):
+        """
+        Validate that the user has enough available storage space
+        for the file being uploaded, based on their target plan.
+        """
+
+        request = self.context.get("request")
+        user = getattr(request, "user", None)
+        if not user or not user.is_authenticated:
+            raise serializers.ValidationError(_("Invalid context: user not provided or not authenticated."))
+
+        subscription = user.subscriptions.filter(status=SubscriptionStatusChoices.ACTIVE.value).first()
+        if not subscription:
+            raise serializers.ValidationError(_("No active subscription found for this user."))
+
+        plan = subscription.plan
+        if not plan:
+            raise serializers.ValidationError(_("Invalid context: no plan associated with the active subscription."))
+
+        limit_bytes = plan.max_storage_bytes
+        used_bytes = get_user_used_bytes(user)
+
+        # Check against plan limit
+        if limit_bytes is not None and (used_bytes + value > limit_bytes):
+            raise serializers.ValidationError(
+                f"Upload exceeds your plan’s storage limit."
+            )
+
+        return value
 
     def validate(self, data):
         user = self.context["request"].user

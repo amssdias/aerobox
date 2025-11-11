@@ -1,10 +1,13 @@
 from unittest.mock import Mock, patch
 
 from django.test import TestCase
+from rest_framework.exceptions import ValidationError
 
 from apps.cloud_storage.factories.cloud_file_factory import CloudFileFactory
 from apps.cloud_storage.factories.folder_factory import FolderFactory
 from apps.cloud_storage.serializers import CloudFilesSerializer
+from apps.subscriptions.choices.subscription_choices import SubscriptionStatusChoices
+from apps.subscriptions.factories.subscription import SubscriptionFreePlanFactory
 from apps.users.factories.user_factory import UserFactory
 
 
@@ -14,6 +17,7 @@ class CloudFilesSerializerTests(TestCase):
     def setUpTestData(cls):
         cls.serializer = CloudFilesSerializer
         cls.user = UserFactory(username="testuser")
+        cls.subscription = SubscriptionFreePlanFactory(user=cls.user)
         cls.request = Mock()
         cls.request.user = cls.user
         cls.context = {"request": cls.request}
@@ -122,7 +126,7 @@ class CloudFilesSerializerTests(TestCase):
         }
         serializer = self.serializer(data=data, context=invalid_context)
         self.assertFalse(serializer.is_valid())
-        self.assertIn("non_field_errors", serializer.errors)
+        self.assertIn("size", serializer.errors)
 
     def test_incorrect_content_type(self):
         data = {
@@ -223,3 +227,47 @@ class CloudFilesSerializerTests(TestCase):
         }
         serializer = self.serializer(data=data, context=self.context)
         self.assertTrue(serializer.is_valid(), serializer.errors)
+
+    def test_validate_size_rejects_when_exceeds_limit(self):
+        size_in_bytes = 4_000 * 1000 * 1000
+        CloudFileFactory(user=self.user, size=size_in_bytes)
+
+        data = {
+            "file_name": "document.pdf",
+            "size": 2_000 * 1000 * 1000,
+            "content_type": "application/pdf",
+        }
+
+        serializer = self.serializer(data=data, context=self.context)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("size", serializer.errors)
+
+    def test_validate_size_allows_exactly_at_limit(self):
+        size_in_bytes = 4_000 * 1000 * 1000
+        CloudFileFactory(user=self.user, size=size_in_bytes)
+
+        data = {
+            "file_name": "document.pdf",
+            "size": 1_000 * 1000 * 1000,
+            "content_type": "application/pdf",
+        }
+
+        serializer = self.serializer(data=data, context=self.context)
+        self.assertTrue(serializer.is_valid())
+
+    def test_validate_size_raises_when_no_active_subscription(self):
+        subscription = self.user.subscriptions.filter(status=SubscriptionStatusChoices.ACTIVE.value).first()
+        subscription.status = SubscriptionStatusChoices.INACTIVE.value
+        subscription.save()
+
+        data = {
+            "file_name": "document.pdf",
+            "size": 1_000 * 1000 * 1000,
+            "content_type": "application/pdf",
+        }
+
+        serializer = self.serializer(data=data, context=self.context)
+
+        with self.assertRaises(ValidationError) as exc:
+            serializer.validate_size(1_000)
+        assert "no active subscription" in str(exc.exception).lower()

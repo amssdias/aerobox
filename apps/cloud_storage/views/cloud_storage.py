@@ -20,6 +20,8 @@ from apps.cloud_storage.services import S3Service
 from apps.cloud_storage.tasks.delete_files import clear_all_deleted_files_from_user
 from apps.cloud_storage.utils.hash_utils import generate_unique_hash
 from apps.cloud_storage.utils.path_utils import build_s3_path
+from apps.cloud_storage.utils.size_utils import get_user_max_available_bytes
+from apps.subscriptions.choices.subscription_choices import SubscriptionStatusChoices
 from config.api_docs.openapi_schemas import RESPONSE_SCHEMA_GET_PRESIGNED_URL
 
 logger = logging.getLogger("aerobox")
@@ -77,9 +79,18 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
             user_id=self.request.user.id,
             file_name=hashed_file_name,
         )
+        user = self.request.user
+        subscription = user.subscriptions.filter(status=SubscriptionStatusChoices.ACTIVE.value).first()
+        plan = subscription.plan
+        max_bytes = get_user_max_available_bytes(plan, self.request.user)
 
         try:
-            presigned_url = s3_service.generate_presigned_upload_url(object_name=file_path)
+            presigned_url = s3_service.create_presigned_post_url(
+                object_key=file_path,
+                user_id=self.request.user.id,
+                max_bytes=max_bytes,
+                content_type=serializer.validated_data.get("content_type"),
+            )
             if not presigned_url:
                 raise ValueError(_("Something went wrong while preparing your file upload. Please try again."))
         except Exception as e:
@@ -91,7 +102,10 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
         self.perform_create(serializer)
 
         return Response(
-            {"presigned-url": presigned_url, **serializer.data},
+            {
+                "presigned-url": presigned_url,
+                "file": serializer.data
+            },
             status=status.HTTP_201_CREATED
         )
 
