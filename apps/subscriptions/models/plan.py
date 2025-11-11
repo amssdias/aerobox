@@ -57,7 +57,7 @@ class Plan(Timestampable):
         if max_storage_mb is None:
             return None
 
-        BYTES_IN_MB = 1024 * 1024
+        BYTES_IN_MB = 1000 * 1000
         try:
             max_storage_mb = int(max_storage_mb)
             if max_storage_mb < 0:

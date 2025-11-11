@@ -7,7 +7,7 @@ from apps.features.factories.feature import FeatureCloudStorageFactory
 from apps.subscriptions.factories.plan_factory import PlanProFactory
 from apps.subscriptions.models import PlanFeature
 
-BYTES_IN_MB = 1024 * 1024
+BYTES_IN_MB = 1000 * 1000
 
 
 class PlanModelTests(TestCase):
