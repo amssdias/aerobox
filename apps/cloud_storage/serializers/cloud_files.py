@@ -91,6 +91,20 @@ class CloudFilesSerializer(serializers.ModelSerializer):
         if not plan:
             raise serializers.ValidationError(_("Invalid context: no plan associated with the active subscription."))
 
+        max_file_upload_size_bytes = plan.max_file_upload_size_bytes
+        if value > max_file_upload_size_bytes:
+            BYTES_IN_MB = 1_000_000
+            limit_mb = max_file_upload_size_bytes / BYTES_IN_MB
+            given_mb = value / BYTES_IN_MB
+
+            raise serializers.ValidationError(
+                _(
+                    "This file is too large. "
+                    "Your plan allows files up to %(limit).0f MB (this one is %(given).2f MB)."
+                ) % {"limit": limit_mb, "given": given_mb}
+            )
+        # TODO: TESTS
+
         limit_bytes = plan.max_storage_bytes
         used_bytes = get_user_used_bytes(user)
 

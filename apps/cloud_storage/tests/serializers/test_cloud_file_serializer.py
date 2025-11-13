@@ -182,19 +182,21 @@ class CloudFilesSerializerTests(TestCase):
         self.assertIn("content_type", serializer.errors)
 
     def test_large_file_size(self):
+        max_bytes = self.subscription.plan.max_file_upload_size_bytes
         data = {
             "file_name": "largefile.bin",
-            "size": 2**30,
+            "size": max_bytes + 1,
             "content_type": "application/octet-stream",
         }
         serializer = self.serializer(data=data, context=self.context)
-        self.assertTrue(serializer.is_valid(), serializer.errors)
+        self.assertFalse(serializer.is_valid())
 
-    def _test_extremely_large_file_size(self):
+    def test_extremely_large_file_size(self):
+        max_bytes = self.subscription.plan.max_file_upload_size_bytes
         data = {
             "file_name": "hugefile.bin",
             "path": "backups",
-            "size": 2**40,
+            "size": max_bytes + 1,
             "content_type": "application/octet-stream",
         }
         serializer = self.serializer(data=data, context=self.context)
@@ -228,13 +230,13 @@ class CloudFilesSerializerTests(TestCase):
         serializer = self.serializer(data=data, context=self.context)
         self.assertTrue(serializer.is_valid(), serializer.errors)
 
-    def test_validate_size_rejects_when_exceeds_limit(self):
-        size_in_bytes = 4_000 * 1000 * 1000
+    def test_validate_size_rejects_when_exceeds_storage_limit(self):
+        size_in_bytes = 5_000 * 1000 * 1000
         CloudFileFactory(user=self.user, size=size_in_bytes)
 
         data = {
             "file_name": "document.pdf",
-            "size": 2_000 * 1000 * 1000,
+            "size": 10 * 1000 * 1000,
             "content_type": "application/pdf",
         }
 
@@ -242,13 +244,28 @@ class CloudFilesSerializerTests(TestCase):
         self.assertFalse(serializer.is_valid())
         self.assertIn("size", serializer.errors)
 
-    def test_validate_size_allows_exactly_at_limit(self):
+    def test_validate_size_rejects_when_exceeds_file_size_limit(self):
         size_in_bytes = 4_000 * 1000 * 1000
         CloudFileFactory(user=self.user, size=size_in_bytes)
 
         data = {
             "file_name": "document.pdf",
-            "size": 1_000 * 1000 * 1000,
+            "size": 201 * 1000 * 1000,
+            "content_type": "application/pdf",
+        }
+
+        serializer = self.serializer(data=data, context=self.context)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("size", serializer.errors)
+
+
+    def test_validate_size_allows_exactly_at_limit(self):
+        size_in_bytes = 4_800 * 1000 * 1000
+        CloudFileFactory(user=self.user, size=size_in_bytes)
+
+        data = {
+            "file_name": "document.pdf",
+            "size": 2_00 * 1000 * 1000,
             "content_type": "application/pdf",
         }
 

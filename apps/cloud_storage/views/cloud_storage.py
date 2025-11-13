@@ -20,7 +20,6 @@ from apps.cloud_storage.services import S3Service
 from apps.cloud_storage.tasks.delete_files import clear_all_deleted_files_from_user
 from apps.cloud_storage.utils.hash_utils import generate_unique_hash
 from apps.cloud_storage.utils.path_utils import build_s3_path
-from apps.cloud_storage.utils.size_utils import get_user_max_available_bytes
 from apps.subscriptions.choices.subscription_choices import SubscriptionStatusChoices
 from config.api_docs.openapi_schemas import RESPONSE_SCHEMA_GET_PRESIGNED_URL
 
@@ -82,7 +81,7 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
         user = self.request.user
         subscription = user.subscriptions.filter(status=SubscriptionStatusChoices.ACTIVE.value).first()
         plan = subscription.plan
-        max_bytes = get_user_max_available_bytes(plan, self.request.user)
+        max_bytes = plan.max_file_upload_size_bytes
 
         try:
             presigned_url = s3_service.create_presigned_post_url(

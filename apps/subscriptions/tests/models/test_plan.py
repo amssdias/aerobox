@@ -89,7 +89,7 @@ class PlanModelTests(TestCase):
         plan_feature_max_storage_mb = self.plan_feature.metadata.get("max_storage_mb")
         max_storage_bytes = plan_feature_max_storage_mb * BYTES_IN_MB
 
-        result = self.plan_pro._compute_storage_limit_bytes()
+        result = self.plan_pro._compute_storage_limit_bytes("max_storage_mb")
 
         self.assertEqual(result, max_storage_bytes)
 
@@ -97,7 +97,7 @@ class PlanModelTests(TestCase):
         self.plan_feature.metadata["max_storage_mb"] = 1
         self.plan_feature.save(update_fields=["metadata"])
 
-        result = self.plan_pro._compute_storage_limit_bytes()
+        result = self.plan_pro._compute_storage_limit_bytes("max_storage_mb")
 
         self.assertEqual(result, 1 * BYTES_IN_MB)
 
@@ -108,26 +108,30 @@ class PlanModelTests(TestCase):
         self.plan_feature.metadata = {}
         self.plan_feature.save(update_fields=["metadata"])
 
-        result = self.plan_pro._compute_storage_limit_bytes()
+        result = self.plan_pro._compute_storage_limit_bytes("max_storage_mb")
+        self.assertIsNone(result)
+
+    def test_compute_storage_limit_bytes_wrong_key_returns_none(self):
+        result = self.plan_pro._compute_storage_limit_bytes("max_storage_mbb")
         self.assertIsNone(result)
 
     def test_compute_storage_limit_bytes_non_numeric_value_returns_none(self):
         self.plan_feature.metadata["max_storage_mb"] = {"weird": "value"}
         self.plan_feature.save(update_fields=["metadata"])
 
-        self.assertIsNone(self.plan_pro._compute_storage_limit_bytes())
+        self.assertIsNone(self.plan_pro._compute_storage_limit_bytes("max_storage_mb"))
 
         self.plan_feature.metadata["max_storage_mb"] = "not-a-number"
         self.plan_feature.save(update_fields=["metadata"])
 
-        self.assertIsNone(self.plan_pro._compute_storage_limit_bytes())
+        self.assertIsNone(self.plan_pro._compute_storage_limit_bytes("max_storage_mb"))
 
     @patch("apps.subscriptions.models.plan.logger.error")
     def test_compute_storage_limit_bytes_negative_value(self, mock_logger):
         self.plan_feature.metadata["max_storage_mb"] = -2
         self.plan_feature.save(update_fields=["metadata"])
 
-        result = self.plan_pro._compute_storage_limit_bytes()
+        result = self.plan_pro._compute_storage_limit_bytes("max_storage_mb")
 
         self.assertIsNone(result)
         mock_logger.assert_called_once()
@@ -136,13 +140,13 @@ class PlanModelTests(TestCase):
         self.plan_feature.metadata["max_storage_mb"] = "10"
         self.plan_feature.save(update_fields=["metadata"])
 
-        self.assertEqual(self.plan_pro._compute_storage_limit_bytes(), 10 * BYTES_IN_MB)
+        self.assertEqual(self.plan_pro._compute_storage_limit_bytes("max_storage_mb"), 10 * BYTES_IN_MB)
 
     def test_compute_storage_limit_bytes_string_float_value(self):
         self.plan_feature.metadata["max_storage_mb"] = "5.5"
         self.plan_feature.save(update_fields=["metadata"])
 
-        self.assertIsNone(self.plan_pro._compute_storage_limit_bytes())
+        self.assertIsNone(self.plan_pro._compute_storage_limit_bytes("max_storage_mb"))
 
     def test_max_storage_bytes_returns_none_when_no_key_or_feature(self):
         self.feature.metadata = {}
@@ -161,8 +165,8 @@ class PlanModelTests(TestCase):
         self.assertEqual(self.plan_pro.max_storage_bytes, default_max_storage_mb * BYTES_IN_MB)
 
     def test_max_storage_bytes_planfeature_override_wins(self):
-        plan_feature_max_storage_mb = self.plan_feature.metadata.get("max_storage_mb"
-                                                                     )
+        plan_feature_max_storage_mb = self.plan_feature.metadata.get("max_storage_mb")
+
         self.assertEqual(self.plan_pro.max_storage_bytes, plan_feature_max_storage_mb * BYTES_IN_MB)
 
     @patch("apps.subscriptions.models.plan.logger.error")
@@ -172,3 +176,24 @@ class PlanModelTests(TestCase):
 
         self.assertIsNone(self.plan_pro.max_storage_bytes)
         mock_logger.assert_called_once()
+
+    def test_max_file_upload_size_bytes_returns_none_when_no_key_or_feature(self):
+        self.feature.metadata = {}
+        self.feature.save(update_fields=["metadata"])
+        self.plan_feature.metadata = {}
+        self.plan_feature.save(update_fields=["metadata"])
+
+        self.assertIsNone(self.plan_pro.max_file_upload_size_bytes)
+
+    def test_max_file_upload_size_bytes_returns_bytes_from_default_feature(self):
+        self.plan_feature.metadata = {}
+        self.plan_feature.save(update_fields=["metadata"])
+
+        default_max_storage_mb = self.feature.metadata.get("max_file_size_mb")
+
+        self.assertEqual(self.plan_pro.max_file_upload_size_bytes, default_max_storage_mb * BYTES_IN_MB)
+
+    def test_max_file_upload_size_bytes_planfeature_override_wins(self):
+        plan_feature_max_storage_mb = self.plan_feature.metadata.get("max_file_size_mb")
+
+        self.assertEqual(self.plan_pro.max_file_upload_size_bytes, plan_feature_max_storage_mb * BYTES_IN_MB)

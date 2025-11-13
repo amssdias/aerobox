@@ -1,6 +1,7 @@
 from django.db.models import Sum
 from django.db.models.functions import Coalesce
 
+from apps.cloud_storage.constants.cloud_files import SUCCESS
 from apps.cloud_storage.models import CloudFile
 
 
@@ -21,14 +22,8 @@ def mb_to_human_gb(mb_value: int) -> str:
 
 def get_user_used_bytes(user):
     return int(
-        CloudFile.objects.filter(user=user)
+        CloudFile.not_deleted.filter(user=user, status=SUCCESS)
         .aggregate(total=Coalesce(Sum("size"), 0))
         .get("total", 0)
         or 0
     )
-
-
-def get_user_max_available_bytes(plan, user):
-    limit_bytes = plan.max_storage_bytes or 0
-    used_bytes = get_user_used_bytes(user)
-    return max(0, limit_bytes - used_bytes)

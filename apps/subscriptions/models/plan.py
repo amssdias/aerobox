@@ -48,12 +48,25 @@ class Plan(Timestampable):
 
     @property
     def max_storage_bytes(self):
-        val = self._compute_storage_limit_bytes()
+        val = self._compute_storage_limit_bytes(key_name="max_storage_mb")
         return val
 
-    def _compute_storage_limit_bytes(self):
+    @property
+    def max_file_upload_size_bytes(self):
+        return self._compute_storage_limit_bytes("max_file_size_mb")
+
+    def _compute_storage_limit_bytes(self, key_name: str):
+        """
+        Generic helper to compute any storage-related limit in bytes
+        based on a given metadata key (in MB).
+
+        Example:
+            _compute_limit_bytes("max_storage_mb")
+            _compute_limit_bytes("max_file_upload_size_mb")
+        """
+
         meta = self.effective_feature_metadata(FeatureCodeChoices.CLOUD_STORAGE.value)
-        max_storage_mb = meta.get("max_storage_mb")
+        max_storage_mb = meta.get(key_name)
         if max_storage_mb is None:
             return None
 
