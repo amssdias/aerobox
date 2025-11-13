@@ -35,7 +35,6 @@ class S3Service:
 
         fields = {
             "x-amz-meta-user-id": str(user_id),
-            # "success_action_status": "204",
             "Content-Type": content_type,
         }
 

@@ -1,8 +1,6 @@
 import logging
 
 import stripe
-from django.db.models import Sum
-from django.db.models.functions import Coalesce
 from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import extend_schema
 from rest_framework import viewsets, status
@@ -12,8 +10,7 @@ from rest_framework.exceptions import PermissionDenied, NotAuthenticated
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from apps.cloud_storage.models import CloudFile
-from apps.cloud_storage.utils.size_utils import mb_to_human_gb
+from apps.cloud_storage.utils.size_utils import mb_to_human_gb, get_user_used_bytes
 from apps.subscriptions.choices.subscription_choices import SubscriptionStatusChoices
 from apps.subscriptions.models import Subscription
 from apps.subscriptions.serializers.plan import ChangePlanSerializer
@@ -75,7 +72,7 @@ class SubscriptionViewSet(viewsets.GenericViewSet):
             else "no enforced limit"
         )
 
-        used_bytes = self._get_user_used_bytes()
+        used_bytes = get_user_used_bytes(self.request.user)
         if self._is_over_quota(limit_bytes, used_bytes):
             return Response(
                 {"detail": self._get_over_quota_storage_message(used_bytes, limit_str)},
@@ -101,13 +98,6 @@ class SubscriptionViewSet(viewsets.GenericViewSet):
             limit=limit_str,
         )
         return Response({"detail": plan_message}, status=status.HTTP_200_OK)
-
-    def _get_user_used_bytes(self) -> int:
-        used_bytes = CloudFile.objects.filter(user=self.request.user).aggregate(
-            total=Coalesce(Sum("size"), 0)
-        )["total"]
-
-        return int(used_bytes or 0)
 
     @staticmethod
     def _is_over_quota(limit_bytes, used_bytes) -> bool:
