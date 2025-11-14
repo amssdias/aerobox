@@ -6,7 +6,7 @@ from django.db import transaction
 from django.utils.timezone import now
 
 from apps.cloud_storage.models import CloudFile
-from apps.cloud_storage.services import S3Service
+from apps.cloud_storage.services.storage.s3_service import S3Service
 from apps.subscriptions.choices.subscription_choices import SubscriptionStatusChoices
 from apps.subscriptions.models import Subscription
 

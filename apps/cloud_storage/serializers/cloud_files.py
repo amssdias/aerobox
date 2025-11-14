@@ -6,7 +6,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import NotFound
 
 from apps.cloud_storage.models import CloudFile, Folder
-from apps.cloud_storage.services import S3Service
+from apps.cloud_storage.services.storage.s3_service import S3Service
 from apps.cloud_storage.utils.path_utils import build_object_path
 from apps.cloud_storage.utils.size_utils import get_user_used_bytes
 from apps.subscriptions.choices.subscription_choices import SubscriptionStatusChoices
@@ -103,7 +103,6 @@ class CloudFilesSerializer(serializers.ModelSerializer):
                     "Your plan allows files up to %(limit).0f MB (this one is %(given).2f MB)."
                 ) % {"limit": limit_mb, "given": given_mb}
             )
-        # TODO: TESTS
 
         limit_bytes = plan.max_storage_bytes
         used_bytes = get_user_used_bytes(user)

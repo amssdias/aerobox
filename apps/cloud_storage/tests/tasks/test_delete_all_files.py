@@ -7,7 +7,7 @@ from django.utils.timezone import now
 
 from apps.cloud_storage.factories.cloud_file_factory import CloudFileFactory
 from apps.cloud_storage.models import CloudFile
-from apps.cloud_storage.services import S3Service
+from apps.cloud_storage.services.storage.s3_service import S3Service
 from apps.cloud_storage.tasks.delete_files import clear_all_deleted_files_from_user, delete_old_files
 from apps.subscriptions.factories.subscription import SubscriptionFreePlanFactory, SubscriptionProPlanFactory
 from apps.subscriptions.models import Subscription

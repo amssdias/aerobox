@@ -7,7 +7,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase
 
 from apps.cloud_storage.factories.cloud_file_factory import CloudFileFactory
-from apps.cloud_storage.services import S3Service
+from apps.cloud_storage.services.storage.s3_service import S3Service
 from apps.cloud_storage.utils.path_utils import build_s3_path
 from apps.users.factories.user_factory import UserFactory
 
@@ -30,7 +30,7 @@ class CloudStorageRetrieveTests(APITestCase):
     def setUp(self):
         self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.token.key}")
 
-    @patch("apps.cloud_storage.services.S3Service.generate_presigned_download_url")
+    @patch("apps.cloud_storage.services.storage.s3_service.S3Service.generate_presigned_download_url")
     def test_retrieve_existing_file_with_valid_url(self, mock_generate_url):
         mock_generate_url.return_value = "https://s3.amazonaws.com/bucket/test_file.txt"
 
@@ -77,7 +77,7 @@ class CloudStorageRetrieveTests(APITestCase):
         # Retrieves a 404 because the logged user don´t have that file ID associated to him
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    @patch("apps.cloud_storage.services.S3Service.generate_presigned_download_url")
+    @patch("apps.cloud_storage.services.storage.s3_service.S3Service.generate_presigned_download_url")
     def test_retrieve_file_with_network_failure(self, mock_generate_url):
         """Test retrieving a file when there's a network issue with S3."""
         mock_generate_url.side_effect = Exception("Network timeout")

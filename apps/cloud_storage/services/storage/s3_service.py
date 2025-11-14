@@ -3,7 +3,7 @@ import logging
 from botocore.exceptions import NoCredentialsError, ClientError
 from django.conf import settings
 
-from .aws_client import AWSClient
+from apps.cloud_storage.services.aws_client import AWSClient
 
 logger = logging.getLogger("aerobox")
 
@@ -63,7 +63,8 @@ class S3Service:
         }
 
     def generate_presigned_download_url(
-        self, object_name, bucket_name=settings.AWS_STORAGE_BUCKET_NAME, expiration=3600
+            self, object_name, bucket_name=settings.AWS_STORAGE_BUCKET_NAME,
+            expiration=settings.AWS_PRESIGNED_EXPIRATION_TIME
     ):
         """
         Generates a presigned URL for downloading a file from S3.

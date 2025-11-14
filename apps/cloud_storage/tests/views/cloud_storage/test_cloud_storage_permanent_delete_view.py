@@ -8,7 +8,7 @@ from rest_framework.test import APITestCase
 
 from apps.cloud_storage.factories.cloud_file_factory import CloudFileFactory
 from apps.cloud_storage.models import CloudFile
-from apps.cloud_storage.services import S3Service
+from apps.cloud_storage.services.storage.s3_service import S3Service
 from apps.users.factories.user_factory import UserFactory
 
 User = get_user_model()
