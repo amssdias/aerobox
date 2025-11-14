@@ -118,3 +118,14 @@ class S3Service:
             )
 
             raise Exception("Failed to permanently delete file.")
+
+    def head(self, key: str) -> dict:
+        try:
+            resp = self.s3_client.head_object(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=key)
+            return {
+                "size": resp["ContentLength"],
+                "content_type": resp.get("ContentType"),
+                "metadata": resp.get("Metadata", {}),
+            }
+        except Exception:
+            return None
