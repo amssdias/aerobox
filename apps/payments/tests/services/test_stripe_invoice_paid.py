@@ -28,7 +28,7 @@ class InvoicePaidHandlerTest(TestCase):
         self.addCleanup(patcher.stop)  # Ensures patch is removed after each test
 
         self.timestamp = int(datetime.now(tz=timezone.utc).timestamp())
-        today = datetime.now()
+        today = timezone.now()
         self.period_end = today + timedelta(days=30)
         d_period_end = datetime.combine(self.period_end, datetime.min.time(), tzinfo=timezone.utc)
         self.data = {
