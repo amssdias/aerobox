@@ -22,6 +22,7 @@ from apps.cloud_storage.services.storage.s3_service import S3Service
 from apps.cloud_storage.tasks.delete_files import clear_all_deleted_files_from_user
 from apps.cloud_storage.utils.hash_utils import generate_unique_hash
 from apps.cloud_storage.utils.path_utils import build_s3_path
+from apps.cloud_storage.utils.size_utils import get_user_used_bytes
 from apps.subscriptions.choices.subscription_choices import SubscriptionStatusChoices
 from config.api_docs.openapi_schemas import RESPONSE_SCHEMA_GET_PRESIGNED_URL
 
@@ -73,17 +74,32 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        # Generate a presigned URL for uploading
+        user = self.request.user
+
+        # Generate path to upload
         s3_service = S3Service()
         hashed_file_name = generate_unique_hash(serializer.validated_data.get("file_name"))
         file_path = build_s3_path(
-            user_id=self.request.user.id,
+            user_id=user.id,
             file_name=hashed_file_name,
         )
-        user = self.request.user
+
         subscription = user.subscriptions.filter(status=SubscriptionStatusChoices.ACTIVE.value).first()
         plan = subscription.plan
-        max_bytes = plan.max_file_upload_size_bytes
+
+        limit_bytes = plan.max_storage_bytes
+        used_bytes = get_user_used_bytes(user)
+
+        # Remaining usable storage under the user's plan
+        available_storage_bytes = max(limit_bytes - used_bytes, 0)
+
+        # Per-file limit defined by the plan
+        max_file_upload_bytes = plan.max_file_upload_size_bytes
+
+        # Final allowed size = the minimum of:
+        #   - remaining storage
+        #   - per-file limit
+        max_bytes = min(available_storage_bytes, max_file_upload_bytes)
 
         try:
             presigned_url = s3_service.create_presigned_post_url(
