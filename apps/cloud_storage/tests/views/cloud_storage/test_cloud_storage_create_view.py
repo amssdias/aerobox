@@ -6,10 +6,12 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from apps.cloud_storage.exceptions import FileUploadError
+from apps.cloud_storage.factories.cloud_file_factory import CloudFileFactory
 from apps.cloud_storage.factories.folder_factory import FolderFactory
 from apps.cloud_storage.models import CloudFile
 from apps.cloud_storage.services.storage.s3_service import S3Service
 from apps.cloud_storage.utils.path_utils import build_object_path
+from apps.features.choices.feature_code_choices import FeatureCodeChoices
 from apps.subscriptions.factories.subscription import SubscriptionFreePlanFactory
 from apps.users.factories.user_factory import UserFactory
 
@@ -215,3 +217,56 @@ class CloudStoragePresignedURLTests(APITestCase):
         response = self.client.post(self.url, self.data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("size", response.data)
+
+    @patch.object(
+        S3Service,
+        "create_presigned_post_url",
+        return_value={"url": "https://s3-presigned-url.com", "fields": {}},
+    )
+    def test_presigned_post_uses_available_storage_when_smaller_than_per_file_limit(self, mock_s3):
+        plan = self.subscription.plan
+
+        feature = plan.plan_features.get(feature__code=FeatureCodeChoices.CLOUD_STORAGE)
+        feature.metadata["max_storage_mb"] = 1000
+        feature.metadata["max_file_size_mb"] = 200
+        feature.save(update_fields=["metadata"])
+
+        max_storage_bytes = plan.max_storage_bytes
+
+        CloudFileFactory(
+            file_name=f"A test.pdf",
+            size=900 * 1000 * 1000,
+            user=self.user
+        )
+
+        self.data["size"] = 1 * 1000 * 1000
+
+        response = self.client.post(self.url, self.data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        used_bytes = 900 * 1000 * 1000
+        available_storage_bytes = max_storage_bytes - used_bytes
+
+        _, kwargs = mock_s3.call_args
+        self.assertEqual(kwargs["max_bytes"], available_storage_bytes)
+
+    @patch.object(
+        S3Service,
+        "create_presigned_post_url",
+        return_value={"url": "https://s3-presigned-url.com", "fields": {}},
+    )
+    def test_presigned_post_uses_per_file_limit_when_smaller_than_available_storage(self, mock_create):
+        plan = self.subscription.plan
+
+        feature = plan.plan_features.get(feature__code=FeatureCodeChoices.CLOUD_STORAGE)
+        feature.metadata["max_storage_mb"] = 1000
+        feature.metadata["max_file_size_mb"] = 200
+        feature.save(update_fields=["metadata"])
+
+        self.data["size"] = plan.max_file_upload_size_bytes - 10
+
+        response = self.client.post(self.url, self.data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        _, kwargs = mock_create.call_args
+        self.assertEqual(kwargs["max_bytes"], plan.max_file_upload_size_bytes)
