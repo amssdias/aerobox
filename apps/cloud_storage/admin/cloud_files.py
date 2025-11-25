@@ -17,6 +17,7 @@ class CloudFilesAdmin(admin.ModelAdmin):
     list_per_page = 25
     readonly_fields = (
         "size",
+        "s3_key",
         "created_at",
         "updated_at",
         "deleted_at",
