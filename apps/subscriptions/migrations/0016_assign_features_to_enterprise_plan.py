@@ -54,6 +54,16 @@ def assign_basic_features_to_enterprise_plan(apps, schema_editor):
                 ],
             }
 
+        elif feature.code == FeatureCodeChoices.FILE_SHARING.value:
+            metadata = {
+                "allow_folder_sharing": True,
+                "allow_password": True,
+                "allow_choose_expiration": True,
+                "max_expiration_minutes": None,
+                "max_active_links": 100,
+                "allow_custom_message": True
+            }
+
         PlanFeature.objects.update_or_create(
             plan=enterprise_plan,
             feature=feature,

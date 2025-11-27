@@ -45,7 +45,12 @@ def create_basic_features(apps, schema_editor):
                     "es": "Comparte archivos mediante un enlace seguro."
                 },
                 "metadata": {
-                    "default_share_duration_minutes": 120
+                    "allow_folder_sharing": False,
+                    "allow_password": False,
+                    "allow_choose_expiration": False,
+                    "max_expiration_minutes": 1440,
+                    "max_active_links": 1,
+                    "allow_custom_message": False
                 },
             },
             {

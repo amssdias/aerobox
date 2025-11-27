@@ -36,6 +36,15 @@ def assign_basic_features_to_pro_plan(apps, schema_editor):
                     "vb", "vbs", "apk", "iso", "img", "scr", "hta", "gadget", "wsf"
                 ]
             }
+        elif feature.code == FeatureCodeChoices.FILE_SHARING.value:
+            metadata = {
+                "allow_folder_sharing": True,
+                "allow_password": True,
+                "allow_choose_expiration": True,
+                "max_expiration_minutes": None,
+                "max_active_links": 50,
+                "allow_custom_message": True
+            }
 
         PlanFeature.objects.update_or_create(
             plan=pro_plan,
