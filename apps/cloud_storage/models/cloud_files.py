@@ -2,6 +2,7 @@ from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+from apps.cloud_storage.choices.cloud_file_error_code_choices import CloudFileErrorCode
 from apps.cloud_storage.constants.cloud_files import PENDING, SUCCESS, FAILED
 from apps.cloud_storage.models.managers.cloud_file import CloudFileManager, DeletedCloudFileManager
 from apps.cloud_storage.utils.path_utils import build_object_path
@@ -53,6 +54,12 @@ class CloudFile(Timestampable, SoftDeleteModel):
         choices=STATUS, 
         default=PENDING,
         help_text=_("The current status of the file upload process.")
+    )
+    error_code = models.CharField(
+        max_length=64,
+        choices=CloudFileErrorCode.choices,
+        null=True,
+        blank=True,
     )
     error_message = models.TextField(
         blank=True, 
