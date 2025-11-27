@@ -5,6 +5,8 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.exceptions import NotFound
 
+from apps.cloud_storage.choices.cloud_file_error_code_choices import CloudFileErrorCode
+from apps.cloud_storage.constants.cloud_files import SUCCESS, FAILED
 from apps.cloud_storage.models import CloudFile, Folder
 from apps.cloud_storage.services.storage.s3_service import S3Service
 from apps.cloud_storage.utils.path_utils import build_object_path
@@ -12,6 +14,10 @@ from apps.cloud_storage.utils.size_utils import get_user_used_bytes
 from apps.subscriptions.choices.subscription_choices import SubscriptionStatusChoices
 
 logger = logging.getLogger("aerobox")
+
+S3_TO_INTERNAL_CODES = {
+    "EntityTooLarge": "file_too_large",
+}
 
 
 class CloudFilesSerializer(serializers.ModelSerializer):
@@ -172,10 +178,26 @@ class CloudFilesSerializer(serializers.ModelSerializer):
 
 
 class CloudFileMetaPatchSerializer(serializers.ModelSerializer):
+    status = serializers.ChoiceField(required=True, choices=[SUCCESS, FAILED])
+    error_code = serializers.CharField(required=False, allow_blank=True)
+
     class Meta:
         model = CloudFile
-        fields = ("status", "error_message")
+        fields = ("status", "error_code", "error_message")
 
+    def validate_error_code(self, value):
+        return S3_TO_INTERNAL_CODES.get(value, CloudFileErrorCode.UNKNOWN_S3_ERROR)
+
+    def validate(self, data):
+        is_status_success = data.get("status") == SUCCESS
+
+        if is_status_success:
+            data["error_code"] = None
+            return data
+
+        error_code = data.get("error_code")
+        data["error_code"] = data.get("error_code", CloudFileErrorCode.UNKNOWN_S3_ERROR) if error_code else None
+        return data
 
 class CloudFileUpdateSerializer(serializers.ModelSerializer):
     file_name = serializers.CharField(

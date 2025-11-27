@@ -11,14 +11,15 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from apps.cloud_storage.constants.cloud_files import SUCCESS, FAILED
+from apps.cloud_storage.error_messages import get_error_message
 from apps.cloud_storage.exceptions import FileUploadError
 from apps.cloud_storage.filters.cloud_file_filter import CloudFileFilter
 from apps.cloud_storage.models import CloudFile
 from apps.cloud_storage.pagination import CloudFilesPagination
 from apps.cloud_storage.serializers import CloudFilesSerializer
 from apps.cloud_storage.serializers.cloud_files import CloudFileMetaPatchSerializer, CloudFileUpdateSerializer
-from apps.cloud_storage.services.storage.cloud_file_sync_service import CloudFileSyncService
 from apps.cloud_storage.services.storage.s3_service import S3Service
+from apps.cloud_storage.services.uploads.file_upload_finalizer_service import FileUploadFinalizerService
 from apps.cloud_storage.tasks.delete_files import clear_all_deleted_files_from_user
 from apps.cloud_storage.utils.hash_utils import generate_unique_hash
 from apps.cloud_storage.utils.path_utils import build_s3_path
@@ -158,26 +159,32 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
         instance = serializer.save()
 
         new_status = serializer.validated_data.get("status")
+
+        if new_status == FAILED:
+            msg = get_error_message(instance.error_code)
+            return Response(
+                {
+                    "detail": msg,
+                    "code": instance.error_code,
+                },
+                status=status.HTTP_200_OK,
+            )
+
         if new_status == SUCCESS:
-            if not CloudFileSyncService().sync(instance):
-                instance.status = FAILED
-                instance.error_message = (
-                    "File upload verification failed: the file could not be found in storage. "
-                    "Please try uploading again."
-                )
-                instance.save(update_fields=["status", "error_message"])
+            finalizer = FileUploadFinalizerService()
+            ok = finalizer.finalize(instance)
 
+            if not ok:
+                msg = get_error_message(instance.error_code)
                 return Response(
-                    data={
-                        "message": _(
-                            "File upload verification failed: the file could not be found in storage. "
-                            "Please try uploading it again."
-                        )
+                    {
+                        "detail": msg,
+                        "code": instance.error_code,
                     },
-                    status=status.HTTP_422_UNPROCESSABLE_ENTITY
+                    status=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 )
 
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def destroy(self, request, *args, **kwargs):
         """Soft delete the file by setting 'deleted_at' instead of deleting it."""
