@@ -3,7 +3,7 @@ from datetime import timedelta
 from typing import Optional
 
 from celery import shared_task
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import format_html
@@ -12,6 +12,7 @@ from django.utils.translation import override, gettext as _
 from apps.subscriptions.choices.subscription_choices import SubscriptionStatusChoices
 
 logger = logging.getLogger("aerobox")
+User = get_user_model()
 
 
 @shared_task

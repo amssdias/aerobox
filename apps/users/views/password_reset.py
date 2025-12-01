@@ -1,4 +1,4 @@
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
@@ -11,6 +11,7 @@ from apps.users.serializers.password_reset_serializer import (
 from apps.users.tasks.email_tasks import send_password_reset_email
 from config.api_docs.custom_extensions import api_users_tag
 
+User = get_user_model()
 
 @api_users_tag()
 class CustomPasswordResetView(GenericAPIView):

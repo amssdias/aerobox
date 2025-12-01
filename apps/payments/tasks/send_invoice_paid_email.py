@@ -2,13 +2,13 @@ import logging
 
 from celery import shared_task
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.translation import override, gettext as _
 
 logger = logging.getLogger("aerobox")
-
+User = get_user_model()
 
 @shared_task
 def send_invoice_payment_success_email(user_id: str, invoice_pdf_url: str) -> None:

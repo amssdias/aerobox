@@ -2,14 +2,13 @@ import logging
 
 from celery import shared_task
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.translation import override, gettext as _
 
-from apps.subscriptions.choices.subscription_choices import SubscriptionStatusChoices
-
 logger = logging.getLogger("aerobox")
+User = get_user_model()
 
 
 @shared_task
@@ -18,7 +17,7 @@ def send_scheduled_cancellation_email(user_id: str) -> None:
         user = User.objects.get(id=user_id)
 
         with override(user.profile.language):
-            sub = user.subscriptions.filter(status=SubscriptionStatusChoices.ACTIVE).first()
+            sub = user.active_subscription
 
             if not sub:
                 return
