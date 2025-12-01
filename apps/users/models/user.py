@@ -6,12 +6,14 @@ from apps.subscriptions.choices.subscription_choices import SubscriptionStatusCh
 class User(AbstractUser):
 
     @property
-    def get_active_subscription(self):
-        subscription = self.subscriptions.filter(status=SubscriptionStatusChoices.ACTIVE.value).first()
-        return subscription if subscription else None
+    def active_subscription(self):
+        return (
+            self.subscriptions
+            .filter(status=SubscriptionStatusChoices.ACTIVE.value)
+            .first()
+        )
 
     @property
-    def current_plan(self):
-        subscription = self.get_active_subscription()
-        plan = subscription.plan
-        return plan if plan else None
+    def plan(self):
+        sub = self.active_subscription
+        return sub.plan if sub else None

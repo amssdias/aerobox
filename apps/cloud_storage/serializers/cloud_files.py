@@ -11,7 +11,6 @@ from apps.cloud_storage.models import CloudFile, Folder
 from apps.cloud_storage.services.storage.s3_service import S3Service
 from apps.cloud_storage.utils.path_utils import build_object_path
 from apps.cloud_storage.utils.size_utils import get_user_used_bytes
-from apps.subscriptions.choices.subscription_choices import SubscriptionStatusChoices
 
 logger = logging.getLogger("aerobox")
 
@@ -89,13 +88,13 @@ class CloudFilesSerializer(serializers.ModelSerializer):
         if not user or not user.is_authenticated:
             raise serializers.ValidationError(_("Invalid context: user not provided or not authenticated."))
 
-        subscription = user.subscriptions.filter(status=SubscriptionStatusChoices.ACTIVE.value).first()
+        subscription = user.active_subscription
         if not subscription:
             raise serializers.ValidationError(_("No active subscription found for this user."))
 
         plan = subscription.plan
         if not plan:
-            raise serializers.ValidationError(_("Invalid context: no plan associated with the active subscription."))
+            raise serializers.ValidationError(_("No plan associated with the active subscription."))
 
         max_file_upload_size_bytes = plan.max_file_upload_size_bytes
         if value > max_file_upload_size_bytes:

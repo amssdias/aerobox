@@ -5,7 +5,6 @@ from apps.cloud_storage.constants.cloud_files import FAILED
 from apps.cloud_storage.services.storage.cloud_file_sync_service import CloudFileSyncService
 from apps.cloud_storage.services.storage.s3_service import S3Service
 from apps.cloud_storage.utils.size_utils import get_user_used_bytes
-from apps.subscriptions.choices.subscription_choices import SubscriptionStatusChoices
 
 
 class FileUploadFinalizerService:
@@ -56,7 +55,7 @@ class FileUploadFinalizerService:
     def is_over_quota(cloud_file) -> bool:
         user = cloud_file.user
         used_bytes = get_user_used_bytes(user)
-        subscription = user.subscriptions.filter(status=SubscriptionStatusChoices.ACTIVE.value).first()
+        subscription = user.active_subscription
         plan = subscription.plan
         limit_bytes = plan.max_storage_bytes
         return used_bytes > limit_bytes

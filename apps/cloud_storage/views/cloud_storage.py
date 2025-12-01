@@ -24,7 +24,6 @@ from apps.cloud_storage.tasks.delete_files import clear_all_deleted_files_from_u
 from apps.cloud_storage.utils.hash_utils import generate_unique_hash
 from apps.cloud_storage.utils.path_utils import build_s3_path
 from apps.cloud_storage.utils.size_utils import get_user_used_bytes
-from apps.subscriptions.choices.subscription_choices import SubscriptionStatusChoices
 from config.api_docs.openapi_schemas import RESPONSE_SCHEMA_GET_PRESIGNED_URL
 
 logger = logging.getLogger("aerobox")
@@ -85,7 +84,7 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
             file_name=hashed_file_name,
         )
 
-        subscription = user.subscriptions.filter(status=SubscriptionStatusChoices.ACTIVE.value).first()
+        subscription = user.active_subscription
         plan = subscription.plan
 
         limit_bytes = plan.max_storage_bytes

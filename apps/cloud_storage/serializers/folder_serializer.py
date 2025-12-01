@@ -76,7 +76,7 @@ class FolderSerializer(serializers.ModelSerializer):
     def validate_user_subscription(self):
         user = self.context["request"].user
 
-        subscription = user.subscriptions.filter(status="active").first()
+        subscription = user.active_subscription
         if not subscription:
             raise serializers.ValidationError(
                 _("You need an active subscription to use this feature. Please check your billing or subscribe to a plan."))
