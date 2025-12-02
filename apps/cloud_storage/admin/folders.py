@@ -4,7 +4,7 @@ from apps.cloud_storage.models import Folder
 
 
 @admin.register(Folder)
-class CloudFilesAdmin(admin.ModelAdmin):
+class FoldersAdmin(admin.ModelAdmin):
     list_display = (
         "id",
         "name",
@@ -17,3 +17,4 @@ class CloudFilesAdmin(admin.ModelAdmin):
         "updated_at",
     )
     raw_id_fields = ("user",)
+    search_fields = ("name",)
