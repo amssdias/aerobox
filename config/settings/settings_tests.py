@@ -45,3 +45,10 @@ CELERY_TASK_EAGER_PROPAGATES = True
 
 STRIPE_SECRET_KEY = "test"
 STRIPE_WEBHOOK_SECRET = "test"
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.TokenAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+    ]
+}
