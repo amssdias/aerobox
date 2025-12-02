@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
@@ -7,6 +6,7 @@ from rest_framework.test import APITestCase
 
 from apps.cloud_storage.factories.cloud_file_factory import CloudFileFactory
 from apps.cloud_storage.models import CloudFile
+from apps.cloud_storage.pagination import CloudFilesPagination
 from apps.cloud_storage.utils.path_utils import build_s3_path
 from apps.users.factories.user_factory import UserFactory
 
@@ -135,7 +135,7 @@ class CloudStorageViewSetListTests(APITestCase):
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        page_size = settings.REST_FRAMEWORK.get("PAGE_SIZE", 0)
+        page_size = CloudFilesPagination.page_size
         self.assertEqual(response.data.get("count"), total_files)
         self.assertEqual(len(response.data.get("results")), page_size)
 
@@ -153,5 +153,5 @@ class CloudStorageViewSetListTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data.get("count"), 500)
 
-        page_size = settings.REST_FRAMEWORK.get("PAGE_SIZE", 0)
+        page_size = CloudFilesPagination.page_size
         self.assertEqual(len(response.data.get("results")), page_size)
