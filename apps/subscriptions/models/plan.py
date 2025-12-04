@@ -86,6 +86,10 @@ class Plan(Timestampable):
         except (TypeError, ValueError):
             return None
 
+    @property
+    def file_sharing_config(self):
+        return self.effective_feature_metadata(FeatureCodeChoices.FILE_SHARING.value)
+
     def effective_feature_metadata(self, feature_code: str) -> dict:
         """
         Merge default Feature.metadata with PlanFeatures.metadata (override wins).
