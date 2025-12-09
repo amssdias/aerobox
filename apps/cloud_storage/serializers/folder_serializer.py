@@ -36,7 +36,11 @@ class FolderSerializer(serializers.ModelSerializer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        user = self.context["request"].user
+
+        user = self.context.get("user")
+
+        if user is None:
+            user = self.context["request"].user
         self.fields["parent_id"].queryset = Folder.objects.filter(user=user)
 
     def validate_name(self, value):
