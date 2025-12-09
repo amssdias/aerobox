@@ -1,10 +1,12 @@
 from django.contrib import admin
 
+from apps.cloud_storage.forms.share_link_form import ShareLinkAdminForm
 from apps.cloud_storage.models import ShareLink
 
 
 @admin.register(ShareLink)
 class ShareLinkAdmin(admin.ModelAdmin):
+    form = ShareLinkAdminForm
     list_display = (
         "id",
         "owner",

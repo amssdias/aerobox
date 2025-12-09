@@ -1,7 +1,8 @@
 import secrets
+from typing import Optional
 
 from django.conf import settings
-from django.contrib.auth.hashers import check_password
+from django.contrib.auth.hashers import check_password, make_password
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -79,6 +80,10 @@ class ShareLink(Timestampable):
     @property
     def is_revoked(self) -> bool:
         return self.revoked_at is not None
+
+    def set_password(self, raw_password: Optional[str]):
+        if raw_password:
+            self.password = make_password(raw_password)
 
     def check_password(self, raw_password) -> bool:
         if not self.password:

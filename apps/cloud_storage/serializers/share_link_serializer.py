@@ -77,9 +77,7 @@ class ShareLinkSerializer(serializers.ModelSerializer):
         )
         validated_data["expires_at"] = expires_at
 
-        raw_password = validated_data.pop("password", None)
-        if raw_password:
-            validated_data["password"] = make_password(raw_password)
+        instance.set_password(validated_data.pop("password", None))
 
         return super().update(instance, validated_data)
 
