@@ -86,36 +86,6 @@ class PublicShareLinkAuthView(ShareLinkMixin, ShareLinkAccessMixin, APIView):
 
 
 @extend_schema(tags=["API - File Sharing"])
-class PublicShareLinkUnlock(ShareLinkMixin, APIView):
-    """
-    Public endpoint to access a share link by token WITH PASSWORD to unlock.
-    """
-
-    permission_classes = [permissions.AllowAny]
-
-    def post(self, request, token):
-        password = request.data.get("password", "")
-
-        share_link = self.get_object()
-        self.validate_share_link(share_link)
-
-        if not share_link.password:
-            return Response(
-                {"detail": _("This link is not password protected.")},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        if not share_link.check_password(password):
-            return Response(
-                {"detail": _("Invalid password.")}, status=status.HTTP_400_BAD_REQUEST
-            )
-
-        serializer = PublicShareLinkDetailSerializer(
-            share_link, context={"user": share_link.owner}
-        )
-        return Response(serializer.data)
-
-
 class PublicShareLinkFileDownloadView(ShareLinkMixin, APIView):
     """
     Public endpoint to get a presigned download URL for a file
