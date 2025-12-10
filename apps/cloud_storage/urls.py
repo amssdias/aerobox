@@ -7,6 +7,7 @@ from apps.cloud_storage.views.public_share import (
     PublicShareLinkDetail,
     PublicShareLinkUnlock,
     PublicShareLinkFileDownloadView,
+    PublicShareLinkAuthView,
 )
 from apps.cloud_storage.views.share_link import ShareLinkViewSet
 
@@ -15,6 +16,11 @@ urlpatterns = [
         "share/<str:token>/",
         PublicShareLinkDetail.as_view(),
         name="public-share-link-detail",
+    ),
+    path(
+        "share/<str:token>/auth/",
+        PublicShareLinkAuthView.as_view(),
+        name="public-share-link-auth",
     ),
     path(
         "share/<str:token>/unlock/",

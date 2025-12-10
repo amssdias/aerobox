@@ -4,23 +4,23 @@ from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import extend_schema
 from rest_framework import status, permissions
-from rest_framework.exceptions import ValidationError, NotFound
+from rest_framework.exceptions import ValidationError, NotFound, AuthenticationFailed
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.cloud_storage.models import CloudFile
+from apps.cloud_storage.serializers import FolderDetailSerializer
 from apps.cloud_storage.serializers.public_share_serializer import (
-    PublicShareLinkMetaSerializer,
-    PublicShareLinkDetailSerializer,
+    PublicShareLinkDetailSerializer, ShareLinkPasswordSerializer,
 )
 from apps.cloud_storage.services.storage.s3_service import S3Service
-from apps.cloud_storage.views.mixins.share_link import ShareLinkMixin
+from apps.cloud_storage.views.mixins.share_link import ShareLinkMixin, ShareLinkAccessMixin
 
 logger = logging.getLogger("aerobox")
 
 
 @extend_schema(tags=["API - File Sharing"])
-class PublicShareLinkDetail(ShareLinkMixin, APIView):
+class PublicShareLinkDetail(ShareLinkMixin, ShareLinkAccessMixin, APIView):
     """
     Public endpoint to access a share link by token.
     """
@@ -30,17 +30,59 @@ class PublicShareLinkDetail(ShareLinkMixin, APIView):
     def get(self, request, token):
         share_link = self.get_object()
         self.validate_share_link(share_link)
+        self.require_valid_access(request, share_link)
 
-        if share_link.password:
-            # Password-protected → only send meta
-            serializer = PublicShareLinkMetaSerializer(share_link)
-        else:
-            # Public link → send full details
-            serializer = PublicShareLinkDetailSerializer(
-                share_link, context={"user": share_link.owner}
-            )
+        serializer = PublicShareLinkDetailSerializer(
+            share_link, context={"user": share_link.owner}
+        )
 
         return Response(serializer.data)
+
+
+@extend_schema(tags=["API - File Sharing"])
+class PublicShareLinkAuthView(ShareLinkMixin, ShareLinkAccessMixin, APIView):
+    """
+    Validates the password for a ShareLink and returns an access token
+    that the frontend must send in the `X-ShareLink-Access` header on
+    subsequent requests (folder browse, file download, etc.).
+    """
+
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request, token, *args, **kwargs):
+        share_link = self.get_object()
+
+        serializer = ShareLinkPasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        raw_password = serializer.validated_data.get("password") or ""
+
+        if share_link.password:
+            if not share_link.check_password(raw_password):
+                raise AuthenticationFailed(_("Invalid password for this share link."))
+        else:
+            # If the link does NOT have a password, we don't need to validate anything.
+            # You can still choose to return access_token = null here.
+            access_token = None
+
+            return Response(
+                {
+                    "access_token": access_token,
+                    "requires_password": False,
+                    "expires_in": None,
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        access_token = self.build_access_token(share_link)
+
+        return Response(
+            {
+                "access_token": access_token,
+                "expires_in": self.access_max_age,  # e.g. 3600 seconds
+                "token_type": "sharelink_access",
+            },
+            status=status.HTTP_200_OK,
+        )
 
 
 @extend_schema(tags=["API - File Sharing"])

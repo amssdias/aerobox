@@ -1,3 +1,6 @@
+from unittest.mock import patch
+
+from django.core.signing import SignatureExpired
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
@@ -6,6 +9,7 @@ from rest_framework.test import APITestCase
 from apps.cloud_storage.factories.cloud_file_factory import CloudFileFactory
 from apps.cloud_storage.factories.folder_factory import FolderFactory
 from apps.cloud_storage.factories.share_link_factory import ShareLinkFactory
+from apps.cloud_storage.views.mixins.share_link import ShareLinkAccessMixin
 from apps.users.factories.user_factory import UserFactory
 
 
@@ -20,6 +24,14 @@ class PublicShareLinkDetailTests(APITestCase):
         )
 
         cls.base_expires_at = timezone.now() + timezone.timedelta(days=1)
+        cls.access_mixin = ShareLinkAccessMixin()
+
+    def _access_header(self, token: str):
+        """
+        Helper to build the header dict for the DRF test client.
+        'X-ShareLink-Access' -> HTTP_X_SHARELINK_ACCESS in tests.
+        """
+        return {"HTTP_X_SHARELINK_ACCESS": token}
 
     def _create_share_link(self, **kwargs):
         defaults = {
@@ -29,21 +41,108 @@ class PublicShareLinkDetailTests(APITestCase):
         defaults.update(kwargs)
         return ShareLinkFactory(**defaults)
 
-    def test_returns_meta_for_password_protected_link(self):
-        share_link = self._create_share_link(password="some-password")
-
-        url = reverse("public-share-link-detail", kwargs={"token": share_link.token})
+    def test_public_share_link_without_password_returns_200_without_token(self):
+        share_link = self._create_share_link()
+        url = reverse(
+            "public-share-link-detail",
+            kwargs={"token": share_link.token},
+        )
         response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_public_share_link_without_password_ignores_access_token_header(self):
+        share_link = self._create_share_link()
+        url = reverse(
+            "public-share-link-detail",
+            kwargs={"token": share_link.token},
+        )
+        fake_token = "whatever"
+        response = self.client.get(url, **self._access_header(fake_token))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_public_share_link_with_password_and_valid_token_returns_200(self):
+        share_link = self._create_share_link(password="some-password")
+        access_token = self.access_mixin.build_access_token(share_link)
+
+        url = reverse(
+            "public-share-link-detail",
+            kwargs={"token": share_link.token},
+        )
+
+        response = self.client.get(
+            url,
+            **self._access_header(access_token),
+        )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        data = response.json()
+        self.assertEqual(response.data["token"], share_link.token)
+        self.assertEqual(response.data["owner_name"], self.user.get_full_name())
+        self.assertTrue(response.data["is_password_protected"])
+        self.assertIn("files", response.data)
+        self.assertIn("folders", response.data)
 
-        self.assertEqual(data["token"], share_link.token)
-        self.assertEqual(data["owner_name"], self.user.get_full_name())
-        self.assertTrue(data["is_password_protected"])
+    def test_public_share_link_with_password_missing_token_returns_401(self):
+        share_link = self._create_share_link(password="some-password")
 
-        self.assertNotIn("files", data)
-        self.assertNotIn("folders", data)
+        url = reverse(
+            "public-share-link-detail",
+            kwargs={"token": share_link.token},
+        )
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_public_share_link_with_password_invalid_token_returns_401(self):
+        invalid_token = "totally-invalid-token-string"
+        share_link = self._create_share_link(password="some-password")
+
+        url = reverse(
+            "public-share-link-detail",
+            kwargs={"token": share_link.token},
+        )
+
+        response = self.client.get(
+            url,
+            **self._access_header(invalid_token),
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_public_share_link_with_password_token_for_other_share_link_returns_401(self):
+        share_link = self._create_share_link(password="some-password")
+        other_share_link = self._create_share_link(password="some-other-password")
+        other_token = self.access_mixin.build_access_token(other_share_link)
+
+        url = reverse(
+            "public-share-link-detail",
+            kwargs={"token": share_link.token},
+        )
+
+        # Try to use other_token on self.share_link_with_pw
+        response = self.client.get(
+            url,
+            **self._access_header(other_token),
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_public_share_link_with_password_expired_token_returns_401(self):
+        share_link = self._create_share_link(password="some-password")
+        access_token = self.access_mixin.build_access_token(share_link)
+        url = reverse(
+            "public-share-link-detail",
+            kwargs={"token": share_link.token},
+        )
+
+        with patch(
+                "apps.cloud_storage.views.mixins.share_link.ShareLinkAccessMixin.signer.unsign",
+                side_effect=SignatureExpired("Token expired"),
+        ):
+            response = self.client.get(
+                url,
+                **self._access_header(access_token),
+            )
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_returns_full_details_for_non_password_link(self):
         share_link = self._create_share_link(password=None, token="public-token")
@@ -108,156 +207,182 @@ class PublicShareLinkDetailTests(APITestCase):
         )
 
 
-class PublicShareLinkUnlockTests(APITestCase):
+class PublicShareLinkAuthViewTests(APITestCase):
+    def setUp(self):
+        self.owner = UserFactory(username="test")
 
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = UserFactory(
-            username="andre",
-            email="andre@example.com",
-            password="dummy-pass",
+        # Share link that REQUIRES password
+        self.protected_link = ShareLinkFactory(owner=self.owner)
+        self.protected_link.set_password("correct-password")
+        self.protected_link.save()
+
+        # Share link WITHOUT password
+        self.unprotected_link = ShareLinkFactory(owner=self.owner)
+
+    def get_url(self, token):
+        return reverse("public-share-link-auth", kwargs={"token": token})
+
+    def test_valid_password_returns_access_token(self):
+        response = self.client.post(
+            self.get_url(self.protected_link.token),
+            {"password": "correct-password"},
+            format="json",
         )
-        cls.base_expires_at = timezone.now() + timezone.timedelta(days=1)
-
-    def _create_share_link(self, **kwargs):
-        defaults = {
-            "owner": self.user,
-            "password": None,
-            "expires_at": self.base_expires_at,
-        }
-        defaults.update(kwargs)
-        return ShareLinkFactory(**defaults)
-
-    def test_get_on_unlock_endpoint_is_not_allowed(self):
-        share_link = self._create_share_link(token="get-not-allowed")
-        share_link.set_password("secret123")
-        share_link.save(update_fields=["password"])
-
-        url = reverse("public-share-unlock", kwargs={"token": share_link.token})
-        response = self.client.get(url)
-
-        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
-
-    def test_unlock_non_password_protected_link_returns_400(self):
-        share_link = self._create_share_link(password=None)
-
-        url = reverse("public-share-unlock", kwargs={"token": share_link.token})
-        response = self.client.post(url, {"password": "anything"}, format="json")
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            response.data["detail"],
-            "This link is not password protected.",
-        )
-
-    def test_unlock_with_invalid_password_returns_400(self):
-        share_link = self._create_share_link()
-
-        share_link.set_password("correct-password")
-        share_link.save(update_fields=["password"])
-
-        url = reverse("public-share-unlock", kwargs={"token": share_link.token})
-        response = self.client.post(url, {"password": "wrong-password"}, format="json")
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data["detail"], "Invalid password.")
-
-    def test_unlock_with_valid_password_returns_full_details(self):
-        share_link = self._create_share_link(token="valid-pass-token")
-        share_link.set_password("secret123")
-        share_link.save(update_fields=["password"])
-
-        file1 = CloudFileFactory(user=self.user)
-        folder1 = FolderFactory(user=self.user)
-        share_link.files.add(file1)
-        share_link.folders.add(folder1)
-
-        url = reverse("public-share-unlock", kwargs={"token": share_link.token})
-        response = self.client.post(url, {"password": "secret123"}, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        data = response.json()
+        self.assertIn("access_token", response.data)
+        self.assertIsNotNone(response.data["access_token"])
+        self.assertIn("expires_in", response.data)
+        self.assertIn("token_type", response.data)
+        self.assertEqual(response.data["token_type"], "sharelink_access")
 
-        self.assertIn("files", data)
-        self.assertIn("folders", data)
-        self.assertEqual(len(data["files"]), 1)
-        self.assertEqual(len(data["folders"]), 1)
+    def test_invalid_password_returns_401(self):
+        response = self.client.post(
+            self.get_url(self.protected_link.token),
+            {"password": "wrong-password"},
+            format="json",
+        )
 
-    def test_unlock_nonexistent_token_returns_404(self):
-        url = reverse("public-share-unlock", kwargs={"token": "does-not-exist"})
-        response = self.client.post(url, {"password": "anything"}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertIn("detail", response.data)
+        self.assertIn("Invalid password", str(response.data["detail"]))
+
+    def test_missing_password_field_returns_401(self):
+        response = self.client.post(
+            self.get_url(self.protected_link.token),
+            {},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_empty_password_treated_as_invalid(self):
+        response = self.client.post(
+            self.get_url(self.protected_link.token),
+            {"password": ""},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertIn("detail", response.data)
+
+    def test_link_without_password_returns_requires_password_false(self):
+        response = self.client.post(
+            self.get_url(self.unprotected_link.token),
+            {},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("requires_password", response.data)
+        self.assertFalse(response.data["requires_password"])
+        self.assertIn("access_token", response.data)
+        self.assertIsNone(response.data["access_token"])
+        self.assertIsNone(response.data["expires_in"])
+
+    def test_link_without_password_ignores_password_field(self):
+        response = self.client.post(
+            self.get_url(self.unprotected_link.token),
+            {"password": "whatever"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(response.data["requires_password"])
+        self.assertIsNone(response.data["access_token"])
+
+    def test_invalid_token_returns_404(self):
+        response = self.client.post(
+            self.get_url("non-existent-token"),
+            {"password": "anything"},
+            format="json",
+        )
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(
-            response.data["detail"],
-            "The link you’re trying to open doesn’t exist.",
-        )
 
-    def test_unlock_revoked_link_returns_410(self):
-        share_link = self._create_share_link(revoked_at=timezone.now())
-        share_link.set_password("secret")
-        share_link.save(update_fields=["password"])
-
-        url = reverse("public-share-unlock", kwargs={"token": share_link.token})
-        response = self.client.post(url, {"password": "secret"}, format="json")
-
-        self.assertEqual(response.status_code, status.HTTP_410_GONE)
-        self.assertEqual(
-            response.data["detail"],
-            "This link has been disabled by the owner.",
-        )
-
-    def test_unlock_expired_link_returns_410(self):
-        expired_at = timezone.now() - timezone.timedelta(days=1)
-        share_link = self._create_share_link(expires_at=expired_at)
-        share_link.set_password("secret")
-        share_link.save(update_fields=["password"])
-
-        url = reverse("public-share-unlock", kwargs={"token": share_link.token})
-        response = self.client.post(url, {"password": "secret"}, format="json")
-
-        self.assertEqual(response.status_code, status.HTTP_410_GONE)
-        self.assertEqual(
-            response.data["detail"],
-            "This link has expired and can’t be accessed anymore.",
-        )
-
-    def test_unlock_with_missing_password_treated_as_invalid(self):
-        share_link = self._create_share_link(token="missing-pass-token")
-        share_link.set_password("secret123")
-        share_link.save(update_fields=["password"])
-
-        url = reverse("public-share-unlock", kwargs={"token": share_link.token})
-
-        # No password field at all
-        response = self.client.post(url, {}, format="json")
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data["detail"], "Invalid password.")
-
-    def test_unlock_with_empty_password_string_returns_invalid(self):
-        share_link = self._create_share_link(token="empty-pass-token")
-        share_link.set_password("secret123")
-        share_link.save(update_fields=["password"])
-
-        url = reverse("public-share-unlock", kwargs={"token": share_link.token})
-        response = self.client.post(url, {"password": ""}, format="json")
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data["detail"], "Invalid password.")
-
-    def test_successful_unlock_never_exposes_password_field(self):
-        share_link = self._create_share_link(token="no-password-leak")
-        share_link.set_password("secret123")
-        share_link.save(update_fields=["password"])
-
-        url = reverse("public-share-unlock", kwargs={"token": share_link.token})
-        response = self.client.post(url, {"password": "secret123"}, format="json")
+    def test_build_access_token_called_with_share_link(self):
+        with patch.object(
+                ShareLinkAccessMixin,
+                "build_access_token",
+                return_value="dummy-token",
+        ) as mocked_build:
+            response = self.client.post(
+                self.get_url(self.protected_link.token),
+                {"password": "correct-password"},
+                format="json",
+            )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        data = response.json()
+        mocked_build.assert_called_once()
+        called_arg = mocked_build.call_args[0][0]
+        self.assertEqual(called_arg.pk, self.protected_link.pk)
+        self.assertEqual(response.data["access_token"], "dummy-token")
 
-        self.assertNotIn("password", data)
-        self.assertIn("token", data)
-        self.assertIn("files", data)
-        self.assertIn("folders", data)
+    def test_expires_in_uses_access_max_age(self):
+        with patch.object(ShareLinkAccessMixin, "access_max_age", 999):
+            response = self.client.post(
+                self.get_url(self.protected_link.token),
+                {"password": "correct-password"},
+                format="json",
+            )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["expires_in"], 999)
+
+    def test_anonymous_user_can_authenticate_share_link(self):
+        self.client.logout()
+        response = self.client.post(
+            self.get_url(self.protected_link.token),
+            {"password": "correct-password"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_requires_password_not_in_protected_success_response(self):
+        response = self.client.post(
+            self.get_url(self.protected_link.token),
+            {"password": "correct-password"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertNotIn("requires_password", response.data)
+
+    def test_get_method_not_allowed(self):
+        response = self.client.get(self.get_url(self.protected_link.token))
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_access_token_is_string_on_success(self):
+        with patch.object(
+                ShareLinkAccessMixin,
+                "build_access_token",
+                return_value="string-token-123",
+        ):
+            response = self.client.post(
+                self.get_url(self.protected_link.token),
+                {"password": "correct-password"},
+                format="json",
+            )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsInstance(response.data["access_token"], str)
+
+    def test_extra_fields_in_payload_are_ignored(self):
+        response = self.client.post(
+            self.get_url(self.protected_link.token),
+            {"password": "correct-password", "foo": "bar"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("access_token", response.data)
+
+    def test_form_encoded_body_still_works(self):
+        # no format="json" -> uses application/x-www-form-urlencoded
+        response = self.client.post(
+            self.get_url(self.protected_link.token),
+            {"password": "correct-password"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("access_token", response.data)

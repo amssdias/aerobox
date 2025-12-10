@@ -1,17 +1,14 @@
 from rest_framework import serializers
 
 from apps.cloud_storage.models import ShareLink
-from apps.cloud_storage.serializers import CloudFilesSerializer, FolderDetailSerializer
+from apps.cloud_storage.serializers import CloudFilesSerializer, FolderParentSerializer
 
 
-class PublicShareLinkMetaSerializer(serializers.ModelSerializer):
-    """
-    Used when we only want to expose metadata about the link,
-    e.g. before password validation.
-    """
-
+class PublicShareLinkDetailSerializer(serializers.ModelSerializer):
     owner_name = serializers.SerializerMethodField()
     is_password_protected = serializers.SerializerMethodField()
+    files = CloudFilesSerializer(many=True, read_only=True)
+    folders = FolderParentSerializer(many=True, read_only=True)
 
     class Meta:
         model = ShareLink
@@ -21,6 +18,8 @@ class PublicShareLinkMetaSerializer(serializers.ModelSerializer):
             "expires_at",
             "created_at",
             "is_password_protected",
+            "files",
+            "folders"
         )
         read_only_fields = fields
 
@@ -36,17 +35,9 @@ class PublicShareLinkMetaSerializer(serializers.ModelSerializer):
         return bool(obj.password)
 
 
-class PublicShareLinkDetailSerializer(PublicShareLinkMetaSerializer):
-    """
-    Used when the link is accessible (no password or password already validated).
-    Includes the shared files and folders.
-    """
-
-    files = CloudFilesSerializer(many=True, read_only=True)
-    folders = FolderDetailSerializer(many=True, read_only=True)
-
-    class Meta(PublicShareLinkMetaSerializer.Meta):
-        fields = PublicShareLinkMetaSerializer.Meta.fields + (
-            "files",
-            "folders",
-        )
+class ShareLinkPasswordSerializer(serializers.Serializer):
+    password = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        style={"input_type": "password"},
+    )
