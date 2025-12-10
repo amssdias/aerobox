@@ -416,6 +416,29 @@ class ShareLinkViewSetTests(APITestCase):
         )
         self.assertEqual(ShareLink.objects.filter(owner=self.user).count(), 0)
 
+    def test_cannot_create_share_link_with_non_root_folder(self):
+        self._attach_plan(
+            {
+                "allow_folder_sharing": True,
+                "max_active_links": 5,
+                "allow_password": True,
+                "allow_choose_expiration": True,
+                "max_expiration_minutes": 60,
+            }
+        )
+
+        folder_3 = FolderFactory(parent=self.folder_1)
+
+        payload = {
+            "files": [self.file_1.id],
+            "folders": [folder_3.id],
+            "expires_at": None,
+            "password": None,
+        }
+
+        response = self.client.post(self.share_links_url, payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_create_share_link_integration_max_active_links_reached(self):
         self._attach_plan(
             {

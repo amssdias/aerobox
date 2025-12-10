@@ -16,7 +16,7 @@ class ShareLinkSerializer(serializers.ModelSerializer):
     )
     folders = serializers.PrimaryKeyRelatedField(
         many=True,
-        queryset=Folder.objects.all(),
+        queryset=Folder.objects.filter(parent__isnull=True),
         required=False,
     )
 
