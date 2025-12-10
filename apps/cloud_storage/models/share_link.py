@@ -91,3 +91,16 @@ class ShareLink(Timestampable):
         if not raw_password:
             return False
         return check_password(raw_password, self.password)
+
+    def can_access_file(self, cloud_file) -> bool:
+        if self.files.filter(id=cloud_file.id).exists():
+            return True
+
+        if not cloud_file.folder_id:
+            return False
+
+        root = cloud_file.get_root_folder()
+        if root and self.folders.filter(id=root.id).exists():
+            return True
+
+        return False

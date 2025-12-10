@@ -89,3 +89,9 @@ class CloudFile(Timestampable, SoftDeleteModel):
 
     def rebuild_path(self):
         self.path = build_object_path(self.file_name, self.folder)
+
+    def get_root_folder(self):
+        folder = self.folder
+        while folder and folder.parent_id:
+            folder = folder.parent
+        return folder
