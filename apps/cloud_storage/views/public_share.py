@@ -86,7 +86,7 @@ class PublicShareLinkAuthView(ShareLinkMixin, ShareLinkAccessMixin, APIView):
 
 
 @extend_schema(tags=["API - File Sharing"])
-class PublicShareLinkFileDownloadView(ShareLinkMixin, APIView):
+class PublicShareLinkFileDownloadView(ShareLinkMixin, ShareLinkAccessMixin, APIView):
     """
     Public endpoint to get a presigned download URL for a file
     belonging to a ShareLink.
@@ -97,12 +97,7 @@ class PublicShareLinkFileDownloadView(ShareLinkMixin, APIView):
     def post(self, request, token, file_id):
         share_link = self.get_object()
         self.validate_share_link(share_link)
-
-        # Password check
-        if share_link.password:
-            password = request.data.get("password")
-            if not password or not share_link.check_password(password):
-                raise ValidationError({"password": _("Invalid password.")})
+        self.require_valid_access(request, share_link)
 
         file_obj = get_object_or_404(
             CloudFile.objects.select_related("folder"), id=file_id
