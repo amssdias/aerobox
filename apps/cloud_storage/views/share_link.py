@@ -17,7 +17,7 @@ from apps.cloud_storage.pagination import ShareLinkPagination
 from apps.cloud_storage.serializers.share_link_serializer import ShareLinkSerializer
 
 
-@extend_schema(tags=["API - File Sharing"])
+@extend_schema(tags=["API - Share Links / Private"])
 class ShareLinkViewSet(viewsets.ModelViewSet):
     """
     API endpoint for managing file sharing links (ShareLink).
