@@ -7,6 +7,7 @@ from apps.cloud_storage.factories.share_link_factory import ShareLinkFactory
 from apps.cloud_storage.serializers import CloudFilesSerializer, FolderParentSerializer
 from apps.cloud_storage.serializers.public_share_serializer import (
     PublicShareLinkDetailSerializer,
+    PublicShareFolderDetailSerializer,
 )
 from apps.users.factories.user_factory import UserFactory
 
@@ -109,7 +110,7 @@ class PublicShareLinkDetailSerializerTests(TestCase):
             "created_at",
             "is_password_protected",
             "files",
-            "folders"
+            "folders",
         )
 
         self.assertEqual(tuple(serializer.fields.keys()), expected_fields)
@@ -146,3 +147,94 @@ class PublicShareLinkDetailSerializerTests(TestCase):
 
         self.assertSetEqual(file_names, {"file1.txt", "file2.jpg"})
         self.assertSetEqual(folder_names, {"Folder 1", "Folder 2"})
+
+
+class TestPublicShareFolderDetailSerializer(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = UserFactory()
+
+        cls.root_folder = FolderFactory(name="root")
+
+        cls.folder = FolderFactory(name="main", parent=cls.root_folder)
+
+        # Subfolders under main
+        cls.subfolder_1 = FolderFactory(name="sub_1", parent=cls.folder)
+        cls.subfolder_2 = FolderFactory(name="sub_2", parent=cls.folder)
+
+        cls.file_1 = CloudFileFactory(
+            file_name="file_1", folder=cls.folder, user=cls.user
+        )
+        cls.file_2 = CloudFileFactory(
+            file_name="file_2", folder=cls.folder, user=cls.user
+        )
+
+        cls.serializer = PublicShareFolderDetailSerializer
+
+    def test_serializer_includes_expected_top_level_fields(self):
+        data = self.serializer(self.folder).data
+        self.assertEqual(
+            set(data.keys()), {"id", "name", "parent", "subfolders", "files"}
+        )
+
+    def test_serializer_id_and_name_match_instance(self):
+        data = self.serializer(self.folder).data
+        self.assertEqual(data["id"], self.folder.id)
+        self.assertEqual(data["name"], self.folder.name)
+
+    def test_parent_is_serialized_when_present(self):
+        data = self.serializer(self.folder).data
+        self.assertIsNotNone(data["parent"])
+
+    def test_parent_is_none_when_no_parent(self):
+        data = self.serializer(self.root_folder).data
+        self.assertIsNone(data["parent"])
+
+    def test_subfolders_is_a_list(self):
+        data = self.serializer(self.folder).data
+        self.assertIsInstance(data["subfolders"], list)
+
+    def test_files_is_a_list(self):
+        data = self.serializer(self.folder).data
+        self.assertIsInstance(data["files"], list)
+
+    def test_subfolders_returns_correct_count(self):
+        data = self.serializer(self.folder).data
+        self.assertEqual(len(data["subfolders"]), 2)
+
+    def test_files_returns_correct_count(self):
+        data = self.serializer(self.folder).data
+        self.assertEqual(len(data["files"]), 2)
+
+    def test_subfolders_empty_when_no_subfolders(self):
+        empty_folder = FolderFactory(
+            name="empty_no_subfolders", parent=self.root_folder
+        )
+        data = self.serializer(empty_folder).data
+        self.assertEqual(data["subfolders"], [])
+
+    def test_files_empty_when_no_files(self):
+        empty_folder = FolderFactory(name="empty_no_files", parent=self.root_folder)
+        data = self.serializer(empty_folder).data
+        self.assertEqual(data["files"], [])
+
+    def test_get_subfolders_uses_simplefolderserializer_with_many_true(self):
+        serializer = self.serializer(self.root_folder)
+        subfolders = serializer.get_subfolders(self.root_folder)
+
+        self.assertEqual(subfolders[0]["id"], self.folder.id)
+        self.assertEqual(subfolders[0]["name"], self.folder.name)
+        self.assertEqual(subfolders[0]["subfolders_count"], 2)
+        self.assertEqual(subfolders[0]["files_count"], 2)
+
+    def test_get_files_uses_cloudfilesserializer_with_many_true(self):
+        new_file = CloudFileFactory(
+            file_name="file_1_1", folder=self.root_folder, user=self.user
+        )
+        serializer = self.serializer(self.root_folder)
+        files = serializer.get_files(self.root_folder)
+
+        self.assertEqual(files[0]["id"], new_file.id)
+        self.assertEqual(files[0]["file_name"], new_file.file_name)
+        self.assertEqual(files[0]["size"], new_file.size)
+        self.assertEqual(files[0]["content_type"], new_file.content_type)
