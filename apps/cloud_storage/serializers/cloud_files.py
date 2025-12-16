@@ -198,6 +198,7 @@ class CloudFileMetaPatchSerializer(serializers.ModelSerializer):
         data["error_code"] = data.get("error_code", CloudFileErrorCode.UNKNOWN_S3_ERROR) if error_code else None
         return data
 
+
 class CloudFileUpdateSerializer(serializers.ModelSerializer):
     file_name = serializers.CharField(
         required=False,
