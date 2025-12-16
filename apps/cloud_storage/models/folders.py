@@ -61,3 +61,9 @@ class Folder(Timestampable):
         for i in range(0, len(files), batch_size):
             batch = files[i:i + batch_size]
             CloudFile.objects.bulk_update(batch, ["path"])
+
+    def get_root(self):
+        folder = self
+        while folder.parent is not None:
+            folder = folder.parent
+        return folder

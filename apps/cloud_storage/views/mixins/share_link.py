@@ -32,6 +32,14 @@ class ShareLinkMixin:
 
         return True
 
+    @staticmethod
+    def get_folder(id, owner):
+        try:
+            return Folder.objects.prefetch_related("files").get(pk=id, user=owner)
+        except Folder.DoesNotExist:
+            raise Http404
+
+
 class ShareLinkAccessMixin:
     """
     Mixin for password-protected share links.

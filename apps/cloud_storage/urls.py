@@ -7,6 +7,7 @@ from apps.cloud_storage.views.public_share import (
     PublicShareLinkDetail,
     PublicShareLinkFileDownloadView,
     PublicShareLinkAuthView,
+    PublicShareLinkFolderView,
 )
 from apps.cloud_storage.views.share_link import ShareLinkViewSet
 
@@ -25,6 +26,11 @@ urlpatterns = [
         "share/<str:token>/files/<int:file_id>/download/",
         PublicShareLinkFileDownloadView.as_view(),
         name="public-share-file-download",
+    ),
+    path(
+        "share/<str:token>/folders/<int:folder_id>/",
+        PublicShareLinkFolderView.as_view(),
+        name="public-sharelink-folder-detail",
     ),
 ]
 

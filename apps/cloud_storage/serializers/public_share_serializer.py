@@ -1,7 +1,8 @@
 from rest_framework import serializers
 
-from apps.cloud_storage.models import ShareLink
+from apps.cloud_storage.models import ShareLink, Folder
 from apps.cloud_storage.serializers import CloudFilesSerializer, FolderParentSerializer
+from apps.cloud_storage.serializers.folder_serializer import SimpleFolderSerializer
 
 
 class PublicShareLinkDetailSerializer(serializers.ModelSerializer):
@@ -19,7 +20,7 @@ class PublicShareLinkDetailSerializer(serializers.ModelSerializer):
             "created_at",
             "is_password_protected",
             "files",
-            "folders"
+            "folders",
         )
         read_only_fields = fields
 
@@ -41,3 +42,19 @@ class ShareLinkPasswordSerializer(serializers.Serializer):
         allow_blank=True,
         style={"input_type": "password"},
     )
+
+
+class PublicShareFolderDetailSerializer(serializers.ModelSerializer):
+    parent = FolderParentSerializer(read_only=True)
+    subfolders = serializers.SerializerMethodField()
+    files = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Folder
+        fields = ["id", "name", "parent", "subfolders", "files"]
+
+    def get_subfolders(self, obj):
+        return SimpleFolderSerializer(obj.subfolders.all(), many=True).data
+
+    def get_files(self, obj):
+        return CloudFilesSerializer(obj.files.all(), many=True).data

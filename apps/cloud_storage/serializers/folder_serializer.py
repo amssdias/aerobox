@@ -116,6 +116,7 @@ class FolderSerializer(serializers.ModelSerializer):
     def get_files_count(self, obj):
         return obj.files.all().count()
 
+
 class FolderDetailSerializer(serializers.ModelSerializer):
     parent = FolderParentSerializer(read_only=True)
     subfolders = serializers.SerializerMethodField()
@@ -130,3 +131,26 @@ class FolderDetailSerializer(serializers.ModelSerializer):
 
     def get_files(self, obj):
         return CloudFilesSerializer(obj.files.all(), many=True, context=self.context).data
+
+
+class SimpleFolderSerializer(serializers.ModelSerializer):
+    subfolders_count = serializers.SerializerMethodField()
+    files_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Folder
+        fields = [
+            "id",
+            "name",
+            "created_at",
+            "updated_at",
+            "subfolders_count",
+            "files_count",
+        ]
+        read_only_fields = fields
+
+    def get_subfolders_count(self, obj):
+        return obj.subfolders.all().count()
+
+    def get_files_count(self, obj):
+        return obj.files.all().count()

@@ -9,17 +9,21 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.cloud_storage.models import CloudFile
-from apps.cloud_storage.serializers import FolderDetailSerializer
 from apps.cloud_storage.serializers.public_share_serializer import (
-    PublicShareLinkDetailSerializer, ShareLinkPasswordSerializer,
+    PublicShareLinkDetailSerializer,
+    ShareLinkPasswordSerializer,
+    PublicShareFolderDetailSerializer,
 )
 from apps.cloud_storage.services.storage.s3_service import S3Service
-from apps.cloud_storage.views.mixins.share_link import ShareLinkMixin, ShareLinkAccessMixin
+from apps.cloud_storage.views.mixins.share_link import (
+    ShareLinkMixin,
+    ShareLinkAccessMixin,
+)
 
 logger = logging.getLogger("aerobox")
 
 
-@extend_schema(tags=["API - File Sharing"])
+@extend_schema(tags=["API - Share Links / Public"])
 class PublicShareLinkDetail(ShareLinkMixin, ShareLinkAccessMixin, APIView):
     """
     Public endpoint to access a share link by token.
@@ -32,14 +36,12 @@ class PublicShareLinkDetail(ShareLinkMixin, ShareLinkAccessMixin, APIView):
         self.validate_share_link(share_link)
         self.require_valid_access(request, share_link)
 
-        serializer = PublicShareLinkDetailSerializer(
-            share_link, context={"user": share_link.owner}
-        )
+        serializer = PublicShareLinkDetailSerializer(share_link)
 
         return Response(serializer.data)
 
 
-@extend_schema(tags=["API - File Sharing"])
+@extend_schema(tags=["API - Share Links / Public"])
 class PublicShareLinkAuthView(ShareLinkMixin, ShareLinkAccessMixin, APIView):
     """
     Validates the password for a ShareLink and returns an access token
@@ -85,7 +87,7 @@ class PublicShareLinkAuthView(ShareLinkMixin, ShareLinkAccessMixin, APIView):
         )
 
 
-@extend_schema(tags=["API - File Sharing"])
+@extend_schema(tags=["API - Share Links / Public"])
 class PublicShareLinkFileDownloadView(ShareLinkMixin, ShareLinkAccessMixin, APIView):
     """
     Public endpoint to get a presigned download URL for a file
@@ -123,3 +125,28 @@ class PublicShareLinkFileDownloadView(ShareLinkMixin, ShareLinkAccessMixin, APIV
             )
 
         return Response({"url": download_url}, status=status.HTTP_200_OK)
+
+
+@extend_schema(tags=["API - Share Links / Public"])
+class PublicShareLinkFolderView(ShareLinkMixin, ShareLinkAccessMixin, APIView):
+    """
+    Returns contents (subfolders + files) of `folder_id`,
+    but only if its ROOT folder is one of the folders included in the share link.
+    """
+
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, token, folder_id):
+        share_link = self.get_object()
+        self.validate_share_link(share_link)
+        self.require_valid_access(request, share_link)
+
+        folder = self.get_folder(folder_id, owner=share_link.owner)
+
+        root = folder.get_root()
+        root_is_shared = share_link.folders.filter(pk=root.pk).exists()
+        if not root_is_shared:
+            raise NotFound(_("The folder you’re trying to open doesn’t exist."))
+
+        serializer = PublicShareFolderDetailSerializer(folder)
+        return Response(serializer.data)
