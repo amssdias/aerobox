@@ -1,6 +1,6 @@
 import logging
 
-from django.db import transaction, IntegrityError
+from django.db import IntegrityError
 
 from apps.profiles.models import Profile
 from apps.subscriptions.choices.subscription_choices import SubscriptionStatusChoices
@@ -32,20 +32,19 @@ class SubscriptionCreatedHandler(StripeEventHandler, StripeSubscriptionMixin):
             return False
 
         try:
-            with transaction.atomic():
-                subscription, created = Subscription.objects.get_or_create(
-                    user=user,
-                    stripe_subscription_id=stripe_subscription.id,
-                    defaults={
-                        "plan": plan,
-                        "billing_cycle": billing_cycle,
-                        "start_date": billing_start,
-                        "end_date": billing_end,
-                        "status": SubscriptionStatusChoices.INACTIVE.value,
-                        "trial_start_date": None,
-                        "is_recurring": True,
-                    },
-                )
+            subscription, created = Subscription.objects.get_or_create(
+                user=user,
+                stripe_subscription_id=stripe_subscription.id,
+                defaults={
+                    "plan": plan,
+                    "billing_cycle": billing_cycle,
+                    "start_date": billing_start,
+                    "end_date": billing_end,
+                    "status": SubscriptionStatusChoices.INACTIVE.value,
+                    "trial_start_date": None,
+                    "is_recurring": True,
+                },
+            )
         except IntegrityError:
             subscription = Subscription.objects.get(stripe_invoice_id=stripe_subscription.id)
 

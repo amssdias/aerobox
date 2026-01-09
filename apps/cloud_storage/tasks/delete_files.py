@@ -2,7 +2,6 @@ import logging
 from datetime import timedelta
 
 from celery import shared_task, group
-from django.db import transaction
 from django.utils.timezone import now
 
 from apps.cloud_storage.models import CloudFile
@@ -41,9 +40,7 @@ def clear_all_deleted_files_from_user(user_id, older_than_days=None):
 
     # Only delete from DB if all S3 deletions succeeded
     successfully_deleted_files = deleted_files.exclude(s3_key__in=failed_s3_keys)
-
-    with transaction.atomic():
-        deleted_count = successfully_deleted_files.delete()[0]
+    deleted_count = successfully_deleted_files.delete()[0]
 
     logger.info(
         "Permanently deleted %s file(s) from DB and S3 for user_id=%s.",

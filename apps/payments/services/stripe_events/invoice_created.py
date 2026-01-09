@@ -1,6 +1,6 @@
 import logging
 
-from django.db import transaction, IntegrityError
+from django.db import IntegrityError
 
 from apps.payments.choices.payment_choices import PaymentStatusChoices
 from apps.payments.models import Payment
@@ -81,19 +81,18 @@ class InvoiceCreatedHandler(
     def create_payment(user, subscription, status, stripe_invoice_id, invoice_url, invoice_pdf_url, amount):
 
         try:
-            with transaction.atomic():
-                payment, created = Payment.objects.get_or_create(
-                    stripe_invoice_id=stripe_invoice_id,
-                    defaults={
-                        "user": user,
-                        "subscription": subscription,
-                        "status": status,
-                        "invoice_url": invoice_url,
-                        "invoice_pdf_url": invoice_pdf_url,
-                        "amount": amount,
-                    }
-                )
-                logger.info(f"Payment created successfully for invoice {stripe_invoice_id}.")
+            payment, created = Payment.objects.get_or_create(
+                stripe_invoice_id=stripe_invoice_id,
+                defaults={
+                    "user": user,
+                    "subscription": subscription,
+                    "status": status,
+                    "invoice_url": invoice_url,
+                    "invoice_pdf_url": invoice_pdf_url,
+                    "amount": amount,
+                }
+            )
+            logger.info(f"Payment created successfully for invoice {stripe_invoice_id}.")
 
         except IntegrityError:
             payment = Payment.objects.get(stripe_invoice_id=stripe_invoice_id)
