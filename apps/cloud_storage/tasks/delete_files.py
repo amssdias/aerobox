@@ -17,8 +17,7 @@ def clear_all_deleted_files_from_user(user_id, older_than_days=None):
     deleted_files = CloudFile.deleted.filter(user_id=user_id)
 
     if older_than_days is not None:
-        threshold_date = now() - timedelta(days=older_than_days)
-        deleted_files = deleted_files.filter(deleted_at__lte=threshold_date)
+        deleted_files = get_deleted_files_before_filter(deleted_files, older_than_days)
 
     s3_service = S3Service()
     failed_s3_keys = []
@@ -54,6 +53,11 @@ def clear_all_deleted_files_from_user(user_id, older_than_days=None):
             user_id,
             extra={"failed_keys": failed_s3_keys},
         )
+
+
+def get_deleted_files_before_filter(qs, older_than_days):
+    threshold_date = now() - timedelta(days=older_than_days)
+    return qs.filter(deleted_at__lte=threshold_date)
 
 
 @shared_task
