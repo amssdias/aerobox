@@ -2,8 +2,8 @@ from unittest.mock import patch
 
 from django.test import TestCase
 
-from apps.cloud_storage.factories.cloud_file_factory import CloudFileFactory
 from apps.cloud_storage.services.storage.cloud_file_sync_service import CloudFileSyncService
+from apps.cloud_storage.tests.factories.cloud_file_factory import CloudFileFactory
 from apps.users.factories.user_factory import UserFactory
 
 

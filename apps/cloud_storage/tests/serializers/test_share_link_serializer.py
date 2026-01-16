@@ -6,11 +6,11 @@ from django.conf import settings
 from django.test import TestCase
 from django.utils import timezone
 
-from apps.cloud_storage.factories.cloud_file_factory import CloudFileFactory
-from apps.cloud_storage.factories.folder_factory import FolderFactory
-from apps.cloud_storage.factories.share_link_factory import ShareLinkFactory
 from apps.cloud_storage.models import ShareLink, CloudFile, Folder
 from apps.cloud_storage.serializers.share_link_serializer import ShareLinkSerializer
+from apps.cloud_storage.tests.factories.cloud_file_factory import CloudFileFactory
+from apps.cloud_storage.tests.factories.folder_factory import FolderFactory
+from apps.cloud_storage.tests.factories.share_link_factory import ShareLinkFactory
 from apps.users.factories.user_factory import UserFactory
 
 

@@ -4,7 +4,7 @@ from django.test import TestCase
 from django.utils.timezone import now
 
 from apps.cloud_storage.constants.cloud_files import SUCCESS, FAILED
-from apps.cloud_storage.factories.cloud_file_factory import CloudFileFactory
+from apps.cloud_storage.tests.factories.cloud_file_factory import CloudFileFactory
 from apps.cloud_storage.utils.size_utils import mb_to_human_gb, get_user_used_bytes
 from apps.subscriptions.factories.subscription import SubscriptionFreePlanFactory
 from apps.users.factories.user_factory import UserFactory

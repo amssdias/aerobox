@@ -1,14 +1,14 @@
 from django.test import TestCase
 from django.utils import timezone
 
-from apps.cloud_storage.factories.cloud_file_factory import CloudFileFactory
-from apps.cloud_storage.factories.folder_factory import FolderFactory
-from apps.cloud_storage.factories.share_link_factory import ShareLinkFactory
 from apps.cloud_storage.serializers import CloudFilesSerializer, FolderParentSerializer
 from apps.cloud_storage.serializers.public_share_serializer import (
     PublicShareLinkDetailSerializer,
     PublicShareFolderDetailSerializer,
 )
+from apps.cloud_storage.tests.factories.cloud_file_factory import CloudFileFactory
+from apps.cloud_storage.tests.factories.folder_factory import FolderFactory
+from apps.cloud_storage.tests.factories.share_link_factory import ShareLinkFactory
 from apps.users.factories.user_factory import UserFactory
 
 

@@ -5,11 +5,11 @@ from django.test import TestCase, RequestFactory
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
-from apps.cloud_storage.factories.cloud_file_factory import CloudFileFactory
-from apps.cloud_storage.factories.folder_factory import FolderFactory
 from apps.cloud_storage.models import Folder
 from apps.cloud_storage.serializers import FolderParentSerializer
 from apps.cloud_storage.serializers import FolderSerializer
+from apps.cloud_storage.tests.factories.cloud_file_factory import CloudFileFactory
+from apps.cloud_storage.tests.factories.folder_factory import FolderFactory
 from apps.subscriptions.factories.plan_factory import PlanFreeFactory
 from apps.subscriptions.factories.subscription import SubscriptionFactory, SubscriptionFreePlanFactory
 from apps.subscriptions.models import Plan

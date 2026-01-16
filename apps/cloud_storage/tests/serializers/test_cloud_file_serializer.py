@@ -3,9 +3,9 @@ from unittest.mock import Mock, patch
 from django.test import TestCase
 from rest_framework.exceptions import ValidationError
 
-from apps.cloud_storage.factories.cloud_file_factory import CloudFileFactory
-from apps.cloud_storage.factories.folder_factory import FolderFactory
 from apps.cloud_storage.serializers import CloudFilesSerializer
+from apps.cloud_storage.tests.factories.cloud_file_factory import CloudFileFactory
+from apps.cloud_storage.tests.factories.folder_factory import FolderFactory
 from apps.subscriptions.choices.subscription_choices import SubscriptionStatusChoices
 from apps.subscriptions.factories.subscription import SubscriptionFreePlanFactory
 from apps.users.factories.user_factory import UserFactory

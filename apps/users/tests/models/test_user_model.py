@@ -9,7 +9,7 @@ from apps.cloud_storage.exceptions import (
     ShareLinkPasswordNotAllowed,
     ShareLinkExpirationTooLong,
 )
-from apps.cloud_storage.factories.share_link_factory import ShareLinkFactory
+from apps.cloud_storage.tests.factories.share_link_factory import ShareLinkFactory
 from apps.features.choices.feature_code_choices import FeatureCodeChoices
 from apps.subscriptions.choices.subscription_choices import SubscriptionStatusChoices
 from apps.subscriptions.factories.subscription import SubscriptionFreePlanFactory

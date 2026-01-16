@@ -2,8 +2,8 @@ from django.test import TestCase
 
 from apps.cloud_storage.choices.cloud_file_error_code_choices import CloudFileErrorCode
 from apps.cloud_storage.constants.cloud_files import SUCCESS, FAILED, PENDING
-from apps.cloud_storage.factories.cloud_file_factory import CloudFileFactory
 from apps.cloud_storage.serializers import CloudFileMetaPatchSerializer
+from apps.cloud_storage.tests.factories.cloud_file_factory import CloudFileFactory
 
 
 class CloudFileMetaPatchSerializerTests(TestCase):

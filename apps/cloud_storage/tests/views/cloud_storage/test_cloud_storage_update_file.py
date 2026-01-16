@@ -3,8 +3,8 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from apps.cloud_storage.constants.cloud_files import SUCCESS, FAILED, PENDING
-from apps.cloud_storage.factories.cloud_file_factory import CloudFileFactory
-from apps.cloud_storage.factories.folder_factory import FolderFactory
+from apps.cloud_storage.tests.factories.cloud_file_factory import CloudFileFactory
+from apps.cloud_storage.tests.factories.folder_factory import FolderFactory
 from apps.cloud_storage.utils.path_utils import build_s3_path, build_object_path
 from apps.users.factories.user_factory import UserFactory
 
