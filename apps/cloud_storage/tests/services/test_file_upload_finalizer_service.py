@@ -5,7 +5,7 @@ from django.test import TestCase
 from apps.cloud_storage.choices.cloud_file_error_code_choices import CloudFileErrorCode
 from apps.cloud_storage.constants.cloud_files import FAILED
 from apps.cloud_storage.factories.cloud_file_factory import CloudFileFactory
-from apps.cloud_storage.services.storage.s3_service import S3Service
+from apps.cloud_storage.integrations.storage.s3_service import S3Service
 from apps.cloud_storage.services.uploads.file_upload_finalizer_service import (
     FileUploadFinalizerService,
 )

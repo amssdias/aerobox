@@ -14,11 +14,11 @@ from apps.cloud_storage.constants.cloud_files import SUCCESS, FAILED
 from apps.cloud_storage.error_messages import get_error_message
 from apps.cloud_storage.exceptions import FileUploadError
 from apps.cloud_storage.filters.cloud_file_filter import CloudFileFilter
+from apps.cloud_storage.integrations.storage.s3_service import S3Service
 from apps.cloud_storage.models import CloudFile
 from apps.cloud_storage.pagination import CloudFilesPagination
 from apps.cloud_storage.serializers import CloudFilesSerializer
 from apps.cloud_storage.serializers.cloud_files import CloudFileMetaPatchSerializer, CloudFileUpdateSerializer
-from apps.cloud_storage.services.storage.s3_service import S3Service
 from apps.cloud_storage.services.uploads.file_upload_finalizer_service import FileUploadFinalizerService
 from apps.cloud_storage.tasks.delete_files import clear_all_deleted_files_from_user
 from apps.cloud_storage.utils.hash_utils import generate_unique_hash

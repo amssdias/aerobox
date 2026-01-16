@@ -8,8 +8,8 @@ from rest_framework.test import APITestCase
 from apps.cloud_storage.exceptions import FileUploadError
 from apps.cloud_storage.factories.cloud_file_factory import CloudFileFactory
 from apps.cloud_storage.factories.folder_factory import FolderFactory
+from apps.cloud_storage.integrations.storage.s3_service import S3Service
 from apps.cloud_storage.models import CloudFile
-from apps.cloud_storage.services.storage.s3_service import S3Service
 from apps.cloud_storage.utils.path_utils import build_object_path
 from apps.features.choices.feature_code_choices import FeatureCodeChoices
 from apps.subscriptions.factories.subscription import SubscriptionFreePlanFactory

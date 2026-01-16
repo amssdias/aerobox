@@ -30,7 +30,7 @@ class CloudFilePartialUpdateIntegrationTests(APITestCase):
     def setUp(self):
         self.client.force_authenticate(self.user)
 
-    @patch("apps.cloud_storage.services.storage.s3_service.S3Service.head")
+    @patch("apps.cloud_storage.integrations.storage.s3_service.S3Service.head")
     def test_partial_update_syncs_when_success(self, mock_s3_head):
         mock_s3_head.return_value = {
             "size": 12345,
@@ -49,7 +49,7 @@ class CloudFilePartialUpdateIntegrationTests(APITestCase):
         self.assertEqual(cf.metadata, {"foo": "bar"})
         self.assertEqual(cf.status, SUCCESS)
 
-    @patch("apps.cloud_storage.services.storage.s3_service.S3Service.head")
+    @patch("apps.cloud_storage.integrations.storage.s3_service.S3Service.head")
     def test_partial_update_empty_payload(self, mock_s3_head):
         response = self.client.patch(self.url, {}, format="json")
 
@@ -65,7 +65,7 @@ class CloudFilePartialUpdateIntegrationTests(APITestCase):
         self.assertIsNone(cf.error_code)
         self.assertIsNone(cf.error_message)
 
-    @patch("apps.cloud_storage.services.storage.s3_service.S3Service.head")
+    @patch("apps.cloud_storage.integrations.storage.s3_service.S3Service.head")
     def test_partial_update_does_not_sync_when_status_is_not_success(self, mock_s3_head):
         payload = {
             "status": FAILED,
@@ -88,7 +88,7 @@ class CloudFilePartialUpdateIntegrationTests(APITestCase):
         self.assertEqual(cf.metadata, {})
         self.assertEqual(cf.status, FAILED)
 
-    @patch("apps.cloud_storage.services.storage.s3_service.S3Service.head")
+    @patch("apps.cloud_storage.integrations.storage.s3_service.S3Service.head")
     def test_partial_update_does_not_sync_when_file_is_not_found(self, mock_s3_head):
         mock_s3_head.return_value = None
         payload = {
@@ -113,8 +113,8 @@ class CloudFilePartialUpdateIntegrationTests(APITestCase):
         self.assertEqual(cf.error_code, CloudFileErrorCode.FILE_NOT_FOUND_IN_S3.value)
         self.assertEqual(cf.error_message, "File not found in storage during upload verification.")
 
-    @patch("apps.cloud_storage.services.storage.s3_service.S3Service.delete_file_from_s3")
-    @patch("apps.cloud_storage.services.storage.s3_service.S3Service.head")
+    @patch("apps.cloud_storage.integrations.storage.s3_service.S3Service.delete_file_from_s3")
+    @patch("apps.cloud_storage.integrations.storage.s3_service.S3Service.head")
     def test_partial_update_does_not_sync_when_over_quota(self, mock_s3_head, mock_s3_delete_file_from_s3):
         limit_bytes = self.subscription.plan.max_storage_bytes
 
@@ -146,8 +146,8 @@ class CloudFilePartialUpdateIntegrationTests(APITestCase):
         self.assertEqual(cf.error_code, CloudFileErrorCode.STORAGE_QUOTA_EXCEEDED.value)
         self.assertEqual(cf.error_message, "User exceeded storage quota after final size verification.")
 
-    @patch("apps.cloud_storage.services.storage.s3_service.S3Service.delete_file_from_s3")
-    @patch("apps.cloud_storage.services.storage.s3_service.S3Service.head")
+    @patch("apps.cloud_storage.integrations.storage.s3_service.S3Service.delete_file_from_s3")
+    @patch("apps.cloud_storage.integrations.storage.s3_service.S3Service.head")
     def test_partial_update_does_not_sync_when_status_is_not_success_unknown_error(self, mock_s3_head,
                                                                                    mock_s3_delete_file_from_s3):
         payload = {
@@ -173,8 +173,8 @@ class CloudFilePartialUpdateIntegrationTests(APITestCase):
         self.assertEqual(cf.error_code, CloudFileErrorCode.UNKNOWN_S3_ERROR.value)
         self.assertEqual(cf.error_message, "Some error happened")
 
-    @patch("apps.cloud_storage.services.storage.s3_service.S3Service.delete_file_from_s3")
-    @patch("apps.cloud_storage.services.storage.s3_service.S3Service.head")
+    @patch("apps.cloud_storage.integrations.storage.s3_service.S3Service.delete_file_from_s3")
+    @patch("apps.cloud_storage.integrations.storage.s3_service.S3Service.head")
     def test_partial_update_missing_status(self, mock_s3_head, mock_s3_delete_file_from_s3):
         limit_bytes = self.subscription.plan.max_storage_bytes
 
@@ -203,8 +203,8 @@ class CloudFilePartialUpdateIntegrationTests(APITestCase):
         self.assertIsNone(cf.error_code)
         self.assertEqual(cf.error_message, "Some error happened")
 
-    @patch("apps.cloud_storage.services.storage.s3_service.S3Service.delete_file_from_s3")
-    @patch("apps.cloud_storage.services.storage.s3_service.S3Service.head")
+    @patch("apps.cloud_storage.integrations.storage.s3_service.S3Service.delete_file_from_s3")
+    @patch("apps.cloud_storage.integrations.storage.s3_service.S3Service.head")
     def test_partial_update_not_success_missing_error_code(self, mock_s3_head, mock_s3_delete_file_from_s3):
         payload = {
             "error_message": "Some error happened",

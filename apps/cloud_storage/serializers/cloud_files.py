@@ -7,8 +7,8 @@ from rest_framework.exceptions import NotFound
 
 from apps.cloud_storage.choices.cloud_file_error_code_choices import CloudFileErrorCode
 from apps.cloud_storage.constants.cloud_files import SUCCESS, FAILED
+from apps.cloud_storage.integrations.storage.s3_service import S3Service
 from apps.cloud_storage.models import CloudFile, Folder
-from apps.cloud_storage.services.storage.s3_service import S3Service
 from apps.cloud_storage.utils.path_utils import build_object_path
 from apps.cloud_storage.utils.size_utils import get_user_used_bytes
 

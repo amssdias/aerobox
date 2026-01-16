@@ -9,8 +9,8 @@ from rest_framework.test import APITestCase
 from apps.cloud_storage.factories.cloud_file_factory import CloudFileFactory
 from apps.cloud_storage.factories.folder_factory import FolderFactory
 from apps.cloud_storage.factories.share_link_factory import ShareLinkFactory
+from apps.cloud_storage.integrations.storage.s3_service import S3Service
 from apps.cloud_storage.models import ShareLink
-from apps.cloud_storage.services.storage.s3_service import S3Service
 from apps.cloud_storage.views.mixins.share_link import ShareLinkAccessMixin
 
 

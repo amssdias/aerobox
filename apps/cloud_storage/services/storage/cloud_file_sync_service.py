@@ -1,6 +1,6 @@
 from typing import Tuple
 
-from .s3_service import S3Service
+from apps.cloud_storage.integrations.storage.s3_service import S3Service
 
 
 class CloudFileSyncService:
