@@ -3,7 +3,7 @@ import logging
 from botocore.exceptions import NoCredentialsError, ClientError
 from django.conf import settings
 
-from apps.cloud_storage.services.aws_client import AWSClient
+from integrations.aws.aws_client import AWSClient
 
 logger = logging.getLogger("aerobox")
 
