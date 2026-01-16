@@ -53,7 +53,7 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
             return CloudFile.deleted.filter(user=user).order_by("id")
 
         if self.action == "update":
-            return CloudFile.not_deleted.user_success_files(user).order_by("id")
+            return CloudFile.not_deleted.user_success_files(user)
 
         return CloudFile.not_deleted.filter(user=user).order_by("id")
 
