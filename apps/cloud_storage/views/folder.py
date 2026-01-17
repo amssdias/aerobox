@@ -1,14 +1,16 @@
 from django.utils.translation import gettext_lazy as _
 from django_filters import rest_framework
 from drf_spectacular.utils import extend_schema, extend_schema_view
-from rest_framework import viewsets, filters
+from rest_framework import viewsets, filters, status
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from apps.cloud_storage.domain.exceptions.folder import FolderContainsFilesOrSubfoldersError
 from apps.cloud_storage.filters.folder_filter import FolderFilter
 from apps.cloud_storage.models import Folder
 from apps.cloud_storage.serializers import FolderSerializer, FolderDetailSerializer
+from apps.cloud_storage.services.folders.delete_folder import delete_folder
 
 
 @extend_schema_view(
@@ -57,8 +59,11 @@ class FolderViewSet(viewsets.ModelViewSet):
         """
         folder = self.get_object()
 
-        if folder.subfolders.exists() or folder.files.filter(deleted_at__isnull=True).exists():
-            return Response({"detail": _("Cannot delete a folder that contains files or subfolders.")}, status=400)
-
-        folder.delete()
+        try:
+            delete_folder(folder_id=folder.id)
+        except FolderContainsFilesOrSubfoldersError:
+            return Response(
+                {"detail": _("Cannot delete a folder that contains files or subfolders.")},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         return Response(status=204)
