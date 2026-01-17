@@ -5,7 +5,7 @@ from django.test import TestCase
 from apps.cloud_storage.choices.cloud_file_error_code_choices import CloudFileErrorCode
 from apps.cloud_storage.constants.cloud_files import FAILED
 from apps.cloud_storage.integrations.storage.s3_service import S3Service
-from apps.cloud_storage.services.uploads.file_upload_finalizer_service import (
+from apps.cloud_storage.services.files.file_upload_finalizer_service import (
     FileUploadFinalizerService,
 )
 from apps.cloud_storage.tests.factories.cloud_file_factory import CloudFileFactory
@@ -139,7 +139,7 @@ class FileUploadFinalizerServiceTests(TestCase):
         self.assertEqual(self.cloud_file.error_code, CloudFileErrorCode.STORAGE_QUOTA_EXCEEDED.value)
         self.assertEqual(self.cloud_file.error_message, "Something went wrong.")
 
-    @patch("apps.cloud_storage.services.uploads.file_upload_finalizer_service.get_user_used_bytes")
+    @patch("apps.cloud_storage.services.files.file_upload_finalizer_service.get_user_used_bytes")
     def test_is_over_quota_returns_false_when_used_equals_limit(self, mock_used_bytes):
         plan = self.subscription.plan
 
@@ -152,7 +152,7 @@ class FileUploadFinalizerServiceTests(TestCase):
         result = FileUploadFinalizerService.is_over_quota(self.cloud_file)
         self.assertFalse(result)
 
-    @patch("apps.cloud_storage.services.uploads.file_upload_finalizer_service.get_user_used_bytes")
+    @patch("apps.cloud_storage.services.files.file_upload_finalizer_service.get_user_used_bytes")
     def test_is_over_quota_returns_true_when_used_greater_than_limit(self, mock_used_bytes):
         plan = self.subscription.plan
 
@@ -165,7 +165,7 @@ class FileUploadFinalizerServiceTests(TestCase):
         result = FileUploadFinalizerService.is_over_quota(self.cloud_file)
         self.assertTrue(result)
 
-    @patch("apps.cloud_storage.services.uploads.file_upload_finalizer_service.get_user_used_bytes")
+    @patch("apps.cloud_storage.services.files.file_upload_finalizer_service.get_user_used_bytes")
     def test_is_over_quota_returns_false_when_used_less_than_limit(self, mock_used_bytes):
         plan = self.subscription.plan
 

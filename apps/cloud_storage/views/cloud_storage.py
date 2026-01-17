@@ -28,10 +28,10 @@ from apps.cloud_storage.services.files.delete_file import (
     soft_delete_file,
     permanent_delete_file,
 )
-from apps.cloud_storage.services.files.restore_file import restore_deleted_file
-from apps.cloud_storage.services.uploads.file_upload_finalizer_service import (
+from apps.cloud_storage.services.files.file_upload_finalizer_service import (
     FileUploadFinalizerService,
 )
+from apps.cloud_storage.services.files.restore_file import restore_deleted_file
 from apps.cloud_storage.tasks.delete_files import clear_all_deleted_files_from_user
 from config.api_docs.openapi_schemas import RESPONSE_SCHEMA_GET_PRESIGNED_URL
 
