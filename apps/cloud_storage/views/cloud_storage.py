@@ -52,7 +52,7 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
             "permanent_delete_file",
             "permanent_delete_all_files",
         ]:
-            return CloudFile.deleted.filter(user=user).order_by("id")
+            return CloudFile.deleted.filter(user=user).order_by("deleted_at")
 
         if self.action == "update":
             return CloudFile.not_deleted.user_success_files(user)
