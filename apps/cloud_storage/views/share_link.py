@@ -6,7 +6,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError, PermissionDenied
 from rest_framework.response import Response
 
-from apps.cloud_storage.exceptions import (
+from apps.cloud_storage.domain.exceptions.share_link import (
     FolderSharingNotAllowed,
     ShareLinkLimitReached,
     ShareLinkExpirationTooLong,

@@ -5,7 +5,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from apps.cloud_storage.exceptions import FileUploadError
+from apps.cloud_storage.domain.exceptions.exceptions import FileUploadError
 from apps.cloud_storage.integrations.storage.s3_service import S3Service
 from apps.cloud_storage.models import CloudFile
 from apps.cloud_storage.tests.factories.cloud_file_factory import CloudFileFactory

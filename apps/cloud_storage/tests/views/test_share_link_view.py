@@ -6,7 +6,7 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from apps.cloud_storage.exceptions import (
+from apps.cloud_storage.domain.exceptions.share_link import (
     FolderSharingNotAllowed,
     ShareLinkLimitReached,
     ShareLinkExpirationTooLong,

@@ -4,8 +4,6 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import status
 from rest_framework.exceptions import APIException
 
-from config.exceptions import DomainError
-
 logger = logging.getLogger("aerobox")
 
 
@@ -30,21 +28,3 @@ class Gone(APIException):
     status_code = status.HTTP_410_GONE
     default_detail = _("This link is no longer available.")
     default_code = "gone"
-
-
-class FolderSharingNotAllowed(DomainError):
-    default_message = "User's current plan does not allow sharing folders."
-
-
-class ShareLinkLimitReached(DomainError):
-    default_message = "User exceeded the maximum number of active share links."
-
-
-class ShareLinkExpirationTooLong(Exception):
-    default_message = (
-        "Share link expiration exceeds the maximum duration allowed by the user's plan."
-    )
-
-
-class ShareLinkPasswordNotAllowed(Exception):
-    default_message = "User can not use password by his current plan."

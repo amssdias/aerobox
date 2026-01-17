@@ -3,7 +3,7 @@ from datetime import timedelta
 from django.test import TestCase, override_settings
 from django.utils import timezone
 
-from apps.cloud_storage.exceptions import (
+from apps.cloud_storage.domain.exceptions.share_link import (
     FolderSharingNotAllowed,
     ShareLinkLimitReached,
     ShareLinkPasswordNotAllowed,

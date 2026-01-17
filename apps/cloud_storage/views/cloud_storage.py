@@ -11,8 +11,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from apps.cloud_storage.constants.cloud_files import SUCCESS, FAILED
+from apps.cloud_storage.domain.exceptions.exceptions import FileUploadError
 from apps.cloud_storage.error_messages import get_error_message
-from apps.cloud_storage.exceptions import FileUploadError
 from apps.cloud_storage.filters.cloud_file_filter import CloudFileFilter
 from apps.cloud_storage.integrations.storage.s3_service import S3Service
 from apps.cloud_storage.models import CloudFile

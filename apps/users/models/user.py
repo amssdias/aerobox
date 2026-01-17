@@ -5,8 +5,12 @@ from django.contrib.auth.models import AbstractUser
 from django.db.models import Q
 from django.utils import timezone
 
-from apps.cloud_storage.exceptions import FolderSharingNotAllowed, ShareLinkLimitReached, ShareLinkExpirationTooLong, \
-    ShareLinkPasswordNotAllowed
+from apps.cloud_storage.domain.exceptions.share_link import (
+    FolderSharingNotAllowed,
+    ShareLinkLimitReached,
+    ShareLinkExpirationTooLong,
+    ShareLinkPasswordNotAllowed,
+)
 from apps.subscriptions.choices.subscription_choices import SubscriptionStatusChoices
 
 
@@ -14,11 +18,9 @@ class User(AbstractUser):
 
     @property
     def active_subscription(self):
-        return (
-            self.subscriptions
-            .filter(status=SubscriptionStatusChoices.ACTIVE.value)
-            .first()
-        )
+        return self.subscriptions.filter(
+            status=SubscriptionStatusChoices.ACTIVE.value
+        ).first()
 
     @property
     def plan(self):
@@ -32,7 +34,9 @@ class User(AbstractUser):
 
     @property
     def active_share_links(self):
-        return self.share_links.filter(Q(expires_at__isnull=True) | Q(expires_at__gt=timezone.now()))
+        return self.share_links.filter(
+            Q(expires_at__isnull=True) | Q(expires_at__gt=timezone.now())
+        )
 
     def validate_create_or_update_sharelink(self, data, create=True):
         file_sharing_config = self.file_sharing_config
@@ -49,11 +53,16 @@ class User(AbstractUser):
 
         # Expiration handling
         expires_at = data.get("expires_at")
-        max_exp_minutes = file_sharing_config.get("max_expiration_minutes",
-                                                  settings.DEFAULT_SHARELINK_EXPIRATION_MINUTES)
+        max_exp_minutes = file_sharing_config.get(
+            "max_expiration_minutes", settings.DEFAULT_SHARELINK_EXPIRATION_MINUTES
+        )
         now = timezone.now()
 
-        if file_sharing_config.get("allow_choose_expiration", False) and expires_at and max_exp_minutes is not None:
+        if (
+                file_sharing_config.get("allow_choose_expiration", False)
+                and expires_at
+                and max_exp_minutes is not None
+        ):
             max_allowed = now + timedelta(minutes=max_exp_minutes)
             if expires_at > max_allowed:
                 raise ShareLinkExpirationTooLong()
