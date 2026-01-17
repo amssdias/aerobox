@@ -52,7 +52,7 @@ class FileUploadFinalizerServiceTests(TestCase):
             "File not found in storage during upload verification.",
         )
 
-        storage.delete_file_from_s3.assert_not_called()
+        storage.delete_file.assert_not_called()
 
     @patch.object(S3Service, "head")
     def test_finalize_with_no_size_change_does_not_check_quota(self, mock_s3_head):
@@ -68,7 +68,7 @@ class FileUploadFinalizerServiceTests(TestCase):
 
         self.assertTrue(result)
 
-        storage.delete_file_from_s3.assert_not_called()
+        storage.delete_file.assert_not_called()
         self.cloud_file.refresh_from_db()
         self.assertIsNone(self.cloud_file.error_code)
 
@@ -87,19 +87,19 @@ class FileUploadFinalizerServiceTests(TestCase):
 
         self.assertTrue(result)
         mock_is_over_quota.assert_called_once_with(self.cloud_file)
-        storage.delete_file_from_s3.assert_not_called()
+        storage.delete_file.assert_not_called()
 
         self.cloud_file.refresh_from_db()
         self.assertIsNone(self.cloud_file.error_code)
         self.assertNotEqual(self.cloud_file.status, FAILED)
 
     @patch.object(S3Service, "head")
-    @patch.object(S3Service, "delete_file_from_s3")
+    @patch.object(S3Service, "delete_file")
     @patch.object(FileUploadFinalizerService, "is_over_quota", return_value=True)
     def test_finalize_size_changed_and_over_quota_marks_failed_and_deletes(
             self,
             mock_is_over_quota,
-            mock_delete_file_from_s3,
+            mock_delete_file,
             mock_s3_head,
     ):
         mock_s3_head.return_value = {
@@ -113,7 +113,7 @@ class FileUploadFinalizerServiceTests(TestCase):
 
         self.assertFalse(result)
         mock_is_over_quota.assert_called_once_with(self.cloud_file)
-        mock_delete_file_from_s3.assert_called_once_with(self.cloud_file.s3_key)
+        mock_delete_file.assert_called_once_with(self.cloud_file.s3_key)
 
         self.cloud_file.refresh_from_db()
         self.assertEqual(self.cloud_file.status, FAILED)

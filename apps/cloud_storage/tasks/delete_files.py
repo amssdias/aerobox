@@ -24,7 +24,7 @@ def clear_all_deleted_files_from_user(user_id, older_than_days=None):
 
     for deleted_file in deleted_files:
         try:
-            s3_service.delete_file_from_s3(object_name=deleted_file.s3_key)
+            s3_service.delete_file(object_name=deleted_file.s3_key)
         except Exception as e:
             failed_s3_keys.append(deleted_file.s3_key)
             logger.error(

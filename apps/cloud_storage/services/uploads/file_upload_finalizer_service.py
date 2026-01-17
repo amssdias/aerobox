@@ -34,7 +34,7 @@ class FileUploadFinalizerService:
             return False
 
         if size_changed and self.is_over_quota(cloud_file):
-            self.storage.delete_file_from_s3(synced_file.s3_key)
+            self.storage.delete_file(synced_file.s3_key)
             self.mark_as_failed(
                 cloud_file,
                 error_code=CloudFileErrorCode.STORAGE_QUOTA_EXCEEDED.value,

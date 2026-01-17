@@ -30,7 +30,7 @@ class CloudStoragePermanentDeleteViewSetTests(APITestCase):
         self.url = reverse("storage-permanent-delete-file", kwargs={"pk": self.deleted_file.id})
         self.client.force_authenticate(user=self.user)
 
-    @patch.object(S3Service, "delete_file_from_s3")
+    @patch.object(S3Service, "delete_file")
     def test_user_can_permanently_delete_own_deleted_file(self, mock_s3):
         file_name = self.deleted_file.file_name
         response = self.client.delete(self.url)
@@ -63,13 +63,13 @@ class CloudStoragePermanentDeleteViewSetTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    @patch.object(S3Service, "delete_file_from_s3")
+    @patch.object(S3Service, "delete_file")
     def test_s3_service_is_called_to_delete_file_on_s3(self, mock_s3):
         self.client.delete(self.url)
 
         mock_s3.assert_called_once()
 
-    @patch.object(S3Service, "delete_file_from_s3")
+    @patch.object(S3Service, "delete_file")
     def test_permanent_delete_returns_success_message_and_status(self, mock_s3):
         response = self.client.delete(self.url)
 
@@ -84,7 +84,7 @@ class CloudStoragePermanentDeleteViewSetTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    @patch.object(S3Service, "delete_file_from_s3")
+    @patch.object(S3Service, "delete_file")
     def test_permanent_delete_does_not_affect_other_user_files(self, mock_s3):
         user = UserFactory()
         file = CloudFileFactory(user=user, deleted_at=timezone.now())
