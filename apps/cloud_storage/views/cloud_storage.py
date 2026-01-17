@@ -1,6 +1,5 @@
 import logging
 
-from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_filters import rest_framework
 from drf_spectacular.utils import extend_schema
@@ -19,6 +18,7 @@ from apps.cloud_storage.models import CloudFile
 from apps.cloud_storage.pagination import CloudFilesPagination
 from apps.cloud_storage.serializers import CloudFilesSerializer
 from apps.cloud_storage.serializers.cloud_files import CloudFileMetaPatchSerializer, CloudFileUpdateSerializer
+from apps.cloud_storage.services.files.delete_file import soft_delete_file
 from apps.cloud_storage.services.uploads.file_upload_finalizer_service import FileUploadFinalizerService
 from apps.cloud_storage.tasks.delete_files import clear_all_deleted_files_from_user
 from apps.cloud_storage.utils.hash_utils import generate_unique_hash
@@ -188,9 +188,7 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         """Soft delete the file by setting 'deleted_at' instead of deleting it."""
         instance = self.get_object()
-        instance.deleted_at = timezone.now()
-        instance.folder = None
-        instance.save(update_fields=["deleted_at", "folder"])
+        soft_delete_file(instance)
         return Response({}, status=status.HTTP_204_NO_CONTENT)
 
     def get_serializer_context(self):
