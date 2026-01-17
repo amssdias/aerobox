@@ -85,7 +85,7 @@ class CloudStoragePresignedURLTests(APITestCase):
         "create_presigned_post_url",
         return_value={"url": "https://s3-presigned-url.com", "fields": {}},
     )
-    @patch("apps.cloud_storage.views.cloud_storage.generate_unique_hash")
+    @patch("apps.cloud_storage.services.files.create_presigned_upload.generate_unique_hash")
     def test_generate_unique_hash_called_on_file_creation(self, mock_generate_unique_hash, mock_s3):
         response = self.client.post(self.url, self.data, format="json")
 

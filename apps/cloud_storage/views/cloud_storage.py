@@ -10,7 +10,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from apps.cloud_storage.constants.cloud_files import SUCCESS, FAILED
-from apps.cloud_storage.domain.exceptions.exceptions import FileUploadError
 from apps.cloud_storage.domain.exceptions.file import FileError
 from apps.cloud_storage.error_messages import get_error_message
 from apps.cloud_storage.filters.cloud_file_filter import CloudFileFilter
@@ -18,14 +17,22 @@ from apps.cloud_storage.integrations.storage.s3_service import S3Service
 from apps.cloud_storage.models import CloudFile
 from apps.cloud_storage.pagination import CloudFilesPagination
 from apps.cloud_storage.serializers import CloudFilesSerializer
-from apps.cloud_storage.serializers.cloud_files import CloudFileMetaPatchSerializer, CloudFileUpdateSerializer
-from apps.cloud_storage.services.files.delete_file import soft_delete_file, permanent_delete_file
+from apps.cloud_storage.serializers.cloud_files import (
+    CloudFileMetaPatchSerializer,
+    CloudFileUpdateSerializer,
+)
+from apps.cloud_storage.services.files.create_presigned_upload import (
+    prepare_file_upload,
+)
+from apps.cloud_storage.services.files.delete_file import (
+    soft_delete_file,
+    permanent_delete_file,
+)
 from apps.cloud_storage.services.files.restore_file import restore_deleted_file
-from apps.cloud_storage.services.uploads.file_upload_finalizer_service import FileUploadFinalizerService
+from apps.cloud_storage.services.uploads.file_upload_finalizer_service import (
+    FileUploadFinalizerService,
+)
 from apps.cloud_storage.tasks.delete_files import clear_all_deleted_files_from_user
-from apps.cloud_storage.utils.hash_utils import generate_unique_hash
-from apps.cloud_storage.utils.path_utils import build_s3_path
-from apps.cloud_storage.utils.size_utils import get_user_used_bytes
 from config.api_docs.openapi_schemas import RESPONSE_SCHEMA_GET_PRESIGNED_URL
 
 logger = logging.getLogger("aerobox")
@@ -76,56 +83,21 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        user = self.request.user
-
-        # Generate path to upload
-        s3_service = S3Service()
-        hashed_file_name = generate_unique_hash(serializer.validated_data.get("file_name"))
-        file_path = build_s3_path(
-            user_id=user.id,
-            file_name=hashed_file_name,
+        storage = S3Service()
+        result = prepare_file_upload(
+            storage=storage,
+            user=request.user,
+            file_name=serializer.validated_data["file_name"],
+            content_type=serializer.validated_data["content_type"],
         )
 
-        subscription = user.active_subscription
-        plan = subscription.plan
-
-        limit_bytes = plan.max_storage_bytes
-        used_bytes = get_user_used_bytes(user)
-
-        # Remaining usable storage under the user's plan
-        available_storage_bytes = max(limit_bytes - used_bytes, 0)
-
-        # Per-file limit defined by the plan
-        max_file_upload_bytes = plan.max_file_upload_size_bytes
-
-        # Final allowed size = the minimum of:
-        #   - remaining storage
-        #   - per-file limit
-        max_bytes = min(available_storage_bytes, max_file_upload_bytes)
-
-        try:
-            presigned_url = s3_service.create_presigned_post_url(
-                object_key=file_path,
-                user_id=self.request.user.id,
-                max_bytes=max_bytes,
-                content_type=serializer.validated_data.get("content_type"),
-            )
-            if not presigned_url:
-                raise ValueError(_("Something went wrong while preparing your file upload. Please try again."))
-        except Exception as e:
-            logger.error(f"File upload error for path {file_path}: {str(e)}", exc_info=True)
-            raise FileUploadError()
-
         # Save file metadata in DB
-        serializer.validated_data["s3_key"] = file_path
+        serializer.validated_data["s3_key"] = result.file_path
         self.perform_create(serializer)
 
         return Response(
-            {
-                "presigned-url": presigned_url,
-                "file": serializer.data
-            },
-            status=status.HTTP_201_CREATED
+            {"presigned-url": result.presigned_url, "file": serializer.data},
+            status=status.HTTP_201_CREATED,
         )
 
     def list(self, request):
@@ -149,8 +121,7 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
 
         serializer.save()
         return Response(
-            {"message": _("File successfully updated.")},
-            status=status.HTTP_200_OK
+            {"message": _("File successfully updated.")}, status=status.HTTP_200_OK
         )
 
     def partial_update(self, request, *args, **kwargs):
@@ -225,7 +196,10 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
         try:
             restore_deleted_file(file)
         except FileError:
-            return Response({"detail": _("File is not deleted.")}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": _("File is not deleted.")},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         return Response({"id": file.id, "restored": True}, status=status.HTTP_200_OK)
 
@@ -240,7 +214,10 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
         s3_service = S3Service()
         permanent_delete_file(s3_service, file)
 
-        return Response({"message": _("File permanently deleted.")}, status=status.HTTP_204_NO_CONTENT)
+        return Response(
+            {"message": _("File permanently deleted.")},
+            status=status.HTTP_204_NO_CONTENT,
+        )
 
     @extend_schema(request=None)
     @action(detail=False, methods=["delete"], url_path="permanent-delete-files")
@@ -253,7 +230,7 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
         if not all_deleted_files:
             return Response(
                 {"message": _("No files found in the recycle bin to delete.")},
-                status=status.HTTP_200_OK
+                status=status.HTTP_200_OK,
             )
 
         all_deleted_files_count = all_deleted_files.count()
@@ -261,8 +238,10 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
 
         return Response(
             {
-                "message": _("All files in the recycle bin have been permanently deleted."),
+                "message": _(
+                    "All files in the recycle bin have been permanently deleted."
+                ),
                 "deleted_count": all_deleted_files_count,
             },
-            status=status.HTTP_204_NO_CONTENT
+            status=status.HTTP_204_NO_CONTENT,
         )
