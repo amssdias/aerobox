@@ -11,6 +11,7 @@ from rest_framework.response import Response
 
 from apps.cloud_storage.constants.cloud_files import SUCCESS, FAILED
 from apps.cloud_storage.domain.exceptions.exceptions import FileUploadError
+from apps.cloud_storage.domain.exceptions.file import FileError
 from apps.cloud_storage.error_messages import get_error_message
 from apps.cloud_storage.filters.cloud_file_filter import CloudFileFilter
 from apps.cloud_storage.integrations.storage.s3_service import S3Service
@@ -19,6 +20,7 @@ from apps.cloud_storage.pagination import CloudFilesPagination
 from apps.cloud_storage.serializers import CloudFilesSerializer
 from apps.cloud_storage.serializers.cloud_files import CloudFileMetaPatchSerializer, CloudFileUpdateSerializer
 from apps.cloud_storage.services.files.delete_file import soft_delete_file, permanent_delete_file
+from apps.cloud_storage.services.files.restore_file import restore_deleted_file
 from apps.cloud_storage.services.uploads.file_upload_finalizer_service import FileUploadFinalizerService
 from apps.cloud_storage.tasks.delete_files import clear_all_deleted_files_from_user
 from apps.cloud_storage.utils.hash_utils import generate_unique_hash
@@ -220,12 +222,12 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
         """
         file = self.get_object()
 
-        if not file.deleted_at:
+        try:
+            restore_deleted_file(file)
+        except FileError:
             return Response({"detail": _("File is not deleted.")}, status=status.HTTP_400_BAD_REQUEST)
 
-        file.deleted_at = None
-        file.save(update_fields=["deleted_at"])
-        return Response({"id": file.id, "restored": True})
+        return Response({"id": file.id, "restored": True}, status=status.HTTP_200_OK)
 
     @extend_schema(request=None)
     @action(detail=True, methods=["delete"], url_path="permanent-delete")
