@@ -329,7 +329,7 @@ class TestSubscriptionViewSetChangePlan(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    @patch("apps.subscriptions.views.subscription.logger.error")
+    @patch("apps.subscriptions.api.views.subscription.logger.error")
     @patch("stripe.Subscription.retrieve")
     def test_change_plan_stripe_retrieve_empty_items_causes_500(
             self, stripe_sub_retrieve, mock_logger
@@ -344,7 +344,7 @@ class TestSubscriptionViewSetChangePlan(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
         mock_logger.assert_called_once()
 
-    @patch("apps.subscriptions.views.subscription.logger.error")
+    @patch("apps.subscriptions.api.views.subscription.logger.error")
     @patch("stripe.Subscription.modify")
     @patch("stripe.Subscription.retrieve")
     def test_change_plan_stripe_modify_raises_error(
@@ -364,7 +364,7 @@ class TestSubscriptionViewSetChangePlan(APITestCase):
         mock_logger.assert_called_once()
 
     @patch("stripe.Subscription.retrieve")
-    @patch("apps.subscriptions.views.subscription.logger.error")
+    @patch("apps.subscriptions.api.views.subscription.logger.error")
     def test_change_plan_stripe_retrieve_raises_error(
             self, mock_logger, stripe_sub_retrieve
     ):
@@ -379,7 +379,7 @@ class TestSubscriptionViewSetChangePlan(APITestCase):
 
     @patch("stripe.Subscription.modify")
     @patch("stripe.Subscription.retrieve")
-    @patch("apps.subscriptions.views.subscription.logger.error")
+    @patch("apps.subscriptions.api.views.subscription.logger.error")
     def test_change_plan_to_free_stripe_delete_raises_error(
             self, mock_logger, stripe_sub_retrieve, stripe_sub_modify
     ):

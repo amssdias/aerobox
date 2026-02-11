@@ -1,9 +1,9 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
+from apps.subscriptions.api.serializers import SubscriptionSerializer
 from apps.subscriptions.choices.subscription_choices import SubscriptionStatusChoices
 from apps.subscriptions.factories.subscription import SubscriptionFactory
-from apps.subscriptions.serializers.subscription import SubscriptionSerializer
 
 User = get_user_model()
 

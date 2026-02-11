@@ -1,8 +1,8 @@
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
+from apps.subscriptions.api.serializers.plan_feature import FeaturePlanSerializer
 from apps.subscriptions.models import Plan
-from apps.subscriptions.serializers.plan_feature import FeaturePlanSerializer
 
 
 class PlanSerializer(serializers.ModelSerializer):

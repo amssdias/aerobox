@@ -1,7 +1,7 @@
 from django.test import TestCase
 
+from apps.subscriptions.api.serializers import ChangePlanSerializer
 from apps.subscriptions.factories.plan_factory import PlanProFactory, PlaEnterpriseFactory, PlanFactory
-from apps.subscriptions.serializers.plan import ChangePlanSerializer
 
 
 class ChangePlanSerializerTests(TestCase):

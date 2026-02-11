@@ -27,7 +27,7 @@ urlpatterns = [
 
     path("api/cloud/", include("apps.cloud_storage.api.urls")),
     path("api/payments/", include("apps.payments.urls")),
-    path("api/subscriptions/", include("apps.subscriptions.urls")),
+    path("api/subscriptions/", include("apps.subscriptions.api.urls")),
     path("api/users/", include("apps.users.api.urls")),
     path("api/stripe/webhook/", StripeWebhookView.as_view(), name="stripe-webhook"),
 ]

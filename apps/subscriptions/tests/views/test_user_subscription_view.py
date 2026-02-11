@@ -5,9 +5,9 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from apps.subscriptions.api.serializers import SubscriptionSerializer
 from apps.subscriptions.choices.subscription_choices import SubscriptionStatusChoices
 from apps.subscriptions.factories.subscription import SubscriptionFactory
-from apps.subscriptions.serializers.subscription import SubscriptionSerializer
 from apps.users.factories.user_factory import UserFactory
 
 User = get_user_model()
@@ -28,7 +28,7 @@ class UserSubscriptionViewTests(APITestCase):
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    @patch("apps.subscriptions.views.user_subscription.logger.warning")
+    @patch("apps.subscriptions.api.views.user_subscription.logger.warning")
     def test_no_active_subscription_returns_404(self, mock_logger):
         SubscriptionFactory(
             user=self.user,
@@ -45,7 +45,7 @@ class UserSubscriptionViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, SubscriptionSerializer(subscription).data)
 
-    @patch("apps.subscriptions.views.user_subscription.logger.error")
+    @patch("apps.subscriptions.api.views.user_subscription.logger.error")
     def test_multiple_active_subscriptions_return_400(self, mock_logger):
         SubscriptionFactory(user=self.user, status=SubscriptionStatusChoices.ACTIVE.value)
         SubscriptionFactory(user=self.user, status=SubscriptionStatusChoices.ACTIVE.value)
@@ -54,7 +54,7 @@ class UserSubscriptionViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         mock_logger.assert_called_once()
 
-    @patch("apps.subscriptions.views.user_subscription.logger.warning")
+    @patch("apps.subscriptions.api.views.user_subscription.logger.warning")
     def test_inactive_subscription_ignored(self, mock_logger):
         SubscriptionFactory(
             user=self.user,
@@ -72,7 +72,7 @@ class UserSubscriptionViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, SubscriptionSerializer(active).data)
 
-    @patch("apps.subscriptions.views.user_subscription.logger.warning")
+    @patch("apps.subscriptions.api.views.user_subscription.logger.warning")
     def test_expired_subscription_ignored(self, mock_logger):
         SubscriptionFactory(user=self.user, status=SubscriptionStatusChoices.EXPIRED.value)
         response = self.client.get(self.url)
@@ -80,7 +80,7 @@ class UserSubscriptionViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         mock_logger.assert_called_once()
 
-    @patch("apps.subscriptions.views.user_subscription.logger.warning")
+    @patch("apps.subscriptions.api.views.user_subscription.logger.warning")
     def test_canceled_subscription_ignored(self, mock_logger):
         SubscriptionFactory(user=self.user, status=SubscriptionStatusChoices.CANCELED.value)
         response = self.client.get(self.url)

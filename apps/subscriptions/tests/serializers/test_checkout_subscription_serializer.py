@@ -3,11 +3,11 @@ from unittest.mock import patch
 from django.test import TestCase
 from rest_framework.exceptions import ValidationError
 
+from apps.subscriptions.api.serializers import CheckoutSubscriptionSerializer
 from apps.subscriptions.choices.subscription_choices import (
     SubscriptionBillingCycleChoices,
 )
 from apps.subscriptions.factories.plan_factory import PlanFactory
-from apps.subscriptions.serializers.subscription import CheckoutSubscriptionSerializer
 from apps.users.factories.user_factory import UserFactory
 
 
@@ -132,7 +132,7 @@ class CheckoutSubscriptionSerializerTest(TestCase):
             serializer.is_valid(raise_exception=True)
         self.assertIn("plan", context.exception.detail)
 
-    @patch("apps.subscriptions.serializers.subscription.create_stripe_checkout_session")
+    @patch("apps.subscriptions.api.serializers.subscription.create_stripe_checkout_session")
     def test_get_checkout_session_url(self, mock_create_stripe_checkout_session):
         """Mock the Stripe API call to prevent real API interaction."""
         mock_create_stripe_checkout_session.return_value = (

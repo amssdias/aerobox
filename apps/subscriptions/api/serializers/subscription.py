@@ -4,9 +4,9 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from apps.payments.services.stripe_api import create_stripe_checkout_session
+from apps.subscriptions.api.serializers.plan import PlanSerializer
 from apps.subscriptions.choices.subscription_choices import SubscriptionBillingCycleChoices
 from apps.subscriptions.models import Subscription, Plan
-from apps.subscriptions.serializers.plan import PlanSerializer
 
 logger = logging.getLogger("aerobox")
 

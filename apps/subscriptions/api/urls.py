@@ -1,9 +1,9 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
-from apps.subscriptions.views.plan import PlanListAPIView
-from apps.subscriptions.views.subscription import SubscriptionViewSet
-from apps.subscriptions.views.user_subscription import UserSubscriptionView
+from apps.subscriptions.api.views import PlanListAPIView
+from apps.subscriptions.api.views import SubscriptionViewSet
+from apps.subscriptions.api.views import UserSubscriptionView
 
 router = DefaultRouter()
 router.register(r"", SubscriptionViewSet, basename="subscriptions")

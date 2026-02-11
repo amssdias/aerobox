@@ -7,11 +7,11 @@ from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.generics import RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
 
-from apps.subscriptions.choices.subscription_choices import SubscriptionStatusChoices
-from apps.subscriptions.models import Subscription
-from apps.subscriptions.serializers.subscription import (
+from apps.subscriptions.api.serializers import (
     SubscriptionSerializer,
 )
+from apps.subscriptions.choices.subscription_choices import SubscriptionStatusChoices
+from apps.subscriptions.models import Subscription
 
 logger = logging.getLogger("aerobox")
 

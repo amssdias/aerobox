@@ -11,9 +11,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from apps.cloud_storage.utils.size_utils import mb_to_human_gb, get_user_used_bytes
+from apps.subscriptions.api.serializers import ChangePlanSerializer
 from apps.subscriptions.choices.subscription_choices import SubscriptionStatusChoices
 from apps.subscriptions.models import Subscription
-from apps.subscriptions.serializers.plan import ChangePlanSerializer
 
 logger = logging.getLogger("aerobox")
 
