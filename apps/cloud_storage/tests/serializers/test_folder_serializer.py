@@ -5,9 +5,9 @@ from django.test import TestCase, RequestFactory
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
+from apps.cloud_storage.api.serializers import FolderParentSerializer
+from apps.cloud_storage.api.serializers import FolderSerializer
 from apps.cloud_storage.models import Folder
-from apps.cloud_storage.serializers import FolderParentSerializer
-from apps.cloud_storage.serializers import FolderSerializer
 from apps.cloud_storage.tests.factories.cloud_file_factory import CloudFileFactory
 from apps.cloud_storage.tests.factories.folder_factory import FolderFactory
 from apps.subscriptions.factories.plan_factory import PlanFreeFactory
@@ -194,7 +194,7 @@ class FolderSerializerTests(TestCase):
             self.assertFalse(serializer.is_valid(raise_exception=True))
             self.assertIn("name", serializer.errors)
 
-    @patch("apps.cloud_storage.serializers.folder_serializer.update_folder_file_paths_task.delay")
+    @patch("apps.cloud_storage.api.serializers.folder_serializer.update_folder_file_paths_task.delay")
     def test_update_name_triggers_path_update(self, mock_task):
         serializer = self.serializer(
             instance=self.parent_folder,
@@ -208,7 +208,7 @@ class FolderSerializerTests(TestCase):
         self.assertEqual(folder.name, "Renamed")
         mock_task.assert_called_once_with(folder.id)
 
-    @patch("apps.cloud_storage.serializers.folder_serializer.update_folder_file_paths_task.delay")
+    @patch("apps.cloud_storage.api.serializers.folder_serializer.update_folder_file_paths_task.delay")
     def test_update_parent_triggers_path_update(self, mock_task):
         new_parent = FolderFactory(name="NewParent", user=self.user)
         serializer = self.serializer(
@@ -223,7 +223,7 @@ class FolderSerializerTests(TestCase):
         self.assertEqual(folder.parent, new_parent)
         mock_task.assert_called_once_with(folder.id)
 
-    @patch("apps.cloud_storage.serializers.folder_serializer.update_folder_file_paths_task.delay")
+    @patch("apps.cloud_storage.api.serializers.folder_serializer.update_folder_file_paths_task.delay")
     def test_update_name_and_parent_triggers_path_update_once(self, mock_task):
         new_parent = FolderFactory(name="NP", user=self.user)
         data = {"name": "Combo", "parent_id": new_parent.id}
@@ -240,7 +240,7 @@ class FolderSerializerTests(TestCase):
         self.assertEqual(folder.parent, new_parent)
         mock_task.assert_called_once_with(folder.id)
 
-    @patch("apps.cloud_storage.serializers.folder_serializer.update_folder_file_paths_task.delay")
+    @patch("apps.cloud_storage.api.serializers.folder_serializer.update_folder_file_paths_task.delay")
     def test_partial_update_without_name_or_parent_does_not_trigger_task(self, mock_task):
         serializer = self.serializer(instance=self.parent_folder, data={}, context=self.get_context(), partial=True)
         self.assertTrue(serializer.is_valid())

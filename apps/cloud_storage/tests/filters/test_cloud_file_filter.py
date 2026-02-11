@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from apps.cloud_storage.filters.cloud_file_filter import CloudFileFilter
+from apps.cloud_storage.api.filters.cloud_file_filter import CloudFileFilter
 from apps.cloud_storage.models import CloudFile
 from apps.cloud_storage.tests.factories.cloud_file_factory import CloudFileFactory
 from apps.cloud_storage.tests.factories.folder_factory import FolderFactory

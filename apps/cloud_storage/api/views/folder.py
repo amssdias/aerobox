@@ -6,10 +6,10 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from apps.cloud_storage.api.filters.folder_filter import FolderFilter
+from apps.cloud_storage.api.serializers import FolderSerializer, FolderDetailSerializer
 from apps.cloud_storage.domain.exceptions.folder import FolderContainsFilesOrSubfoldersError
-from apps.cloud_storage.filters.folder_filter import FolderFilter
 from apps.cloud_storage.models import Folder
-from apps.cloud_storage.serializers import FolderSerializer, FolderDetailSerializer
 from apps.cloud_storage.services.folders.delete_folder import delete_folder
 
 

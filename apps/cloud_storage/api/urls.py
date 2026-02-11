@@ -1,15 +1,15 @@
 from django.urls import path
 from rest_framework.routers import DefaultRouter
 
-from apps.cloud_storage.views import CloudStorageViewSet
-from apps.cloud_storage.views.folder import FolderViewSet
-from apps.cloud_storage.views.public_share import (
+from apps.cloud_storage.api.views import CloudStorageViewSet
+from apps.cloud_storage.api.views import (
     PublicShareLinkDetail,
     PublicShareLinkFileDownloadView,
     PublicShareLinkAuthView,
     PublicShareLinkFolderView,
 )
-from apps.cloud_storage.views.share_link import ShareLinkViewSet
+from apps.cloud_storage.api.views.folder import FolderViewSet
+from apps.cloud_storage.api.views.share_link import ShareLinkViewSet
 
 urlpatterns = [
     path(

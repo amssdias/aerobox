@@ -25,7 +25,7 @@ from config.views.stripe_webhook import StripeWebhookView
 urlpatterns = [
     path("admin/", admin.site.urls),
 
-    path("api/cloud/", include("apps.cloud_storage.urls")),
+    path("api/cloud/", include("apps.cloud_storage.api.urls")),
     path("api/payments/", include("apps.payments.urls")),
     path("api/subscriptions/", include("apps.subscriptions.urls")),
     path("api/users/", include("apps.users.api.urls")),

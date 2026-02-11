@@ -1,8 +1,8 @@
 from rest_framework import serializers
 
+from apps.cloud_storage.api.serializers import CloudFilesSerializer, FolderParentSerializer
+from apps.cloud_storage.api.serializers.folder_serializer import SimpleFolderSerializer
 from apps.cloud_storage.models import ShareLink, Folder
-from apps.cloud_storage.serializers import CloudFilesSerializer, FolderParentSerializer
-from apps.cloud_storage.serializers.folder_serializer import SimpleFolderSerializer
 
 
 class PublicShareLinkDetailSerializer(serializers.ModelSerializer):

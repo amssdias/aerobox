@@ -8,17 +8,17 @@ from rest_framework.exceptions import ValidationError, NotFound, AuthenticationF
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from apps.cloud_storage.integrations.storage.s3_service import S3Service
-from apps.cloud_storage.models import CloudFile
-from apps.cloud_storage.serializers.public_share_serializer import (
+from apps.cloud_storage.api.serializers.public_share_serializer import (
     PublicShareLinkDetailSerializer,
     ShareLinkPasswordSerializer,
     PublicShareFolderDetailSerializer,
 )
-from apps.cloud_storage.views.mixins.share_link import (
+from apps.cloud_storage.api.views.mixins.share_link import (
     ShareLinkMixin,
     ShareLinkAccessMixin,
 )
+from apps.cloud_storage.integrations.storage.s3_service import S3Service
+from apps.cloud_storage.models import CloudFile
 
 logger = logging.getLogger("aerobox")
 

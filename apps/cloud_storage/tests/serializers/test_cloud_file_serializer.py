@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 from django.test import TestCase
 from rest_framework.exceptions import ValidationError
 
-from apps.cloud_storage.serializers import CloudFilesSerializer
+from apps.cloud_storage.api.serializers import CloudFilesSerializer
 from apps.cloud_storage.tests.factories.cloud_file_factory import CloudFileFactory
 from apps.cloud_storage.tests.factories.folder_factory import FolderFactory
 from apps.subscriptions.choices.subscription_choices import SubscriptionStatusChoices

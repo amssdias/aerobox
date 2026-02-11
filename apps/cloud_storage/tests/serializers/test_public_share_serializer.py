@@ -1,8 +1,8 @@
 from django.test import TestCase
 from django.utils import timezone
 
-from apps.cloud_storage.serializers import CloudFilesSerializer, FolderParentSerializer
-from apps.cloud_storage.serializers.public_share_serializer import (
+from apps.cloud_storage.api.serializers import CloudFilesSerializer, FolderParentSerializer
+from apps.cloud_storage.api.serializers import (
     PublicShareLinkDetailSerializer,
     PublicShareFolderDetailSerializer,
 )

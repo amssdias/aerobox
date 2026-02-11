@@ -9,18 +9,18 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from apps.cloud_storage.constants.cloud_files import SUCCESS, FAILED
-from apps.cloud_storage.domain.exceptions.file import FileError
-from apps.cloud_storage.error_messages import get_error_message
-from apps.cloud_storage.filters.cloud_file_filter import CloudFileFilter
-from apps.cloud_storage.integrations.storage.s3_service import S3Service
-from apps.cloud_storage.models import CloudFile
-from apps.cloud_storage.pagination import CloudFilesPagination
-from apps.cloud_storage.serializers import CloudFilesSerializer
-from apps.cloud_storage.serializers.cloud_files import (
+from apps.cloud_storage.api.error_messages import get_error_message
+from apps.cloud_storage.api.filters.cloud_file_filter import CloudFileFilter
+from apps.cloud_storage.api.pagination import CloudFilesPagination
+from apps.cloud_storage.api.serializers import CloudFilesSerializer
+from apps.cloud_storage.api.serializers.cloud_files import (
     CloudFileMetaPatchSerializer,
     CloudFileUpdateSerializer,
 )
+from apps.cloud_storage.constants.cloud_files import SUCCESS, FAILED
+from apps.cloud_storage.domain.exceptions.file import FileError
+from apps.cloud_storage.integrations.storage.s3_service import S3Service
+from apps.cloud_storage.models import CloudFile
 from apps.cloud_storage.services.files.create_presigned_upload import (
     prepare_file_upload,
 )

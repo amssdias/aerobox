@@ -3,8 +3,8 @@ import re
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
+from apps.cloud_storage.api.serializers import CloudFilesSerializer
 from apps.cloud_storage.models import Folder
-from apps.cloud_storage.serializers import CloudFilesSerializer
 from apps.cloud_storage.tasks.file_path_updates import update_folder_file_paths_task
 from apps.features.choices.feature_code_choices import FeatureCodeChoices
 

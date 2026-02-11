@@ -4,8 +4,8 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase, RequestFactory
 from rest_framework.exceptions import ValidationError
 
+from apps.cloud_storage.api.serializers import CloudFileUpdateSerializer
 from apps.cloud_storage.models import CloudFile
-from apps.cloud_storage.serializers.cloud_files import CloudFileUpdateSerializer
 from apps.cloud_storage.tests.factories.cloud_file_factory import CloudFileFactory
 from apps.cloud_storage.tests.factories.folder_factory import FolderFactory
 from apps.users.factories.user_factory import UserFactory
