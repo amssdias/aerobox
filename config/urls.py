@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 from drf_spectacular.views import SpectacularRedocView, SpectacularAPIView
 from rest_framework.authentication import SessionAuthentication
+
 from config.permissions import IsSuperUser
 from config.views.stripe_webhook import StripeWebhookView
 
@@ -27,7 +28,7 @@ urlpatterns = [
     path("api/cloud/", include("apps.cloud_storage.urls")),
     path("api/payments/", include("apps.payments.urls")),
     path("api/subscriptions/", include("apps.subscriptions.urls")),
-    path("api/users/", include("apps.users.urls")),
+    path("api/users/", include("apps.users.api.urls")),
     path("api/stripe/webhook/", StripeWebhookView.as_view(), name="stripe-webhook"),
 ]
 

@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import mixins, generics
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
-from apps.users.serializers import UserSerializer, UserUpdateSerializer
+from apps.users.api.serializers import UserSerializer, UserUpdateSerializer
 from config.api_docs.custom_extensions import api_users_tag
 
 User = get_user_model()

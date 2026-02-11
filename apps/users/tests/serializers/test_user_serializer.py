@@ -2,8 +2,8 @@ from unittest.mock import patch, Mock
 
 from django.test import TestCase
 
+from apps.users.api.serializers import UserSerializer
 from apps.users.factories.user_factory import UserFactory
-from apps.users.serializers import UserSerializer
 
 
 class UserSerializerTest(TestCase):

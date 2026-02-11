@@ -2,7 +2,7 @@ from django.test import SimpleTestCase
 from django.urls import reverse, resolve
 from rest_framework.authtoken.views import obtain_auth_token
 
-from apps.users.views import (
+from apps.users.api.views import (
     UserCreateView,
     CustomPasswordResetView,
     CustomPasswordResetConfirmView,

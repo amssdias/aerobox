@@ -4,7 +4,7 @@ from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 
-from apps.users.serializers.password_reset_serializer import (
+from apps.users.api.serializers.password_reset_serializer import (
     PasswordResetConfirmSerializer,
     PasswordResetRequestSerializer,
 )

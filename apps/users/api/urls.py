@@ -1,8 +1,8 @@
 from django.urls import path
 from rest_framework.authtoken.views import obtain_auth_token
 
-from apps.users.views import UserCreateView
-from apps.users.views.password_reset import CustomPasswordResetView, CustomPasswordResetConfirmView
+from apps.users.api.views import UserCreateView
+from apps.users.api.views.password_reset import CustomPasswordResetView, CustomPasswordResetConfirmView
 
 app_name = "users"
 

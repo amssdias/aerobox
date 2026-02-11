@@ -1,10 +1,10 @@
 from django.contrib.auth import get_user_model
-from django.contrib.auth.tokens import PasswordResetTokenGenerator
-from django.utils.http import urlsafe_base64_decode
-from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.exceptions import ValidationError
+from django.utils.http import urlsafe_base64_decode
 from django.utils.translation import gettext_lazy as _
+from rest_framework import serializers
 
 User = get_user_model()
 
