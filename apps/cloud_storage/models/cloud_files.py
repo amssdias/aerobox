@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from apps.cloud_storage.choices.cloud_file_error_code_choices import CloudFileErrorCode
@@ -102,3 +103,10 @@ class CloudFile(Timestampable, SoftDeleteModel):
             raise FileNotDeletedError()
         self.deleted_at = None
         self.save(update_fields=["deleted_at"])
+
+    def soft_delete(self) -> None:
+        if self.deleted_at:
+            return
+        self.deleted_at = timezone.now()
+        self.folder_id = None
+        self.save(update_fields=["deleted_at", "folder_id"])

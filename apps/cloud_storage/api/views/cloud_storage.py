@@ -25,7 +25,6 @@ from apps.cloud_storage.services.files.create_presigned_upload import (
     prepare_file_upload,
 )
 from apps.cloud_storage.services.files.delete_file import (
-    soft_delete_file,
     permanent_delete_file,
 )
 from apps.cloud_storage.services.files.file_upload_finalizer_service import (
@@ -160,7 +159,7 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         """Soft delete the file by setting 'deleted_at' instead of deleting it."""
         instance = self.get_object()
-        soft_delete_file(instance)
+        instance.soft_delete()
         return Response({}, status=status.HTTP_204_NO_CONTENT)
 
     def get_serializer_context(self):
