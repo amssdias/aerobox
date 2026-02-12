@@ -2,7 +2,7 @@ import logging
 
 from celery import shared_task, group
 
-from apps.cloud_storage.integrations.s3.s3_service import S3Service
+from apps.cloud_storage.integrations.s3.storage import S3Service
 from apps.cloud_storage.services.files.delete_file import permanently_delete_user_files
 from apps.subscriptions.choices.subscription_choices import SubscriptionStatusChoices
 from apps.subscriptions.models import Subscription
