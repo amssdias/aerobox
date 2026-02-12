@@ -18,7 +18,7 @@ from apps.cloud_storage.api.serializers.cloud_files import (
     CloudFileUpdateSerializer,
 )
 from apps.cloud_storage.constants.cloud_files import SUCCESS, FAILED
-from apps.cloud_storage.domain.exceptions.file import FileError
+from apps.cloud_storage.domain.exceptions.file import FileNotDeletedError
 from apps.cloud_storage.integrations.storage.s3_service import S3Service
 from apps.cloud_storage.models import CloudFile
 from apps.cloud_storage.services.files.create_presigned_upload import (
@@ -31,7 +31,6 @@ from apps.cloud_storage.services.files.delete_file import (
 from apps.cloud_storage.services.files.file_upload_finalizer_service import (
     FileUploadFinalizerService,
 )
-from apps.cloud_storage.services.files.restore_file import restore_deleted_file
 from apps.cloud_storage.tasks.delete_files import clear_all_deleted_files_from_user
 from config.api_docs.openapi_schemas import RESPONSE_SCHEMA_GET_PRESIGNED_URL
 
@@ -194,8 +193,8 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
         file = self.get_object()
 
         try:
-            restore_deleted_file(file)
-        except FileError:
+            file.restore()
+        except FileNotDeletedError:
             return Response(
                 {"detail": _("File is not deleted.")},
                 status=status.HTTP_400_BAD_REQUEST,

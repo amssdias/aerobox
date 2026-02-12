@@ -4,6 +4,7 @@ from django.utils.translation import gettext_lazy as _
 
 from apps.cloud_storage.choices.cloud_file_error_code_choices import CloudFileErrorCode
 from apps.cloud_storage.constants.cloud_files import PENDING, SUCCESS, FAILED
+from apps.cloud_storage.domain.exceptions.file import FileNotDeletedError
 from apps.cloud_storage.models.managers.cloud_file import CloudFileManager, DeletedCloudFileManager
 from apps.cloud_storage.utils.path_utils import build_object_path
 from config.models.soft_delete import SoftDeleteModel
@@ -95,3 +96,9 @@ class CloudFile(Timestampable, SoftDeleteModel):
         while folder and folder.parent_id:
             folder = folder.parent
         return folder
+
+    def restore(self) -> None:
+        if not self.deleted_at:
+            raise FileNotDeletedError()
+        self.deleted_at = None
+        self.save(update_fields=["deleted_at"])
