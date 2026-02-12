@@ -2,7 +2,7 @@ import logging
 
 from celery import shared_task, group
 
-from apps.cloud_storage.integrations.s3.storage import S3Service
+from apps.cloud_storage.integrations.s3.storage import S3StorageClient
 from apps.cloud_storage.services.files.delete_file import permanently_delete_user_files
 from apps.subscriptions.choices.subscription_choices import SubscriptionStatusChoices
 from apps.subscriptions.models import Subscription
@@ -12,7 +12,7 @@ logger = logging.getLogger("aerobox")
 
 @shared_task
 def clear_all_deleted_files_from_user(user_id, older_than_days=None):
-    storage = S3Service()
+    storage = S3StorageClient()
     permanently_delete_user_files(
         storage=storage,
         user_id=user_id,

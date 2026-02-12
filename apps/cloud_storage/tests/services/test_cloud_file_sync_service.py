@@ -21,7 +21,7 @@ class CloudFileSyncServiceTests(TestCase):
             user=self.user,
         )
 
-    @patch("apps.cloud_storage.services.storage.cloud_file_sync_service.S3Service.head")
+    @patch("apps.cloud_storage.services.storage.cloud_file_sync_service.S3StorageClient.head")
     def test_sync_updates_fields_from_s3(self, mock_s3_head):
         mock_s3_head.return_value = {
             "size": 500,
@@ -42,7 +42,7 @@ class CloudFileSyncServiceTests(TestCase):
         self.assertEqual(self.cloud_file.content_type, "text/plain")
         self.assertEqual(self.cloud_file.metadata, {"foo": "bar"})
 
-    @patch("apps.cloud_storage.services.storage.cloud_file_sync_service.S3Service.head")
+    @patch("apps.cloud_storage.services.storage.cloud_file_sync_service.S3StorageClient.head")
     def test_sync_uses_empty_metadata_when_missing(self, mock_s3_head):
         mock_s3_head.return_value = {
             "size": 10,
@@ -57,7 +57,7 @@ class CloudFileSyncServiceTests(TestCase):
         self.assertEqual(self.cloud_file.content_type, "image/png")
         self.assertEqual(self.cloud_file.metadata, {})
 
-    @patch("apps.cloud_storage.services.storage.cloud_file_sync_service.S3Service.head")
+    @patch("apps.cloud_storage.services.storage.cloud_file_sync_service.S3StorageClient.head")
     def test_sync_overwrites_existing_values(self, mock_s3_head):
         self.cloud_file.size = 1
         self.cloud_file.content_type = "application/json"
@@ -78,7 +78,7 @@ class CloudFileSyncServiceTests(TestCase):
         self.assertEqual(self.cloud_file.content_type, "application/pdf")
         self.assertEqual(self.cloud_file.metadata, {"new": "value"})
 
-    @patch("apps.cloud_storage.services.storage.cloud_file_sync_service.S3Service.head")
+    @patch("apps.cloud_storage.services.storage.cloud_file_sync_service.S3StorageClient.head")
     def test_sync_returns_size_changed_true(self, mock_s3_head):
         self.cloud_file.size = 1
         self.cloud_file.content_type = "application/json"

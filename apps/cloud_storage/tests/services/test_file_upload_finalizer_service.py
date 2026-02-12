@@ -4,7 +4,7 @@ from django.test import TestCase
 
 from apps.cloud_storage.choices.cloud_file_error_code_choices import CloudFileErrorCode
 from apps.cloud_storage.constants.cloud_files import FAILED
-from apps.cloud_storage.integrations.s3.storage import S3Service
+from apps.cloud_storage.integrations.s3.storage import S3StorageClient
 from apps.cloud_storage.services.files.file_upload_finalizer_service import (
     FileUploadFinalizerService,
 )
@@ -31,9 +31,9 @@ class FileUploadFinalizerServiceTests(TestCase):
             s3_key="user_1/test.pdf",
         )
 
-    @patch.object(S3Service, "head", return_value=None)
+    @patch.object(S3StorageClient, "head", return_value=None)
     def test_finalize_marks_failed_when_sync_returns_none(self, mock_s3_head):
-        storage = Mock(spec=S3Service)
+        storage = Mock(spec=S3StorageClient)
         service = FileUploadFinalizerService(sync_service=None, storage=storage)
 
         result = service.finalize(self.cloud_file)
@@ -54,14 +54,14 @@ class FileUploadFinalizerServiceTests(TestCase):
 
         storage.delete_file.assert_not_called()
 
-    @patch.object(S3Service, "head")
+    @patch.object(S3StorageClient, "head")
     def test_finalize_with_no_size_change_does_not_check_quota(self, mock_s3_head):
         mock_s3_head.return_value = {
             "size": self.cloud_file.size,
             "content_type": self.cloud_file.content_type
         }
 
-        storage = Mock(spec=S3Service)
+        storage = Mock(spec=S3StorageClient)
         service = FileUploadFinalizerService(sync_service=None, storage=storage)
 
         result = service.finalize(self.cloud_file)
@@ -73,14 +73,14 @@ class FileUploadFinalizerServiceTests(TestCase):
         self.assertIsNone(self.cloud_file.error_code)
 
     @patch.object(FileUploadFinalizerService, "is_over_quota", return_value=False)
-    @patch.object(S3Service, "head")
+    @patch.object(S3StorageClient, "head")
     def test_finalize_size_changed_but_not_over_quota(self, mock_s3_head, mock_is_over_quota):
         mock_s3_head.return_value = {
             "size": self.cloud_file.size + 123,
             "content_type": self.cloud_file.content_type
         }
 
-        storage = Mock(spec=S3Service)
+        storage = Mock(spec=S3StorageClient)
         service = FileUploadFinalizerService(sync_service=None, storage=storage)
 
         result = service.finalize(self.cloud_file)
@@ -93,8 +93,8 @@ class FileUploadFinalizerServiceTests(TestCase):
         self.assertIsNone(self.cloud_file.error_code)
         self.assertNotEqual(self.cloud_file.status, FAILED)
 
-    @patch.object(S3Service, "head")
-    @patch.object(S3Service, "delete_file")
+    @patch.object(S3StorageClient, "head")
+    @patch.object(S3StorageClient, "delete_file")
     @patch.object(FileUploadFinalizerService, "is_over_quota", return_value=True)
     def test_finalize_size_changed_and_over_quota_marks_failed_and_deletes(
             self,

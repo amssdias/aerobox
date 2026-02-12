@@ -1,12 +1,12 @@
 from typing import Tuple
 
-from apps.cloud_storage.integrations.s3.storage import S3Service
+from apps.cloud_storage.integrations.s3.storage import S3StorageClient
 
 
 class CloudFileSyncService:
 
     def __init__(self):
-        self.storage = S3Service()
+        self.storage = S3StorageClient()
 
     def sync(self, cloud_file) -> Tuple:
         """Fetch S3 metadata and update the CloudFile instance."""

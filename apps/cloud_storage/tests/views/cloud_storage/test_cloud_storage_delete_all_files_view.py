@@ -6,7 +6,7 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from apps.cloud_storage.integrations.s3.storage import S3Service
+from apps.cloud_storage.integrations.s3.storage import S3StorageClient
 from apps.cloud_storage.models import CloudFile
 from apps.cloud_storage.tests.factories.cloud_file_factory import CloudFileFactory
 from apps.users.factories.user_factory import UserFactory
@@ -33,7 +33,7 @@ class CloudStoragePermanentDeleteAllFilesViewSetTests(APITestCase):
 
         self.client.force_authenticate(user=self.user)
 
-    @patch.object(S3Service, "delete_file")
+    @patch.object(S3StorageClient, "delete_file")
     def test_user_can_permanently_delete_all_files(self, mock_s3):
         file_name = self.deleted_file.file_name
         response = self.client.delete(self.url)
@@ -43,7 +43,7 @@ class CloudStoragePermanentDeleteAllFilesViewSetTests(APITestCase):
         self.assertTrue(CloudFile.objects.filter(file_name=self.not_deleted_file.file_name).exists())
         mock_s3.assert_called()
 
-    @patch.object(S3Service, "delete_file")
+    @patch.object(S3StorageClient, "delete_file")
     def test_user_cannot_permanently_delete_another_users_file(self, mock_s3):
         user = UserFactory()
         file = CloudFileFactory(user=user, deleted_at=timezone.now())
@@ -73,7 +73,7 @@ class CloudStoragePermanentDeleteAllFilesViewSetTests(APITestCase):
 
         mock_delete_all_files_from_user.assert_called_once()
 
-    @patch.object(S3Service, "delete_file")
+    @patch.object(S3StorageClient, "delete_file")
     def test_delete_all_files_returns_success_message_and_status(self, mock_s3):
         deleted_files = CloudFile.deleted.all().count()
         response = self.client.delete(self.url)

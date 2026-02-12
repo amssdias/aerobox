@@ -6,7 +6,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from apps.cloud_storage.domain.exceptions.exceptions import FileUploadError
-from apps.cloud_storage.integrations.s3.storage import S3Service
+from apps.cloud_storage.integrations.s3.storage import S3StorageClient
 from apps.cloud_storage.models import CloudFile
 from apps.cloud_storage.tests.factories.cloud_file_factory import CloudFileFactory
 from apps.cloud_storage.tests.factories.folder_factory import FolderFactory
@@ -35,7 +35,7 @@ class CloudStoragePresignedURLTests(APITestCase):
         }
 
     @patch.object(
-        S3Service,
+        S3StorageClient,
         "create_presigned_post_url",
         return_value={"url": "https://s3-presigned-url.com", "fields": {}},
     )
@@ -58,7 +58,7 @@ class CloudStoragePresignedURLTests(APITestCase):
         mock_s3.assert_called_once()
 
     @patch.object(
-        S3Service,
+        S3StorageClient,
         "create_presigned_post_url",
         return_value={"url": "https://s3-presigned-url.com", "fields": {}},
     )
@@ -81,7 +81,7 @@ class CloudStoragePresignedURLTests(APITestCase):
         self.assertTrue(CloudFile.objects.get(file_name=self.data["file_name"]))
 
     @patch.object(
-        S3Service,
+        S3StorageClient,
         "create_presigned_post_url",
         return_value={"url": "https://s3-presigned-url.com", "fields": {}},
     )
@@ -108,7 +108,7 @@ class CloudStoragePresignedURLTests(APITestCase):
         response = self.client.post(self.url, self.data, format="json")
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    @patch.object(S3Service, "create_presigned_post_url", return_value=None)
+    @patch.object(S3StorageClient, "create_presigned_post_url", return_value=None)
     def test_create_file_and_presigned_url_s3_error(self, mock_s3):
         response = self.client.post(self.url, self.data, format="json")
 
@@ -118,7 +118,7 @@ class CloudStoragePresignedURLTests(APITestCase):
         self.assertEqual(response.data["detail"], str(FileUploadError.default_detail))
 
     @patch.object(
-        S3Service,
+        S3StorageClient,
         "create_presigned_post_url",
         return_value={"url": "https://s3-presigned-url.com", "fields": {}},
     )
@@ -167,7 +167,7 @@ class CloudStoragePresignedURLTests(APITestCase):
 
     @unittest.skip("Skipping: Forbidden file type validation not implemented yet.")
     @patch.object(
-        S3Service,
+        S3StorageClient,
         "create_presigned_post_url",
         return_value={"url": "https://s3-presigned-url.com", "fields": {}},
     )
@@ -186,7 +186,7 @@ class CloudStoragePresignedURLTests(APITestCase):
         response = self.client.post(self.url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    @patch.object(S3Service, "create_presigned_post_url", return_value=None)
+    @patch.object(S3StorageClient, "create_presigned_post_url", return_value=None)
     def test_create_file_and_presigned_url_s3_connection_error(self, mock_s3):
         response = self.client.post(self.url, self.data, format="json")
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -195,7 +195,7 @@ class CloudStoragePresignedURLTests(APITestCase):
         self.assertEqual(response.data["detail"], str(FileUploadError.default_detail))
 
     @patch.object(
-        S3Service,
+        S3StorageClient,
         "create_presigned_post_url",
         return_value={"url": "https://s3-presigned-url.com", "fields": {}},
     )
@@ -219,7 +219,7 @@ class CloudStoragePresignedURLTests(APITestCase):
         self.assertIn("size", response.data)
 
     @patch.object(
-        S3Service,
+        S3StorageClient,
         "create_presigned_post_url",
         return_value={"url": "https://s3-presigned-url.com", "fields": {}},
     )
@@ -251,7 +251,7 @@ class CloudStoragePresignedURLTests(APITestCase):
         self.assertEqual(kwargs["max_bytes"], available_storage_bytes)
 
     @patch.object(
-        S3Service,
+        S3StorageClient,
         "create_presigned_post_url",
         return_value={"url": "https://s3-presigned-url.com", "fields": {}},
     )

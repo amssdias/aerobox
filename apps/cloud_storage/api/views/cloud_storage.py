@@ -19,7 +19,7 @@ from apps.cloud_storage.api.serializers.cloud_files import (
 )
 from apps.cloud_storage.constants.cloud_files import SUCCESS, FAILED
 from apps.cloud_storage.domain.exceptions.file import FileNotDeletedError
-from apps.cloud_storage.integrations.s3.storage import S3Service
+from apps.cloud_storage.integrations.s3.storage import S3StorageClient
 from apps.cloud_storage.models import CloudFile
 from apps.cloud_storage.services.files.create_presigned_upload import (
     prepare_file_upload,
@@ -81,7 +81,7 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        storage = S3Service()
+        storage = S3StorageClient()
         result = prepare_file_upload(
             storage=storage,
             user=request.user,
@@ -209,7 +209,7 @@ class CloudStorageViewSet(viewsets.ModelViewSet):
         """
         file = self.get_object()
 
-        s3_service = S3Service()
+        s3_service = S3StorageClient()
         permanent_delete_file(s3_service, file)
 
         return Response(

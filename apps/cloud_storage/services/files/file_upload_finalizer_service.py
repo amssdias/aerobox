@@ -2,7 +2,7 @@ from django.db import transaction
 
 from apps.cloud_storage.choices.cloud_file_error_code_choices import CloudFileErrorCode
 from apps.cloud_storage.constants.cloud_files import FAILED
-from apps.cloud_storage.integrations.s3.storage import S3Service
+from apps.cloud_storage.integrations.s3.storage import S3StorageClient
 from apps.cloud_storage.services.storage.cloud_file_sync_service import CloudFileSyncService
 from apps.cloud_storage.utils.size_utils import get_user_used_bytes
 
@@ -10,7 +10,7 @@ from apps.cloud_storage.utils.size_utils import get_user_used_bytes
 class FileUploadFinalizerService:
     def __init__(self, sync_service=None, storage=None):
         self.sync_service = sync_service or CloudFileSyncService()
-        self.storage = storage or S3Service()
+        self.storage = storage or S3StorageClient()
 
     @transaction.atomic
     def finalize(self, cloud_file):

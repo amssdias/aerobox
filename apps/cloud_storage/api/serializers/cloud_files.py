@@ -7,7 +7,7 @@ from rest_framework.exceptions import NotFound
 
 from apps.cloud_storage.choices.cloud_file_error_code_choices import CloudFileErrorCode
 from apps.cloud_storage.constants.cloud_files import SUCCESS, FAILED
-from apps.cloud_storage.integrations.s3.storage import S3Service
+from apps.cloud_storage.integrations.s3.storage import S3StorageClient
 from apps.cloud_storage.models import CloudFile, Folder
 from apps.cloud_storage.utils.path_utils import build_object_path
 from apps.cloud_storage.utils.size_utils import get_user_used_bytes
@@ -149,7 +149,7 @@ class CloudFilesSerializer(serializers.ModelSerializer):
     def get_url(self, obj):
         """Only add extra_info when retrieving a single object"""
         if self.context.get("is_detail", False):
-            s3_service = S3Service()
+            s3_service = S3StorageClient()
 
             try:
                 download_url = s3_service.generate_presigned_download_url(

@@ -17,7 +17,7 @@ from apps.cloud_storage.api.views.mixins.share_link import (
     ShareLinkMixin,
     ShareLinkAccessMixin,
 )
-from apps.cloud_storage.integrations.s3.storage import S3Service
+from apps.cloud_storage.integrations.s3.storage import S3StorageClient
 from apps.cloud_storage.models import CloudFile
 
 logger = logging.getLogger("aerobox")
@@ -107,7 +107,7 @@ class PublicShareLinkFileDownloadView(ShareLinkMixin, ShareLinkAccessMixin, APIV
         if not share_link.can_access_file(file_obj):
             raise NotFound(_("File not found for this share link."))
 
-        s3_service = S3Service()
+        s3_service = S3StorageClient()
         try:
             download_url = s3_service.generate_presigned_download_url(
                 object_name=file_obj.s3_key

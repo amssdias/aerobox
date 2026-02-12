@@ -8,7 +8,7 @@ from integrations.aws.aws_client import AWSClient
 logger = logging.getLogger("aerobox")
 
 
-class S3Service:
+class S3StorageClient:
     def __init__(self):
         self.s3_client = AWSClient("s3").get_client()
 

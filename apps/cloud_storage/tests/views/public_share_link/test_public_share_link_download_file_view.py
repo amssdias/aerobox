@@ -7,7 +7,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from apps.cloud_storage.api.views.mixins.share_link import ShareLinkAccessMixin
-from apps.cloud_storage.integrations.s3.storage import S3Service
+from apps.cloud_storage.integrations.s3.storage import S3StorageClient
 from apps.cloud_storage.models import ShareLink
 from apps.cloud_storage.tests.factories.cloud_file_factory import CloudFileFactory
 from apps.cloud_storage.tests.factories.folder_factory import FolderFactory
@@ -50,7 +50,7 @@ class PublicShareLinkFileDownloadViewTests(APITestCase):
     def get_url(self, token, file_id):
         return reverse(self.url_name, kwargs={"token": token, "file_id": file_id})
 
-    @patch.object(S3Service, "generate_presigned_download_url")
+    @patch.object(S3StorageClient, "generate_presigned_download_url")
     def test_download_without_password_success(self, mock_s3_service):
         mock_s3_service.return_value = "https://s3/url"
 
@@ -63,7 +63,7 @@ class PublicShareLinkFileDownloadViewTests(APITestCase):
             object_name=self.file.s3_key
         )
 
-    @patch.object(S3Service, "generate_presigned_download_url")
+    @patch.object(S3StorageClient, "generate_presigned_download_url")
     def test_download_with_correct_password_success(self, mock_s3_service):
         mock_s3_service.return_value = "https://s3/url"
 
@@ -127,7 +127,7 @@ class PublicShareLinkFileDownloadViewTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_410_GONE)
 
-    @patch.object(S3Service, "generate_presigned_download_url")
+    @patch.object(S3StorageClient, "generate_presigned_download_url")
     def test_anonymous_user_can_access_endpoint(self, mock_s3_service):
         mock_s3_service.return_value = "https://s3/url"
 
@@ -137,7 +137,7 @@ class PublicShareLinkFileDownloadViewTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    @patch.object(S3Service, "generate_presigned_download_url")
+    @patch.object(S3StorageClient, "generate_presigned_download_url")
     def test_s3_service_not_called_when_cannot_access_file(self, mock_s3_service):
         with patch.object(
                 ShareLink, "can_access_file", return_value=False
@@ -149,7 +149,7 @@ class PublicShareLinkFileDownloadViewTests(APITestCase):
         mock_can_access.assert_called_once()
         mock_s3_service.assert_not_called()
 
-    @patch.object(S3Service, "generate_presigned_download_url")
+    @patch.object(S3StorageClient, "generate_presigned_download_url")
     def test_s3_service_error_results_in_400(self, mock_s3_service):
         mock_s3_service.side_effect = RuntimeError("S3 error")
 
