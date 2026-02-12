@@ -19,7 +19,7 @@ from apps.cloud_storage.api.serializers.cloud_files import (
 )
 from apps.cloud_storage.constants.cloud_files import SUCCESS, FAILED
 from apps.cloud_storage.domain.exceptions.file import FileNotDeletedError
-from apps.cloud_storage.integrations.storage.s3_service import S3Service
+from apps.cloud_storage.integrations.s3.s3_service import S3Service
 from apps.cloud_storage.models import CloudFile
 from apps.cloud_storage.services.files.create_presigned_upload import (
     prepare_file_upload,

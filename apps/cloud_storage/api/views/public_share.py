@@ -17,7 +17,7 @@ from apps.cloud_storage.api.views.mixins.share_link import (
     ShareLinkMixin,
     ShareLinkAccessMixin,
 )
-from apps.cloud_storage.integrations.storage.s3_service import S3Service
+from apps.cloud_storage.integrations.s3.s3_service import S3Service
 from apps.cloud_storage.models import CloudFile
 
 logger = logging.getLogger("aerobox")
