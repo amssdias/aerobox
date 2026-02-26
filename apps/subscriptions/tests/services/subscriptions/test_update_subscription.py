@@ -22,9 +22,9 @@ class UpdateSubscriptionServiceTests(TestCase):
 
     @patch("apps.subscriptions.services.subscriptions.update_subscription.get_subscription")
     @patch("apps.subscriptions.services.subscriptions.update_subscription.update_cancel_subscription_status")
-    def test_update_subscription_when_cancel_at_period_end_false_does_not_call_anything_and_returns_true(self,
-                                                                                                         get_sub_mock,
-                                                                                                         cancel_mock):
+    def test_update_subscription_when_cancel_at_period_end_false_does_not_call_anything_and_returns_true(
+            self, get_sub_mock, cancel_mock
+    ):
         summary = SimpleNamespace(
             cancel_at_period_end=False,
             subcription_id=str(self.subscription.stripe_subscription_id),
