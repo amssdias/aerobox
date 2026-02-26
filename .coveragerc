@@ -1,0 +1,20 @@
+[run]
+source = apps.cloud_storage
+    apps.features
+    apps.payments
+    apps.profiles
+    apps.subscriptions
+    apps.users
+omit =
+    */migrations/*
+    */tests/*
+    */management/*
+    manage.py
+    */__init__.py
+
+[report]
+show_missing = true
+skip_covered = true
+
+[html]
+directory = htmlcov
