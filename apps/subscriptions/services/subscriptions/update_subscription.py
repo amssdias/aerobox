@@ -8,6 +8,7 @@ def update_subscription(subscription_summary):
     # if plan_id and subscription and subscription.plan.stripe_price_id == plan_id:
     #     self.change_plan_subscription(subscription, stripe_subscription)
 
+    # This will be used when we cancel a subscription from Stripe
     if subscription_summary.cancel_at_period_end:
         subscription = get_subscription(subscription_summary.subcription_id)
         if subscription:
