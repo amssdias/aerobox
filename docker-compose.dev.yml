@@ -97,6 +97,42 @@ services:
       - DEFAULT_FROM_EMAIL=${DEFAULT_FROM_EMAIL}
     command: [ "celery", "-A", "config", "worker", "--loglevel=info" ]
 
+  celery-beat:
+    container_name: celery-beat-worker
+    build:
+      context: .
+      dockerfile: deployments/development/Dockerfile
+    depends_on:
+      - my-redis
+      - api
+    volumes:
+      - .:/usr/src/app
+    environment:
+      - SECRET_KEY=${SECRET_KEY}
+      - DB_NAME=aerobox-db
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=db
+      - DB_PORT=5432
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_STORAGE_BUCKET_NAME=${AWS_STORAGE_BUCKET_NAME}
+      - AWS_S3_BUCKET_REGION=${AWS_S3_BUCKET_REGION}
+      - AWS_S3_BUCKET_FOLDER=${AWS_S3_BUCKET_FOLDER}
+      - DJANGO_SETTINGS_MODULE=config.settings.settings_development
+      - REDIS_PROTOCOL=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_HOST=my-redis
+      - REDIS_PORT=6379
+      - REDIS_DB_CELERY=${REDIS_DB_CELERY}
+      - EMAIL_BACKEND=${EMAIL_BACKEND}
+      - EMAIL_HOST=${EMAIL_HOST}
+      - EMAIL_PORT=587
+      - EMAIL_HOST_USER=${EMAIL_HOST_USER}
+      - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD}
+      - DEFAULT_FROM_EMAIL=${DEFAULT_FROM_EMAIL}
+    command: [ "celery", "-A", "config", "beat", "--loglevel=info" ]
+
   pgadmin:
     image: dpage/pgadmin4
     container_name: pgadmin
