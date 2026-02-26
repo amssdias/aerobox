@@ -1,14 +1,11 @@
-import stripe
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.http import JsonResponse
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 
-from config.services.stripe_services.stripe_service import StripeService
-
-User = get_user_model()
+from apps.integrations.stripe.client import stripe
+from apps.payments.services.stripe_webhooks.dispatch import dispatch_stripe_event
 
 
 @method_decorator(csrf_exempt, name="dispatch")
@@ -31,7 +28,6 @@ class StripeWebhookView(View):
         except Exception:
             return JsonResponse({"error": "Unexpected error while processing the Stripe webhook."}, status=400)
 
-        stripe_service = StripeService()
-        stripe_service.process_webhook_event(event)
+        dispatch_stripe_event(event)
 
         return JsonResponse({"status": "success"})

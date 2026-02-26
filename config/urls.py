@@ -19,8 +19,8 @@ from django.urls import path, include
 from drf_spectacular.views import SpectacularRedocView, SpectacularAPIView
 from rest_framework.authentication import SessionAuthentication
 
+from apps.payments.api.views.stripe_webhook import StripeWebhookView
 from config.permissions import IsSuperUser
-from config.views.stripe_webhook import StripeWebhookView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
