@@ -5,6 +5,10 @@ from typing import Optional
 
 @dataclass(frozen=True)
 class SubscriptionSummary:
+    """
+    https://docs.stripe.com/api/subscriptions?api-version=2025-04-30.basil
+    """
+
     subscription_id: str
     customer_id: str
     plan_id: str

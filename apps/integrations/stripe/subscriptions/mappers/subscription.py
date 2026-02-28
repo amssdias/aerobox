@@ -5,6 +5,9 @@ from apps.subscriptions.choices.subscription_choices import SubscriptionBillingC
 
 
 def to_subscription_summary(stripe_subscription) -> SubscriptionSummary:
+    """
+    https://docs.stripe.com/api/subscriptions?api-version=2025-04-30.basil
+    """
     return SubscriptionSummary(
         subscription_id=stripe_subscription.get("id"),
         customer_id=stripe_subscription.get("customer"),
