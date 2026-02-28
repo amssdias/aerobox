@@ -33,7 +33,6 @@ class CloudFile(Timestampable, SoftDeleteModel):
     )
     path = models.CharField(
         max_length=255,
-        unique=True,
         help_text=_("The path where the file is stored.")
     )
     s3_key = models.CharField(max_length=1024, unique=True, null=True, blank=True, help_text="Full S3 object key path")
