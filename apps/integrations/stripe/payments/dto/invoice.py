@@ -9,6 +9,8 @@ class InvoicePaymentSummary:
     Notes:
     - amounts are in the smallest currency unit (e.g. cents)
     - timestamps are UTC datetimes
+
+    https://docs.stripe.com/api/invoices/object?api-version=2025-04-30.basil
     """
 
     invoice_id: str

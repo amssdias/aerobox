@@ -31,7 +31,10 @@ def _ts_to_dt(ts: Optional[int]) -> Optional[datetime]:
 def to_invoice_payment_summary(
         stripe_invoice,
 ) -> InvoicePaymentSummary:
-    """Main mapper for Stripe invoices -> internal DTO."""
+    """Main mapper for Stripe invoices -> internal DTO.
+
+    https://docs.stripe.com/api/invoices/object?api-version=2025-04-30.basil
+    """
 
     status_transitions = stripe_invoice.get("status_transitions") or {}
     subscription_id = get_subscription_id_from_invoice(stripe_invoice)
