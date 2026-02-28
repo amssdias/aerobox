@@ -55,13 +55,6 @@ class Subscription(Timestampable):
     def __str__(self):
         return f"{self.user.username} - {self.plan.name} ({self.status})"
 
-    def upgrade(self, new_plan):
-        """Handles plan upgrades by deactivating current subscription and creating a new one"""
-        return
-
-    def cancel(self):
-        """Cancels the subscription"""
-        return
 
     def set_end_date(self):
         """Automatically sets end date based on the user's selected billing cycle."""
