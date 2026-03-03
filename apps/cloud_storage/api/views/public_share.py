@@ -61,30 +61,24 @@ class PublicShareLinkAuthView(ShareLinkMixin, ShareLinkAccessMixin, APIView):
         if share_link.password:
             if not share_link.check_password(raw_password):
                 raise AuthenticationFailed(_("Invalid password for this share link."))
+
+            access_token = self.build_access_token(share_link)
+            response_data = {
+                "access_token": access_token,
+                "expires_in": self.access_max_age,  # e.g. 3600 seconds
+                "token_type": "sharelink_access",
+            }
         else:
             # If the link does NOT have a password, we don't need to validate anything.
             # You can still choose to return access_token = null here.
             access_token = None
-
-            return Response(
-                {
-                    "access_token": access_token,
-                    "requires_password": False,
-                    "expires_in": None,
-                },
-                status=status.HTTP_200_OK,
-            )
-
-        access_token = self.build_access_token(share_link)
-
-        return Response(
-            {
+            response_data = {
                 "access_token": access_token,
-                "expires_in": self.access_max_age,  # e.g. 3600 seconds
-                "token_type": "sharelink_access",
-            },
-            status=status.HTTP_200_OK,
-        )
+                "requires_password": False,
+                "expires_in": None,
+            }
+
+        return Response(response_data, status=status.HTTP_200_OK)
 
 
 @extend_schema(tags=["API - Share Links / Public"])
