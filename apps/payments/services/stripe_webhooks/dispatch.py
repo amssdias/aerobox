@@ -14,12 +14,12 @@ from apps.subscriptions.services.stripe_webhooks.handlers.subscription import (
 logger = logging.getLogger(__name__)
 
 HANDLERS = {
-    "customer.subscription.created": handle_subscription_created,  # DONE
+    "customer.subscription.created": handle_subscription_created,
     "customer.subscription.updated": handle_subscription_updated,
-    "customer.subscription.deleted": handle_subscription_deleted,  # DONE
-    "invoice.created": handle_invoice_created,  # DONE
-    "invoice.paid": handle_invoice_paid,  # DONE
-    "invoice.payment_failed": handle_invoice_payment_failed,  # DONE
+    "customer.subscription.deleted": handle_subscription_deleted,
+    "invoice.created": handle_invoice_created,
+    "invoice.paid": handle_invoice_paid,
+    "invoice.payment_failed": handle_invoice_payment_failed,
 }
 
 
