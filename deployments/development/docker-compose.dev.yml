@@ -1,4 +1,4 @@
-version: "2"
+name: aerobox-dev
 
 services:
   my-redis:
@@ -28,10 +28,10 @@ services:
   api:
     container_name: aerobox-api
     build:
-      context: .
+      context: ../..
       dockerfile: deployments/development/Dockerfile
     volumes:
-      - .:/usr/src/app
+      - ../..:/usr/src/app
     ports:
       - "8000:8000"
     environment:
@@ -58,19 +58,21 @@ services:
       - EMAIL_HOST_USER=${EMAIL_HOST_USER}
       - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD}
       - DEFAULT_FROM_EMAIL=${DEFAULT_FROM_EMAIL}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
     depends_on:
       - db
 
   celery:
     container_name: celery-worker
     build:
-      context: .
+      context: ../..
       dockerfile: deployments/development/Dockerfile
     depends_on:
       - my-redis
       - api
     volumes:
-      - .:/usr/src/app
+      - ../..:/usr/src/app
     environment:
       - SECRET_KEY=${SECRET_KEY}
       - DB_NAME=aerobox-db
@@ -95,18 +97,20 @@ services:
       - EMAIL_HOST_USER=${EMAIL_HOST_USER}
       - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD}
       - DEFAULT_FROM_EMAIL=${DEFAULT_FROM_EMAIL}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
     command: [ "celery", "-A", "config", "worker", "--loglevel=info" ]
 
   celery-beat:
     container_name: celery-beat-worker
     build:
-      context: .
+      context: ../..
       dockerfile: deployments/development/Dockerfile
     depends_on:
       - my-redis
       - api
     volumes:
-      - .:/usr/src/app
+      - ../..:/usr/src/app
     environment:
       - SECRET_KEY=${SECRET_KEY}
       - DB_NAME=aerobox-db
@@ -131,6 +135,8 @@ services:
       - EMAIL_HOST_USER=${EMAIL_HOST_USER}
       - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD}
       - DEFAULT_FROM_EMAIL=${DEFAULT_FROM_EMAIL}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
     command: [ "celery", "-A", "config", "beat", "--loglevel=info" ]
 
   pgadmin:
