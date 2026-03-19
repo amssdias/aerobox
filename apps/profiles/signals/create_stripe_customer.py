@@ -1,11 +1,8 @@
-import stripe
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.conf import settings
 
+from apps.integrations.stripe.client import stripe
 from apps.profiles.models import Profile
-
-stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
 @receiver(post_save, sender=Profile)
