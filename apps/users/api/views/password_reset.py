@@ -2,11 +2,13 @@ from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from apps.users.api.serializers.password_reset_serializer import (
+from apps.users.api.serializers import (
     PasswordResetConfirmSerializer,
     PasswordResetRequestSerializer,
+    ChangePasswordSerializer,
 )
 from apps.users.tasks.email_tasks import send_password_reset_email
 from config.api_docs.custom_extensions import api_users_tag
@@ -60,3 +62,22 @@ class CustomPasswordResetConfirmView(GenericAPIView):
             status=status.HTTP_200_OK,
         )
 
+
+@api_users_tag()
+class ChangePasswordView(GenericAPIView):
+    """Change password when a user is logged in."""
+    permission_classes = [IsAuthenticated]
+    serializer_class = ChangePasswordSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(
+            data=request.data,
+            context={"request": request},
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(
+            {"detail": _("Password updated successfully.")},
+            status=status.HTTP_200_OK,
+        )
