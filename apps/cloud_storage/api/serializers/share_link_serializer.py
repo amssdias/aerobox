@@ -92,6 +92,7 @@ class ShareLinkSerializer(serializers.ModelSerializer):
                 "max_expiration_minutes",
                 settings.DEFAULT_SHARELINK_EXPIRATION_MINUTES,
             )
+            max_exp_minutes = max_exp_minutes or settings.DEFAULT_SHARELINK_EXPIRATION_MINUTES
             expires_at = timezone.now() + timedelta(minutes=max_exp_minutes)
 
         return expires_at
